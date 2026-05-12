@@ -73,15 +73,11 @@ The platform helps businesses increase customer retention through personalized r
 
 # ⚠️ Project Scope
 
-## Included
 - Booking management
 - Loyalty management
 - Promotion management
 - Customer management
 
-## Not Included
-- Online payment
-- Refund management
 
 ---
 
