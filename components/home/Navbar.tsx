@@ -25,6 +25,7 @@ import {
   LogOut,
   ChevronDown,
   Bell,
+  User2,
 } from 'lucide-react';
 import { axiosInstance } from '@/lib/axios';
 import { cn } from '@/lib/utils';
@@ -126,13 +127,18 @@ export function Navbar() {
                 <DropdownMenu modal={false}>
                   <DropdownMenuTrigger asChild>
                     <button className='flex items-center gap-3 group cursor-pointer focus:outline-none hover:bg-accent/30 pl-1.5 pr-4 py-1.5 rounded-full transition-all'>
-                      <div className={cn(
-                        'relative p-0.5 rounded-full transition-all group-hover:scale-105 active:scale-95',
-                        tier === 'platinum' ? 'bg-linear-to-br from-secondary via-primary to-secondary' :
-                          tier === 'gold' ? 'bg-linear-to-br from-amber-400 via-yellow-200 to-amber-500' :
-                            tier === 'silver' ? 'bg-linear-to-br from-slate-300 via-slate-100 to-slate-400' :
-                              'bg-linear-to-br from-primary/20 via-primary/10 to-primary/30'
-                      )}>
+                      <div
+                        className={cn(
+                          'relative p-0.5 rounded-full transition-all group-hover:scale-105 active:scale-95',
+                          tier === 'platinum'
+                            ? 'bg-linear-to-br from-secondary via-primary to-secondary'
+                            : tier === 'gold'
+                              ? 'bg-linear-to-br from-amber-400 via-yellow-200 to-amber-500'
+                              : tier === 'silver'
+                                ? 'bg-linear-to-br from-slate-300 via-slate-100 to-slate-400'
+                                : 'bg-linear-to-br from-primary/20 via-primary/10 to-primary/30',
+                        )}
+                      >
                         {authUser.avatarUrl ? (
                           <div className='relative w-8 h-8'>
                             <Image
@@ -178,20 +184,27 @@ export function Navbar() {
 
                       <div className='space-y-3'>
                         <div className='flex items-center justify-between'>
-                          <span className={cn(
-                            'text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-[0.1em] shadow-xs',
-                            tierColors[tier] || tierColors.member
-                          )}>
+                          <span
+                            className={cn(
+                              'text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-[0.1em] shadow-xs',
+                              tierColors[tier] || tierColors.member,
+                            )}
+                          >
                             {tierLabels[tier] || 'Member'}
                           </span>
                           <span className='text-primary font-black text-xs'>
-                            {points.toLocaleString()} <span className='text-foreground/40 font-bold'>PTS</span>
+                            {points.toLocaleString()}{' '}
+                            <span className='text-foreground/40 font-bold'>
+                              PTS
+                            </span>
                           </span>
                         </div>
                         <div className='h-1.5 w-full bg-primary/10 rounded-full overflow-hidden'>
                           <div
                             className='h-full bg-linear-to-r from-primary to-secondary transition-all duration-1000 ease-out'
-                            style={{ width: `${Math.min((points / 5000) * 100, 100)}%` }}
+                            style={{
+                              width: `${Math.min((points / 5000) * 100, 100)}%`,
+                            }}
                           />
                         </div>
                       </div>
@@ -201,33 +214,27 @@ export function Navbar() {
 
                     <div className='space-y-1'>
                       <DropdownMenuItem
-                        onClick={() => router.push('/booking')}
+                        onClick={() => router.push('/profile')}
+                        className='p-3 rounded-lg cursor-pointer flex items-center gap-3 text-foreground/70 font-bold hover:bg-primary/5 hover:text-primary transition-colors focus:bg-primary/5 focus:text-primary'
+                      >
+                        <User2 className='w-5 h-5 text-primary' />
+                        Tài khoản của tôi
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        // onClick={() => router.push('/booking')}
                         className='p-3 rounded-lg cursor-pointer flex items-center gap-3 text-foreground/70 font-bold hover:bg-primary/5 hover:text-primary transition-colors focus:bg-primary/5 focus:text-primary'
                       >
                         <CalendarCheck className='w-5 h-5 text-primary' />
                         Đặt lịch rửa xe
                       </DropdownMenuItem>
                       <DropdownMenuItem
-                        onClick={() => router.push('/history')}
-                        className='p-3 rounded-lg cursor-pointer flex items-center gap-3 text-foreground/70 font-bold hover:bg-primary/5 hover:text-primary transition-colors focus:bg-primary/5 focus:text-primary'
-                      >
-                        <History className='w-5 h-5 text-primary' />
-                        Lịch sử rửa xe
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() => router.push('/vehicles')}
+                        // onClick={() => router.push('/vehicles')}
                         className='p-3 rounded-lg cursor-pointer flex items-center gap-3 text-foreground/70 font-bold hover:bg-primary/5 hover:text-primary transition-colors focus:bg-primary/5 focus:text-primary'
                       >
                         <Car className='w-5 h-5 text-primary' />
                         Xe của tôi
                       </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() => router.push('/loyalty')}
-                        className='p-3 rounded-lg cursor-pointer flex items-center gap-3 text-foreground/70 font-bold hover:bg-primary/5 hover:text-primary transition-colors focus:bg-primary/5 focus:text-primary'
-                      >
-                        <Star className='w-5 h-5 text-yellow-500' />
-                        Điểm thưởng & Hạng
-                      </DropdownMenuItem>
+
                     </div>
 
                     <DropdownMenuSeparator className='bg-border/50 my-1' />
