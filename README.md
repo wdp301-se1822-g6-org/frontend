@@ -11,9 +11,10 @@ Smart Automated Motorbike Wash Management System with Advanced Booking & Loyalty
 
 # 📖 Overview
 
-AutoWash Pro is a web-based motorbike wash management system designed to improve customer experience and optimize daily operations.
+WAVE is a web-based motorbike wash management system designed to improve customer experience and optimize daily operations.
 
 The system provides:
+
 - Online booking
 - Tier-based loyalty program
 - Customer and vehicle management
@@ -27,6 +28,7 @@ The platform helps businesses increase customer retention through personalized r
 # ✨ Main Features
 
 ## 👤 Customer Features
+
 - Online booking
 - Loyalty points tracking
 - Wash history management
@@ -34,16 +36,18 @@ The platform helps businesses increase customer retention through personalized r
 - Tier-based booking priority
 
 ### Loyalty Tiers
-| Tier | Booking Window |
-|---|---|
-| Member | 7 days |
-| Silver | 10 days |
-| Gold | 12 days |
-| Platinum | 14 days |
+
+| Tier     | Booking Window |
+| -------- | -------------- |
+| Member   | 7 days         |
+| Silver   | 10 days        |
+| Gold     | 12 days        |
+| Platinum | 14 days        |
 
 ---
 
 ## 🎁 Loyalty System
+
 - Earn points based on spending
 - Automatic tier upgrade/downgrade
 - Redeem points for:
@@ -54,6 +58,7 @@ The platform helps businesses increase customer retention through personalized r
 ---
 
 ## 🛠️ Admin Features
+
 - Manage bookings and customers
 - Configure loyalty rules
 - Create promotions
@@ -78,7 +83,6 @@ The platform helps businesses increase customer retention through personalized r
 - Promotion management
 - Customer management
 
-
 ---
 
 # 🧰 Tech Stack
@@ -102,6 +106,7 @@ Install pnpm globally:
 ```bash
 npm install -g pnpm
 ```
+
 # 📥 Installation
 
 Clone the repository:
@@ -124,7 +129,7 @@ pnpm install
 
 ---
 
-# ▶️ Run 
+# ▶️ Run
 
 Start the project:
 
