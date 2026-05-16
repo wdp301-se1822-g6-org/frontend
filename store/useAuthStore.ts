@@ -41,9 +41,8 @@ export const useAuthStore = create<AuthState>()(
           set({ accessToken: newAccessToken });
           return newAccessToken;
         } catch (error) {
-          console.error('Refresh accessToken ERROR:', error);
           set({ authUser: null, accessToken: null, refreshToken: null });
-          return null;
+          throw error;
         }
       },
 
@@ -65,12 +64,7 @@ export const useAuthStore = create<AuthState>()(
             return mergedUser;
           }
           return null;
-        } catch (error) {
-          console.log('Get user ERROR', error);
-          // ONLY clear if it's a 401 and we are SURE we had a token
-          if ((error as any)?.response?.status === 401 && get().accessToken) {
-            set({ authUser: null, accessToken: null, refreshToken: null });
-          }
+        } catch {
           set({ isInitialized: true });
           return null;
         }
