@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:www.aquawave-express.com)",
+      "Bash(pnpm lint *)",
+      "Bash(pnpm dlx *)"
+    ]
+  }
+}
