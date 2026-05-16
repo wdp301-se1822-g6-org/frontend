@@ -1,0 +1,345 @@
+'use client';
+
+import { useAuthStore } from '@/store/useAuthStore';
+import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import Image from 'next/image';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+import {
+  Menu,
+  X,
+  CalendarCheck,
+  History,
+  Car,
+  Star,
+  User,
+  LogOut,
+  ChevronDown,
+  Bell,
+} from 'lucide-react';
+import { axiosInstance } from '@/lib/axios';
+import { cn } from '@/lib/utils';
+
+const navLinks = [
+  { label: 'Đặt lịch', href: '#booking' },
+  { label: 'Hạng thành viên', href: '#loyalty' },
+  { label: 'Khuyến mãi', href: '#promotions' },
+  { label: 'Liên hệ', href: '#contact' },
+];
+
+const tierColors: Record<string, string> = {
+  member: 'bg-primary/10 text-primary',
+  silver: 'bg-slate-100 text-slate-600',
+  gold: 'bg-amber-100 text-amber-600',
+  platinum: 'bg-secondary/10 text-secondary',
+};
+
+const tierLabels: Record<string, string> = {
+  member: 'Member',
+  silver: 'Silver',
+  gold: 'Gold',
+  platinum: 'Platinum',
+};
+
+export function Navbar() {
+  const authUser = useAuthStore((s) => s.authUser);
+  const setAccessToken = useAuthStore((s) => s.setAccessToken);
+  const setUser = useAuthStore((s) => s.setUser);
+  const router = useRouter();
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  const handleLogout = async () => {
+    try {
+      await axiosInstance.post('/auth/logout');
+    } catch {
+      // ignore
+    } finally {
+      setAccessToken(null);
+      setUser(null);
+      router.replace('/');
+    }
+  };
+
+  const tier = (authUser as any)?.tier?.toLowerCase?.() ?? 'member';
+  const points = (authUser as any)?.loyaltyPoints ?? 0;
+  const initials =
+    authUser?.name
+      ?.split(' ')
+      .map((w: string) => w[0])
+      .slice(-2)
+      .join('')
+      .toUpperCase() ?? '?';
+
+  return (
+    <nav className='fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border'>
+      <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
+        <div className='flex items-center justify-between h-16'>
+          {/* Logo */}
+          <Link
+            href='/'
+            className='flex items-center gap-2.5 shrink-0'
+          >
+            <Image
+              src='/logo-wave.jpg'
+              alt='WAVE'
+              width={34}
+              height={34}
+              className='rounded-full object-cover shadow-sm'
+            />
+            <span className='text-foreground font-black text-2xl tracking-tighter'>
+              WAVE
+            </span>
+          </Link>
+
+          {/* Nav links */}
+          <div className='hidden md:flex items-center gap-7'>
+            {navLinks.map((link) => (
+              <a
+                key={link.href}
+                href={link.href}
+                className='text-foreground/70 hover:text-primary text-sm font-medium transition-colors'
+              >
+                {link.label}
+              </a>
+            ))}
+          </div>
+
+          {/* Right: auth */}
+          <div className='hidden md:flex items-center gap-4'>
+            {authUser ? (
+              <div className='flex items-center gap-4'>
+                {/* Notification Bell */}
+                <button className='relative p-2 text-foreground/50 hover:text-primary hover:bg-primary/5 rounded-full transition-all cursor-pointer group'>
+                  <Bell className='w-5 h-5 transition-transform group-hover:rotate-12' />
+                  <span className='absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border-2 border-background' />
+                </button>
+
+                <DropdownMenu modal={false}>
+                  <DropdownMenuTrigger asChild>
+                    <button className='flex items-center gap-3 group cursor-pointer focus:outline-none hover:bg-accent/30 pl-1.5 pr-4 py-1.5 rounded-full transition-all'>
+                      <div className={cn(
+                        'relative p-0.5 rounded-full transition-all group-hover:scale-105 active:scale-95',
+                        tier === 'platinum' ? 'bg-linear-to-br from-secondary via-primary to-secondary' :
+                          tier === 'gold' ? 'bg-linear-to-br from-amber-400 via-yellow-200 to-amber-500' :
+                            tier === 'silver' ? 'bg-linear-to-br from-slate-300 via-slate-100 to-slate-400' :
+                              'bg-linear-to-br from-primary/20 via-primary/10 to-primary/30'
+                      )}>
+                        {authUser.avatarUrl ? (
+                          <div className='relative w-8 h-8'>
+                            <Image
+                              src={authUser.avatarUrl}
+                              alt={authUser.name}
+                              fill
+                              className='rounded-full object-cover border-2 border-background'
+                            />
+                          </div>
+                        ) : (
+                          <div className='w-8 h-8 rounded-full bg-background flex items-center justify-center border-2 border-background shadow-inner'>
+                            <span className='text-primary text-[10px] font-black tracking-tighter'>
+                              {initials}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                      <span className='text-foreground text-sm font-bold tracking-tight'>
+                        {authUser.name}
+                      </span>
+                      <ChevronDown className='w-4 h-4 text-foreground/30 transition-transform group-data-[state=open]:rotate-180' />
+                    </button>
+                  </DropdownMenuTrigger>
+
+                  <DropdownMenuContent
+                    align='end'
+                    className='w-72 p-2 bg-white/95 backdrop-blur-xl border-border/50 text-foreground shadow-2xl rounded-2xl'
+                  >
+                    <div className='p-4 mb-2 bg-linear-to-br from-primary/5 to-secondary/5 rounded-xl border border-primary/10'>
+                      <div className='flex items-center gap-3 mb-4'>
+                        <div className='w-12 h-12 rounded-full bg-primary flex items-center justify-center text-white text-base font-black shadow-lg'>
+                          {initials}
+                        </div>
+                        <div className='flex flex-col'>
+                          <span className='font-black text-lg text-foreground tracking-tight'>
+                            {authUser.name}
+                          </span>
+                          <span className='text-foreground/50 text-xs font-medium'>
+                            {authUser.email || 'Thành viên mới'}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className='space-y-3'>
+                        <div className='flex items-center justify-between'>
+                          <span className={cn(
+                            'text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-[0.1em] shadow-xs',
+                            tierColors[tier] || tierColors.member
+                          )}>
+                            {tierLabels[tier] || 'Member'}
+                          </span>
+                          <span className='text-primary font-black text-xs'>
+                            {points.toLocaleString()} <span className='text-foreground/40 font-bold'>PTS</span>
+                          </span>
+                        </div>
+                        <div className='h-1.5 w-full bg-primary/10 rounded-full overflow-hidden'>
+                          <div
+                            className='h-full bg-linear-to-r from-primary to-secondary transition-all duration-1000 ease-out'
+                            style={{ width: `${Math.min((points / 5000) * 100, 100)}%` }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    <DropdownMenuSeparator className='bg-border/50 my-1' />
+
+                    <div className='space-y-1'>
+                      <DropdownMenuItem
+                        onClick={() => router.push('/booking')}
+                        className='p-3 rounded-lg cursor-pointer flex items-center gap-3 text-foreground/70 font-bold hover:bg-primary/5 hover:text-primary transition-colors focus:bg-primary/5 focus:text-primary'
+                      >
+                        <CalendarCheck className='w-5 h-5 text-primary' />
+                        Đặt lịch rửa xe
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => router.push('/history')}
+                        className='p-3 rounded-lg cursor-pointer flex items-center gap-3 text-foreground/70 font-bold hover:bg-primary/5 hover:text-primary transition-colors focus:bg-primary/5 focus:text-primary'
+                      >
+                        <History className='w-5 h-5 text-primary' />
+                        Lịch sử rửa xe
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => router.push('/vehicles')}
+                        className='p-3 rounded-lg cursor-pointer flex items-center gap-3 text-foreground/70 font-bold hover:bg-primary/5 hover:text-primary transition-colors focus:bg-primary/5 focus:text-primary'
+                      >
+                        <Car className='w-5 h-5 text-primary' />
+                        Xe của tôi
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => router.push('/loyalty')}
+                        className='p-3 rounded-lg cursor-pointer flex items-center gap-3 text-foreground/70 font-bold hover:bg-primary/5 hover:text-primary transition-colors focus:bg-primary/5 focus:text-primary'
+                      >
+                        <Star className='w-5 h-5 text-yellow-500' />
+                        Điểm thưởng & Hạng
+                      </DropdownMenuItem>
+                    </div>
+
+                    <DropdownMenuSeparator className='bg-border/50 my-1' />
+
+                    <DropdownMenuItem
+                      onClick={handleLogout}
+                      className='p-3 rounded-lg cursor-pointer flex items-center gap-3 text-red-500/80 font-bold hover:bg-red-500/5 hover:text-red-500 transition-colors focus:bg-red-500/5 focus:text-red-500'
+                    >
+                      <LogOut className='w-5 h-5' />
+                      Đăng xuất
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            ) : (
+              <>
+                <Button
+                  variant='ghost'
+                  onClick={() => router.push('/login')}
+                  className='text-foreground/70 hover:text-primary hover:bg-primary/5 h-9 px-4 text-sm font-medium'
+                >
+                  Đăng nhập
+                </Button>
+                <Button
+                  onClick={() => router.push('/register')}
+                  className='bg-primary hover:bg-primary/90 text-primary-foreground border-0 h-9 px-5 text-sm rounded-full shadow-lg shadow-primary/20 transition-all hover:scale-105'
+                >
+                  Đăng ký
+                </Button>
+              </>
+            )}
+          </div>
+
+          {/* Mobile hamburger */}
+          <button
+            className='md:hidden text-white p-2'
+            onClick={() => setMenuOpen((v) => !v)}
+          >
+            {menuOpen ? (
+              <X className='w-5 h-5' />
+            ) : (
+              <Menu className='w-5 h-5' />
+            )}
+          </button>
+        </div>
+      </div>
+
+      {/* Mobile menu */}
+      {menuOpen && (
+        <div className='md:hidden bg-background border-t border-border px-4 py-4 flex flex-col gap-4 shadow-xl'>
+          {authUser && (
+            <div className='flex items-center gap-3 pb-3 border-b border-white/10'>
+              <span className='w-9 h-9 rounded-full bg-cyan-500 flex items-center justify-center text-white text-sm font-bold'>
+                {initials}
+              </span>
+              <div>
+                <div className='text-white text-sm font-medium'>
+                  {authUser.name}
+                </div>
+                <div className='flex items-center gap-1.5 mt-0.5'>
+                  <span
+                    className={`text-white text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${tierColors[tier] ?? 'bg-slate-500'}`}
+                  >
+                    {tierLabels[tier] ?? 'Member'}
+                  </span>
+                  <span className='text-white/40 text-xs'>
+                    {points.toLocaleString()} pts
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {navLinks.map((link) => (
+            <a
+              key={link.href}
+              href={link.href}
+              className='text-foreground/10 hover:text-primary text-sm font-bold py-2'
+              onClick={() => setMenuOpen(false)}
+            >
+              {link.label}
+            </a>
+          ))}
+
+          <div className='flex gap-3 pt-2 border-t border-white/10'>
+            {authUser ? (
+              <Button
+                onClick={handleLogout}
+                className='flex-1 bg-red-500/20 text-red-400 hover:bg-red-500/30 border-0 h-9 text-sm'
+              >
+                Đăng xuất
+              </Button>
+            ) : (
+              <>
+                <Button
+                  variant='ghost'
+                  onClick={() => router.push('/login')}
+                  className='text-foreground/80 hover:text-primary hover:bg-primary/5 h-10 flex-1 text-sm font-bold'
+                >
+                  Đăng nhập
+                </Button>
+                <Button
+                  onClick={() => router.push('/register')}
+                  className='bg-primary text-white border-0 h-10 flex-1 text-sm font-bold rounded-full'
+                >
+                  Đăng ký
+                </Button>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+    </nav>
+  );
+}
