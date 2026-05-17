@@ -1,0 +1,210 @@
+import Image from 'next/image';
+import { MapPin, Clock, Phone, Mail } from 'lucide-react';
+
+const socialIcons = [
+  {
+    label: 'Facebook',
+    href: '#',
+    svg: (
+      <svg
+        viewBox='0 0 24 24'
+        fill='currentColor'
+        className='w-4 h-4'
+      >
+        <path d='M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z' />
+      </svg>
+    ),
+  },
+  {
+    label: 'Instagram',
+    href: '#',
+    svg: (
+      <svg
+        viewBox='0 0 24 24'
+        fill='none'
+        stroke='currentColor'
+        strokeWidth='2'
+        strokeLinecap='round'
+        strokeLinejoin='round'
+        className='w-4 h-4'
+      >
+        <rect
+          width='20'
+          height='20'
+          x='2'
+          y='2'
+          rx='5'
+          ry='5'
+        />
+        <path d='M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z' />
+        <line
+          x1='17.5'
+          x2='17.51'
+          y1='6.5'
+          y2='6.5'
+        />
+      </svg>
+    ),
+  },
+  {
+    label: 'Youtube',
+    href: '#',
+    svg: (
+      <svg
+        viewBox='0 0 24 24'
+        fill='currentColor'
+        className='w-4 h-4'
+      >
+        <path d='M22.54 6.42a2.78 2.78 0 0 0-1.95-1.96C18.88 4 12 4 12 4s-6.88 0-8.59.46A2.78 2.78 0 0 0 1.46 6.42 29 29 0 0 0 1 12a29 29 0 0 0 .46 5.58 2.78 2.78 0 0 0 1.95 1.96C5.12 20 12 20 12 20s6.88 0 8.59-.46a2.78 2.78 0 0 0 1.95-1.96A29 29 0 0 0 23 12a29 29 0 0 0-.46-5.58z' />
+        <polygon
+          fill='#06111F'
+          points='9.75 15.02 15.5 12 9.75 8.98 9.75 15.02'
+        />
+      </svg>
+    ),
+  },
+];
+
+const footerLinks = {
+  services: [
+    { label: 'Gói Kim Cương', href: '#packages' },
+    { label: 'Gói Vàng', href: '#packages' },
+    { label: 'Gói Bạc', href: '#packages' },
+    { label: 'Gói Nhanh', href: '#packages' },
+    { label: 'Thẻ quà tặng', href: '#' },
+  ],
+  support: [
+    { label: 'Câu hỏi thường gặp', href: '#' },
+    { label: 'Chính sách bảo mật', href: '#' },
+    { label: 'Điều khoản dịch vụ', href: '#' },
+    { label: 'Liên hệ hỗ trợ', href: '#contact' },
+  ],
+};
+
+export function Footer() {
+  return (
+    <footer
+      id='contact'
+      className='bg-background text-foreground px-4 border-t border-border'
+    >
+      <div className='max-w-7xl mx-auto'>
+        {/* Main footer */}
+        <div className='py-20 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12'>
+          {/* Brand */}
+          <div className='lg:col-span-1'>
+            <div className='flex items-center gap-3 mb-6'>
+              <Image
+                src='/logo-wave.jpg'
+                alt='WAVE'
+                width={40}
+                height={40}
+                className='rounded-full object-cover border border-border shadow-sm'
+              />
+              <span className='font-black text-2xl tracking-tight text-foreground'>
+                WAVE
+              </span>
+            </div>
+            <p className='text-foreground/60 text-sm leading-relaxed mb-6 font-medium'>
+              Hệ thống rửa xe thông minh hàng đầu Việt Nam. Công nghệ hiện đại,
+              dịch vụ chuyên nghiệp, trải nghiệm hoàn hảo cho xế yêu của bạn.
+            </p>
+            <div className='flex gap-4'>
+              {socialIcons.map((s) => (
+                <a
+                  key={s.label}
+                  href={s.href}
+                  aria-label={s.label}
+                  className='w-10 h-10 rounded-xl bg-accent/30 text-primary hover:bg-primary hover:text-white flex items-center justify-center transition-all hover:-translate-y-1 shadow-sm'
+                >
+                  {s.svg}
+                </a>
+              ))}
+            </div>
+          </div>
+
+          {/* Services */}
+          <div>
+            <h4 className='font-semibold text-black mb-4'>Dịch vụ</h4>
+            <ul className='space-y-2.5'>
+              {footerLinks.services.map((link) => (
+                <li key={link.label}>
+                  <a
+                    href={link.href}
+                    className='text-foreground/50 hover:text-primary text-sm font-semibold transition-colors'
+                  >
+                    {link.label}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Support */}
+          <div>
+            <h4 className='font-semibold text-black mb-4'>Hỗ trợ</h4>
+            <ul className='space-y-2.5'>
+              {footerLinks.support.map((link) => (
+                <li key={link.label}>
+                  <a
+                    href={link.href}
+                    className='text-foreground/50 hover:text-primary text-sm font-semibold transition-colors'
+                  >
+                    {link.label}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Contact */}
+          <div>
+            <h4 className='font-semibold text-black mb-4'>Liên hệ</h4>
+            <ul className='space-y-3'>
+              <li className='flex items-start gap-3 text-sm text-foreground/60 font-semibold'>
+                <MapPin className='w-5 h-5 text-primary shrink-0 mt-0.5' />
+                123 Đường Lê Văn Việt, Quận 9, TP.HCM
+              </li>
+              <li className='flex items-center gap-3 text-sm text-foreground/60 font-semibold'>
+                <Clock className='w-5 h-5 text-primary shrink-0' />
+                07:00 – 21:00 (Thứ 2 – Chủ nhật)
+              </li>
+              <li className='flex items-center gap-3 text-sm text-foreground/60 font-semibold'>
+                <Phone className='w-5 h-5 text-primary shrink-0' />
+                1800 6868
+              </li>
+              <li className='flex items-center gap-3 text-sm text-foreground/60 font-semibold'>
+                <Mail className='w-5 h-5 text-primary shrink-0' />
+                support@autowash.vn
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        {/* Bottom bar */}
+        <div className='border-t border-border py-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-foreground/40 text-xs font-bold uppercase tracking-wider'>
+          <span>© 2025 WAVE. Bảo lưu mọi quyền.</span>
+          <div className='flex gap-6'>
+            <a
+              href='#'
+              className='hover:text-primary transition-colors'
+            >
+              Bảo mật
+            </a>
+            <a
+              href='#'
+              className='hover:text-primary transition-colors'
+            >
+              Điều khoản
+            </a>
+            <a
+              href='#'
+              className='hover:text-primary transition-colors'
+            >
+              Sitemap
+            </a>
+          </div>
+        </div>
+      </div>
+    </footer>
+  );
+}
