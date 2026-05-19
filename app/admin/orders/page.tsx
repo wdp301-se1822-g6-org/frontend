@@ -6,6 +6,19 @@ import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import { Search, RefreshCw } from 'lucide-react';
 
+interface OrderData {
+  _id?: string;
+  id?: string;
+  userId?: { fullName?: string };
+  customerName?: string;
+  bookingId?: { _id?: string } | string;
+  amount?: number | string;
+  paymentMethod?: string;
+  paymentStatus?: string;
+  createdAt?: string;
+  [key: string]: unknown;
+}
+
 export default function AdminOrdersPage() {
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
@@ -15,11 +28,11 @@ export default function AdminOrdersPage() {
     queryFn: () => adminGetOrders({ page, limit: 10 }),
   });
 
-  const orders: any[] = data?.data?.data ?? data?.data ?? [];
+  const orders: OrderData[] = data?.data?.data ?? data?.data ?? [];
   const total: number = data?.data?.total ?? orders.length;
 
   const filtered = search
-    ? orders.filter((o: any) => JSON.stringify(o).toLowerCase().includes(search.toLowerCase()))
+    ? orders.filter((o: OrderData) => JSON.stringify(o).toLowerCase().includes(search.toLowerCase()))
     : orders;
 
   const paymentStatusConfig: Record<string, { label: string; cls: string }> = {
@@ -62,7 +75,7 @@ export default function AdminOrdersPage() {
                     ))}</tr>
                   )) : filtered.length === 0 ? (
                     <tr><td colSpan={7} className='px-5 py-16 text-center text-foreground/40 font-semibold'>Không có dữ liệu</td></tr>
-                  ) : filtered.map((o: any) => {
+                  ) : filtered.map((o: OrderData) => {
                     const id = o._id ?? o.id ?? '';
                     const ps = paymentStatusConfig[o.paymentStatus ?? 'unpaid'] ?? paymentStatusConfig.unpaid;
                     return (

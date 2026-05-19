@@ -26,7 +26,7 @@ function ShiftModal({ item, onClose, onSave }: { item?: Shift | null; onClose: (
           ].map(({ label, key, type }) => (
             <div key={key}>
               <label className='block text-xs font-black uppercase tracking-widest text-foreground/40 mb-1.5'>{label}</label>
-              <input type={type} value={(form as any)[key]}
+              <input type={type} value={(form as Record<string, string | number>)[key]}
                 onChange={(e) => setForm({ ...form, [key]: type === 'number' ? Number(e.target.value) : e.target.value })}
                 className='w-full border border-border rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-primary/50' />
             </div>

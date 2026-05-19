@@ -6,6 +6,22 @@ import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import { Search, RefreshCw, Car } from 'lucide-react';
 
+interface VehicleData {
+  _id?: string;
+  id?: string;
+  licensePlate?: string;
+  userId?: { fullName?: string };
+  ownerName?: string;
+  brand?: string;
+  make?: string;
+  model?: string;
+  vehicleTypeId?: { name?: string };
+  vehicleType?: string;
+  color?: string;
+  year?: string | number;
+  [key: string]: unknown;
+}
+
 export default function AdminVehiclesPage() {
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
@@ -15,9 +31,9 @@ export default function AdminVehiclesPage() {
     queryFn: () => adminGetVehicles({ page, limit: 10 }),
   });
 
-  const vehicles: any[] = data?.data?.data ?? data?.data ?? [];
+  const vehicles: VehicleData[] = data?.data?.data ?? data?.data ?? [];
   const total: number = data?.data?.total ?? vehicles.length;
-  const filtered = search ? vehicles.filter((v: any) => JSON.stringify(v).toLowerCase().includes(search.toLowerCase())) : vehicles;
+  const filtered = search ? vehicles.filter((v: VehicleData) => JSON.stringify(v).toLowerCase().includes(search.toLowerCase())) : vehicles;
 
   return (
     <>
@@ -53,7 +69,7 @@ export default function AdminVehiclesPage() {
                     ))}</tr>
                   )) : filtered.length === 0 ? (
                     <tr><td colSpan={7} className='px-5 py-16 text-center text-foreground/40 font-semibold'>Không có dữ liệu</td></tr>
-                  ) : filtered.map((v: any) => {
+                  ) : filtered.map((v: VehicleData) => {
                     const id = v._id ?? v.id;
                     return (
                       <tr key={id} className='hover:bg-muted/20 transition-colors'>

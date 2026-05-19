@@ -6,6 +6,22 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { Search, Filter, RefreshCw, ChevronDown } from 'lucide-react';
 
+interface BookingData {
+  _id?: string;
+  id?: string;
+  userId?: { fullName?: string };
+  customerName?: string;
+  vehicleId?: { licensePlate?: string };
+  licensePlate?: string;
+  serviceTypeId?: { name?: string };
+  serviceName?: string;
+  shiftId?: { name?: string };
+  bookingDate?: string;
+  totalPrice?: number | string;
+  status?: string;
+  [key: string]: unknown;
+}
+
 const statusConfig: Record<string, { label: string; cls: string }> = {
   completed:   { label: 'Hoàn thành',  cls: 'bg-emerald-50 text-emerald-700' },
   in_progress: { label: 'Đang xử lý', cls: 'bg-blue-50 text-blue-700' },
@@ -36,11 +52,11 @@ export default function AdminBookingsPage() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['admin-bookings'] }),
   });
 
-  const bookings: any[] = data?.data?.data ?? data?.data ?? [];
+  const bookings: BookingData[] = data?.data?.data ?? data?.data ?? [];
   const total: number = data?.data?.total ?? bookings.length;
 
   const filtered = search
-    ? bookings.filter((b: any) =>
+    ? bookings.filter((b: BookingData) =>
         JSON.stringify(b).toLowerCase().includes(search.toLowerCase()))
     : bookings;
 
@@ -122,7 +138,7 @@ export default function AdminBookingsPage() {
                       </td>
                     </tr>
                   ) : (
-                    filtered.map((b: any) => {
+                    filtered.map((b: BookingData) => {
                       const s = statusConfig[b.status] ?? { label: b.status, cls: 'bg-muted text-foreground/60' };
                       return (
                         <tr key={b._id ?? b.id} className='hover:bg-muted/20 transition-colors'>

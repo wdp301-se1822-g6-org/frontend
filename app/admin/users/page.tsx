@@ -9,6 +9,18 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { Search, RefreshCw, Shield, Ban, KeyRound, ChevronDown } from 'lucide-react';
 
+interface UserData {
+  _id?: string;
+  id?: string;
+  role?: string;
+  status?: string;
+  fullName?: string;
+  name?: string;
+  email?: string;
+  createdAt?: string;
+  [key: string]: unknown;
+}
+
 const roleConfig: Record<string, { label: string; cls: string }> = {
   admin:    { label: 'Admin',    cls: 'bg-primary/10 text-primary' },
   staff:    { label: 'Nhân viên', cls: 'bg-purple-50 text-purple-700' },
@@ -52,11 +64,11 @@ export default function AdminUsersPage() {
     onSuccess: () => { setResetId(null); setNewPwd(''); },
   });
 
-  const users: any[] = data?.data?.data ?? data?.data ?? [];
+  const users: UserData[] = data?.data?.data ?? data?.data ?? [];
   const total: number = data?.data?.total ?? users.length;
 
   const filtered = search
-    ? users.filter((u: any) => JSON.stringify(u).toLowerCase().includes(search.toLowerCase()))
+    ? users.filter((u: UserData) => JSON.stringify(u).toLowerCase().includes(search.toLowerCase()))
     : users;
 
   return (
@@ -111,7 +123,7 @@ export default function AdminUsersPage() {
                   ) : filtered.length === 0 ? (
                     <tr><td colSpan={6} className='px-5 py-16 text-center text-foreground/40 font-semibold'>Không có dữ liệu</td></tr>
                   ) : (
-                    filtered.map((u: any) => {
+                    filtered.map((u: UserData) => {
                       const role = roleConfig[u.role] ?? { label: u.role, cls: 'bg-muted text-foreground/60' };
                       const status = statusConfig[u.status ?? 'active'] ?? statusConfig.active;
                       const id = u._id ?? u.id;
