@@ -26,6 +26,7 @@ export default function ProfilePage() {
   useEffect(() => {
     if (authUser) {
       const dob = authUser.dateOfBirth ? new Date(authUser.dateOfBirth) : null;
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setFormData({
         name: authUser.name || '',
         email: authUser.email || '',

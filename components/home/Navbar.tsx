@@ -70,8 +70,8 @@ export function Navbar() {
     }
   };
 
-  const tier = (authUser as any)?.tier?.toLowerCase?.() ?? 'member';
-  const points = (authUser as any)?.loyaltyPoints ?? 0;
+  const tier = (authUser as { tier?: string })?.tier?.toLowerCase?.() ?? 'member';
+  const points = (authUser as { loyaltyPoints?: number })?.loyaltyPoints ?? 0;
   const initials =
     authUser?.name
       ?.split(' ')
