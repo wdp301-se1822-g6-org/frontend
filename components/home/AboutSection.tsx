@@ -110,7 +110,7 @@ export function AboutSection() {
                 <span className='text-primary'>Sạch sẽ & Bền bỉ</span>
               </h3>
               <p className='text-foreground/60 text-base leading-relaxed'>
-                WashAuto là nền tảng đặt lịch rửa xe thông minh, kết hợp
+                WAVE là nền tảng đặt lịch rửa xe thông minh, kết hợp
                 công nghệ hiện đại và đội ngũ kỹ thuật viên được đào tạo
                 bài bản. Chúng tôi cam kết mang lại dịch vụ chăm sóc xe
                 chất lượng cao nhất với chi phí hợp lý nhất.
