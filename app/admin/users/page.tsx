@@ -124,9 +124,9 @@ export default function AdminUsersPage() {
                     <tr><td colSpan={6} className='px-5 py-16 text-center text-foreground/40 font-semibold'>Không có dữ liệu</td></tr>
                   ) : (
                     filtered.map((u: UserData) => {
-                      const role = roleConfig[u.role] ?? { label: u.role, cls: 'bg-muted text-foreground/60' };
+                      const role = roleConfig[u.role ?? ''] ?? { label: u.role, cls: 'bg-muted text-foreground/60' };
                       const status = statusConfig[u.status ?? 'active'] ?? statusConfig.active;
-                      const id = u._id ?? u.id;
+                      const id = u._id ?? u.id ?? '';
                       return (
                         <tr key={id} className='hover:bg-muted/20 transition-colors'>
                           <td className='px-5 py-4'>
@@ -165,7 +165,7 @@ export default function AdminUsersPage() {
                                 <Ban className='w-3.5 h-3.5' />
                               </button>
                               {/* Reset password */}
-                              <button onClick={() => setResetId(id)} title='Đặt lại mật khẩu'
+                              <button onClick={() => setResetId(id || null)} title='Đặt lại mật khẩu'
                                 className='w-7 h-7 rounded-lg border border-border flex items-center justify-center hover:border-primary/30 hover:text-primary transition-all'>
                                 <KeyRound className='w-3.5 h-3.5' />
                               </button>

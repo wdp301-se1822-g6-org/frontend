@@ -82,7 +82,7 @@ export default function AdminOrdersPage() {
                       <tr key={id} className='hover:bg-muted/20 transition-colors'>
                         <td className='px-5 py-4 font-mono text-xs text-foreground/50'>{id.slice(-6).toUpperCase()}</td>
                         <td className='px-5 py-4 font-semibold text-foreground'>{o.userId?.fullName ?? o.customerName ?? '—'}</td>
-                        <td className='px-5 py-4 font-mono text-xs text-foreground/50'>{(o.bookingId?._id ?? o.bookingId ?? '—').toString().slice(-6).toUpperCase()}</td>
+                        <td className='px-5 py-4 font-mono text-xs text-foreground/50'>{(typeof o.bookingId === 'object' ? o.bookingId?._id : o.bookingId)?.toString().slice(-6).toUpperCase() ?? '—'}</td>
                         <td className='px-5 py-4 font-black text-foreground'>{o.amount != null ? `${Number(o.amount).toLocaleString('vi-VN')}đ` : '—'}</td>
                         <td className='px-5 py-4 text-foreground/60 capitalize'>{o.paymentMethod ?? '—'}</td>
                         <td className='px-5 py-4'>

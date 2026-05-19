@@ -139,7 +139,7 @@ export default function AdminBookingsPage() {
                     </tr>
                   ) : (
                     filtered.map((b: BookingData) => {
-                      const s = statusConfig[b.status] ?? { label: b.status, cls: 'bg-muted text-foreground/60' };
+                      const s = statusConfig[b.status ?? ''] ?? { label: b.status, cls: 'bg-muted text-foreground/60' };
                       return (
                         <tr key={b._id ?? b.id} className='hover:bg-muted/20 transition-colors'>
                           <td className='px-5 py-4 font-mono text-xs text-foreground/50'>
@@ -176,7 +176,7 @@ export default function AdminBookingsPage() {
                           <td className='px-5 py-4'>
                             <select
                               defaultValue={b.status}
-                              onChange={(e) => updateStatus.mutate({ id: b._id ?? b.id, status: e.target.value })}
+                              onChange={(e) => updateStatus.mutate({ id: b._id ?? b.id ?? '', status: e.target.value })}
                               className='text-xs border border-border rounded-lg px-2 py-1.5 bg-white focus:outline-none focus:border-primary/50 cursor-pointer'
                             >
                               {Object.entries(statusConfig).map(([v, { label }]) => (
