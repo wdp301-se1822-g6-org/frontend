@@ -1,0 +1,215 @@
+'use client';
+
+import { AdminTopbar } from '@/components/admin/AdminTopbar';
+import {
+  adminGetUsers, adminUpdateUserRole,
+  adminUpdateUserStatus, adminResetUserPassword,
+} from '@/lib/admin-api';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useState } from 'react';
+import { Search, RefreshCw, Shield, Ban, KeyRound, ChevronDown } from 'lucide-react';
+
+const roleConfig: Record<string, { label: string; cls: string }> = {
+  admin:    { label: 'Admin',    cls: 'bg-primary/10 text-primary' },
+  staff:    { label: 'Nhân viên', cls: 'bg-purple-50 text-purple-700' },
+  customer: { label: 'Khách hàng', cls: 'bg-muted text-foreground/60' },
+};
+
+const statusConfig: Record<string, { label: string; cls: string }> = {
+  active:   { label: 'Hoạt động', cls: 'bg-emerald-50 text-emerald-700' },
+  inactive: { label: 'Vô hiệu',   cls: 'bg-rose-50 text-rose-700' },
+  banned:   { label: 'Banned',    cls: 'bg-gray-100 text-gray-600' },
+};
+
+export default function AdminUsersPage() {
+  const qc = useQueryClient();
+  const [search, setSearch] = useState('');
+  const [roleFilter, setRoleFilter] = useState('all');
+  const [page, setPage] = useState(1);
+  const [resetId, setResetId] = useState<string | null>(null);
+  const [newPwd, setNewPwd] = useState('');
+
+  const { data, isLoading, refetch } = useQuery({
+    queryKey: ['admin-users', page, roleFilter],
+    queryFn: () => adminGetUsers({
+      page, limit: 10,
+      ...(roleFilter !== 'all' ? { role: roleFilter } : {}),
+    }),
+  });
+
+  const changeRole = useMutation({
+    mutationFn: ({ id, role }: { id: string; role: string }) => adminUpdateUserRole(id, role),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['admin-users'] }),
+  });
+
+  const changeStatus = useMutation({
+    mutationFn: ({ id, status }: { id: string; status: string }) => adminUpdateUserStatus(id, status),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['admin-users'] }),
+  });
+
+  const resetPwd = useMutation({
+    mutationFn: ({ id, password }: { id: string; password: string }) => adminResetUserPassword(id, password),
+    onSuccess: () => { setResetId(null); setNewPwd(''); },
+  });
+
+  const users: any[] = data?.data?.data ?? data?.data ?? [];
+  const total: number = data?.data?.total ?? users.length;
+
+  const filtered = search
+    ? users.filter((u: any) => JSON.stringify(u).toLowerCase().includes(search.toLowerCase()))
+    : users;
+
+  return (
+    <>
+      <AdminTopbar title='Quản lý người dùng' subtitle='Xem, phân quyền và quản lý tài khoản' />
+      <main className='flex-1 p-8 overflow-y-auto'>
+        <div className='max-w-7xl mx-auto'>
+
+          {/* Filters */}
+          <div className='flex flex-wrap items-center gap-3 mb-6'>
+            <div className='relative flex-1 min-w-[200px] max-w-xs'>
+              <Search className='absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/30' />
+              <input type='text' placeholder='Tìm kiếm người dùng...'
+                value={search} onChange={(e) => setSearch(e.target.value)}
+                className='w-full pl-9 pr-4 py-2.5 rounded-xl bg-white border border-border text-sm focus:outline-none focus:border-primary/50 transition-all' />
+            </div>
+            <div className='relative'>
+              <select value={roleFilter} onChange={(e) => { setRoleFilter(e.target.value); setPage(1); }}
+                className='appearance-none bg-white border border-border rounded-xl px-4 py-2.5 pr-8 text-sm font-semibold focus:outline-none cursor-pointer'>
+                <option value='all'>Tất cả vai trò</option>
+                <option value='admin'>Admin</option>
+                <option value='staff'>Nhân viên</option>
+                <option value='customer'>Khách hàng</option>
+              </select>
+              <ChevronDown className='absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/40 pointer-events-none' />
+            </div>
+            <button onClick={() => refetch()}
+              className='flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-border text-sm font-semibold hover:border-primary/30 transition-all'>
+              <RefreshCw className='w-4 h-4 text-foreground/50' />Làm mới
+            </button>
+            <span className='ml-auto text-xs font-semibold text-foreground/40'>Tổng: {total} tài khoản</span>
+          </div>
+
+          {/* Table */}
+          <div className='bg-white rounded-2xl border border-border/50 shadow-sm overflow-hidden'>
+            <div className='overflow-x-auto'>
+              <table className='w-full text-sm'>
+                <thead>
+                  <tr className='bg-muted/50 border-b border-border/50'>
+                    {['Người dùng', 'Email', 'Vai trò', 'Trạng thái', 'Ngày tạo', 'Thao tác'].map((h) => (
+                      <th key={h} className='text-left px-5 py-3.5 text-[11px] font-black uppercase tracking-widest text-foreground/40'>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className='divide-y divide-border/30'>
+                  {isLoading ? (
+                    Array.from({ length: 6 }).map((_, i) => (
+                      <tr key={i}>{Array.from({ length: 6 }).map((__, j) => (
+                        <td key={j} className='px-5 py-4'><div className='h-4 bg-muted animate-pulse rounded-lg' /></td>
+                      ))}</tr>
+                    ))
+                  ) : filtered.length === 0 ? (
+                    <tr><td colSpan={6} className='px-5 py-16 text-center text-foreground/40 font-semibold'>Không có dữ liệu</td></tr>
+                  ) : (
+                    filtered.map((u: any) => {
+                      const role = roleConfig[u.role] ?? { label: u.role, cls: 'bg-muted text-foreground/60' };
+                      const status = statusConfig[u.status ?? 'active'] ?? statusConfig.active;
+                      const id = u._id ?? u.id;
+                      return (
+                        <tr key={id} className='hover:bg-muted/20 transition-colors'>
+                          <td className='px-5 py-4'>
+                            <div className='flex items-center gap-3'>
+                              <div className='w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center text-primary font-black text-sm'>
+                                {(u.fullName ?? u.name ?? '?')[0]?.toUpperCase()}
+                              </div>
+                              <span className='font-semibold text-foreground'>{u.fullName ?? u.name ?? '—'}</span>
+                            </div>
+                          </td>
+                          <td className='px-5 py-4 text-foreground/60 text-sm'>{u.email ?? '—'}</td>
+                          <td className='px-5 py-4'>
+                            <span className={`inline-flex px-2.5 py-1 rounded-lg text-[11px] font-black uppercase tracking-wider ${role.cls}`}>{role.label}</span>
+                          </td>
+                          <td className='px-5 py-4'>
+                            <span className={`inline-flex px-2.5 py-1 rounded-lg text-[11px] font-black uppercase tracking-wider ${status.cls}`}>{status.label}</span>
+                          </td>
+                          <td className='px-5 py-4 text-foreground/50 text-xs'>
+                            {u.createdAt ? new Date(u.createdAt).toLocaleDateString('vi-VN') : '—'}
+                          </td>
+                          <td className='px-5 py-4'>
+                            <div className='flex items-center gap-2'>
+                              {/* Role select */}
+                              <select defaultValue={u.role}
+                                onChange={(e) => changeRole.mutate({ id, role: e.target.value })}
+                                className='text-xs border border-border rounded-lg px-2 py-1 bg-white focus:outline-none cursor-pointer'>
+                                <option value='customer'>Khách hàng</option>
+                                <option value='staff'>Nhân viên</option>
+                                <option value='admin'>Admin</option>
+                              </select>
+                              {/* Toggle status */}
+                              <button
+                                onClick={() => changeStatus.mutate({ id, status: u.status === 'active' ? 'inactive' : 'active' })}
+                                title={u.status === 'active' ? 'Vô hiệu hoá' : 'Kích hoạt'}
+                                className='w-7 h-7 rounded-lg border border-border flex items-center justify-center hover:border-rose-300 hover:text-rose-500 transition-all'>
+                                <Ban className='w-3.5 h-3.5' />
+                              </button>
+                              {/* Reset password */}
+                              <button onClick={() => setResetId(id)} title='Đặt lại mật khẩu'
+                                className='w-7 h-7 rounded-lg border border-border flex items-center justify-center hover:border-primary/30 hover:text-primary transition-all'>
+                                <KeyRound className='w-3.5 h-3.5' />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
+            {/* Pagination */}
+            {total > 10 && (
+              <div className='flex items-center justify-between px-5 py-4 border-t border-border/50 bg-muted/20'>
+                <span className='text-xs font-semibold text-foreground/40'>Trang {page} / {Math.ceil(total / 10)}</span>
+                <div className='flex gap-2'>
+                  <button onClick={() => setPage(Math.max(1, page - 1))} disabled={page === 1}
+                    className='px-3 py-1.5 rounded-lg border border-border text-xs font-semibold disabled:opacity-40 hover:border-primary/30'>Trước</button>
+                  <button onClick={() => setPage(page + 1)} disabled={page >= Math.ceil(total / 10)}
+                    className='px-3 py-1.5 rounded-lg border border-border text-xs font-semibold disabled:opacity-40 hover:border-primary/30'>Sau</button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </main>
+
+      {/* Reset Password Modal */}
+      {resetId && (
+        <div className='fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4' onClick={() => setResetId(null)}>
+          <div className='bg-white rounded-2xl p-8 w-full max-w-sm shadow-2xl' onClick={(e) => e.stopPropagation()}>
+            <div className='flex items-center gap-3 mb-6'>
+              <div className='w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center'>
+                <KeyRound className='w-5 h-5 text-primary' />
+              </div>
+              <div>
+                <h3 className='font-black text-foreground'>Đặt lại mật khẩu</h3>
+                <p className='text-xs text-foreground/40'>Nhập mật khẩu mới cho người dùng</p>
+              </div>
+            </div>
+            <input type='password' placeholder='Mật khẩu mới (tối thiểu 8 ký tự)'
+              value={newPwd} onChange={(e) => setNewPwd(e.target.value)}
+              className='w-full border border-border rounded-xl px-4 py-3 text-sm mb-4 focus:outline-none focus:border-primary/50' />
+            <div className='flex gap-3'>
+              <button onClick={() => setResetId(null)}
+                className='flex-1 py-2.5 rounded-xl border border-border text-sm font-semibold hover:bg-muted transition-all'>Huỷ</button>
+              <button onClick={() => resetPwd.mutate({ id: resetId, password: newPwd })}
+                disabled={newPwd.length < 8 || resetPwd.isPending}
+                className='flex-1 py-2.5 rounded-xl bg-primary text-white text-sm font-black disabled:opacity-50 hover:bg-primary/90 transition-all'>
+                {resetPwd.isPending ? 'Đang lưu...' : 'Xác nhận'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
