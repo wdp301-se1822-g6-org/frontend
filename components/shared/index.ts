@@ -7,3 +7,4 @@ export { Pagination } from './Pagination';
 export { ConfirmDialog } from './ConfirmDialog';
 export { DataTable, type DataTableColumn } from './DataTable';
 export { StatCard } from './StatCard';
+export { RoleGuard } from './RoleGuard';

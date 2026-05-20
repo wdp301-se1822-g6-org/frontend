@@ -1,6 +1,6 @@
 'use client';
 
-import { getErrorMessage } from '@/app/utils/getErrorMessage';
+import { getErrorMessage } from '@/lib/getErrorMessage';
 import { useRegister } from '@/hooks/auth/useRegister';
 import { RegisterFormData } from '@/schemas/auth';
 import { useAuthStore } from '@/store/useAuthStore';
@@ -18,7 +18,7 @@ export default function RegisterPage() {
   const handleSubmit = async (data: RegisterFormData): Promise<void> => {
     const { confirmPassword, ...payload } = data;
     if (confirmPassword !== data.password) {
-      toast.error('Passwords do not match');
+      toast.error('Mật khẩu nhập lại không khớp.');
       return;
     }
 

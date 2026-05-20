@@ -5,187 +5,311 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useState, useEffect } from 'react';
-import { Camera, AlertCircle, X, Loader2 } from 'lucide-react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { EmptyState } from '@/components/ui/empty-state';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Spinner } from '@/components/ui/spinner';
+import { useState } from 'react';
+import { Camera, AlertCircle, X, LogIn } from 'lucide-react';
 import { toast } from 'sonner';
+import Link from 'next/link';
+import { getInitials } from '@/lib/format';
+import type { User } from '@/types/auth';
+
+type ProfileFormData = {
+  name: string;
+  email: string;
+  phone: string;
+  day: string;
+  month: string;
+  year: string;
+};
+
+function getProfileFormData(user: User): ProfileFormData {
+  const dob = user.dateOfBirth ? new Date(user.dateOfBirth) : null;
+
+  return {
+    name: user.name || '',
+    email: user.email || '',
+    phone: user.phone || '',
+    day: dob ? dob.getDate().toString() : '',
+    month: dob ? (dob.getMonth() + 1).toString() : '',
+    year: dob ? dob.getFullYear().toString() : '',
+  };
+}
+
+const DAY_OPTIONS = Array.from({ length: 31 }, (_, i) => i + 1);
+const MONTH_OPTIONS = Array.from({ length: 12 }, (_, i) => i + 1);
+const YEAR_OPTIONS = Array.from({ length: 100 }, (_, i) => 2024 - i);
 
 export default function ProfilePage() {
   const authUser = useAuthStore((s) => s.authUser);
-  const [isLoading, setIsLoading] = useState(false);
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    day: '',
-    month: '',
-    year: '',
-  });
+  const isInitialized = useAuthStore((s) => s.isInitialized);
 
+  if (!isInitialized) {
+    return <ProfilePageSkeleton />;
+  }
+
+  if (!authUser) {
+    return (
+      <EmptyState
+        icon={LogIn}
+        title='Bạn cần đăng nhập để xem hồ sơ'
+        description='Hồ sơ cá nhân chỉ hiển thị khi hệ thống xác định được phiên đăng nhập của bạn.'
+        className='bg-card/80'
+        action={
+          <Button asChild className='font-bold'>
+            <Link href='/login'>Đăng nhập</Link>
+          </Button>
+        }
+      />
+    );
+  }
+
+  return <ProfileContent key={authUser.id ?? authUser.email} authUser={authUser} />;
+}
+
+function ProfileContent({ authUser }: { authUser: User }) {
+  const [isLoading, setIsLoading] = useState(false);
+  const [formData, setFormData] = useState(() => getProfileFormData(authUser));
   const [showAlert, setShowAlert] = useState(true);
 
-  useEffect(() => {
-    if (authUser) {
-      const dob = authUser.dateOfBirth ? new Date(authUser.dateOfBirth) : null;
-      setFormData({
-        name: authUser.name || '',
-        email: authUser.email || '',
-        phone: authUser.phone || '',
-        day: dob ? dob.getDate().toString() : '',
-        month: dob ? (dob.getMonth() + 1).toString() : '',
-        year: dob ? dob.getFullYear().toString() : '',
-      });
-    }
-  }, [authUser]);
+  const initials = getInitials(authUser.name);
 
-  const initials =
-    authUser?.name
-      ?.split(' ')
-      .map((w: string) => w[0])
-      .slice(-2)
-      .join('')
-      .toUpperCase() ?? '?';
+  const handleSave = async () => {
+    setIsLoading(true);
+    await new Promise((r) => setTimeout(r, 500));
+    setIsLoading(false);
+    toast.info(
+      'Tính năng cập nhật hồ sơ đang được phát triển. Dữ liệu của bạn chưa bị thay đổi.',
+    );
+  };
 
   return (
     <div className='space-y-4'>
-      {/* Update Alert */}
       {showAlert && (
-        <div className='bg-[#FFFBF2] border border-[#F9E1B2] rounded-md p-4 flex items-center justify-between text-[#856404] text-sm'>
+        <div className='flex items-center justify-between rounded-md border border-warning/30 bg-warning/10 p-4 text-sm text-warning'>
           <div className='flex items-center gap-3'>
-            <AlertCircle className='w-4 h-4 text-orange-400' />
+            <AlertCircle className='size-4' />
             <span>Tính năng thay đổi thông tin cá nhân sắp được ra mắt.</span>
           </div>
-          <button onClick={() => setShowAlert(false)} className='text-muted-foreground hover:text-foreground'>
-            <X className='w-4 h-4' />
+          <button
+            type='button'
+            onClick={() => setShowAlert(false)}
+            className='text-warning/70 transition-colors hover:text-warning'
+            aria-label='Đóng thông báo'
+          >
+            <X className='size-4' />
           </button>
         </div>
       )}
 
-      <Card className='border-none shadow-xl shadow-black/5 rounded-2xl overflow-hidden bg-white/80 backdrop-blur-md'>
+      <Card className='overflow-hidden rounded-xl border-none bg-card/80 shadow-md backdrop-blur-md'>
         <CardContent className='p-8'>
           <div className='mb-8 border-b border-border pb-4'>
-            <h1 className='text-xl font-bold text-foreground'>Hồ Sơ Của Tôi</h1>
-            <p className='text-sm text-muted-foreground'>Quản lý thông tin hồ sơ để bảo mật tài khoản</p>
+            <h1 className='font-heading text-xl font-bold text-foreground'>
+              Hồ Sơ Của Tôi
+            </h1>
+            <p className='text-sm text-muted-foreground'>
+              Quản lý thông tin hồ sơ để bảo mật tài khoản
+            </p>
           </div>
 
-          <div className='grid grid-cols-1 lg:grid-cols-12 gap-12'>
-            {/* Form Left */}
-            <div className='lg:col-span-8 space-y-6'>
-
-              <div className='grid grid-cols-3 items-center gap-4'>
-                <Label className='text-right text-muted-foreground font-medium'>Tên</Label>
-                <div className='col-span-2'>
+          <div className='grid grid-cols-1 gap-12 lg:grid-cols-12'>
+            <div className='space-y-6 lg:col-span-8'>
+              <div className='grid grid-cols-1 gap-2 sm:grid-cols-3 sm:items-center sm:gap-4'>
+                <Label className='font-medium text-muted-foreground sm:text-right'>
+                  Tên
+                </Label>
+                <div className='sm:col-span-2'>
                   <Input
                     value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className='rounded-xl border-border/50 bg-white/50 focus:bg-white transition-all'
+                    onChange={(e) =>
+                      setFormData({ ...formData, name: e.target.value })
+                    }
+                    className='h-10 rounded-xl'
                   />
                 </div>
               </div>
 
-              <div className='grid grid-cols-3 items-center gap-4'>
-                <Label className='text-right text-muted-foreground font-medium'>Email</Label>
-                <div className='col-span-2 flex items-center gap-2'>
-                  <span className='text-foreground'>{formData.email.replace(/(.{2}).+(@.+)/, '$1******$2')}</span>
-                  <button className='text-xs text-blue-600 hover:underline'>Thay Đổi</button>
+              <div className='grid grid-cols-1 gap-2 sm:grid-cols-3 sm:items-center sm:gap-4'>
+                <Label className='font-medium text-muted-foreground sm:text-right'>
+                  Email
+                </Label>
+                <div className='flex items-center gap-2 sm:col-span-2'>
+                  <span className='text-foreground'>
+                    {formData.email.replace(/(.{2}).+(@.+)/, '$1******$2')}
+                  </span>
+                  <button className='text-xs text-primary hover:underline'>
+                    Thay Đổi
+                  </button>
                 </div>
               </div>
 
-              <div className='grid grid-cols-3 items-center gap-4'>
-                <Label className='text-right text-muted-foreground font-medium'>Số điện thoại</Label>
-                <div className='col-span-2 flex items-center gap-2'>
-                  <span className='text-foreground'>{formData.phone.replace(/(.{3}).+(.{2})/, '$1********$2')}</span>
-                  <button className='text-xs text-blue-600 hover:underline'>Thay Đổi</button>
+              <div className='grid grid-cols-1 gap-2 sm:grid-cols-3 sm:items-center sm:gap-4'>
+                <Label className='font-medium text-muted-foreground sm:text-right'>
+                  Số điện thoại
+                </Label>
+                <div className='flex items-center gap-2 sm:col-span-2'>
+                  <span className='text-foreground'>
+                    {formData.phone.replace(/(.{3}).+(.{2})/, '$1********$2')}
+                  </span>
+                  <button className='text-xs text-primary hover:underline'>
+                    Thay Đổi
+                  </button>
                 </div>
               </div>
 
-              <div className='grid grid-cols-3 items-center gap-4'>
-                <Label className='text-right text-muted-foreground font-medium'>Ngày sinh</Label>
-                <div className='col-span-2 flex gap-3'>
-                  {/* Simple Select replacements for premium look */}
-                  <select
+              <div className='grid grid-cols-1 gap-2 sm:grid-cols-3 sm:items-center sm:gap-4'>
+                <Label className='font-medium text-muted-foreground sm:text-right'>
+                  Ngày sinh
+                </Label>
+                <div className='grid grid-cols-1 gap-3 sm:col-span-2 sm:grid-cols-3'>
+                  <Select
                     value={formData.day}
-                    onChange={(e) => setFormData({ ...formData, day: e.target.value })}
-                    className='flex-1 h-10 px-3 rounded-xl border border-border/50 bg-white/50 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all text-sm appearance-none'
+                    onValueChange={(day) => setFormData({ ...formData, day })}
                   >
-                    <option value=''>Ngày</option>
-                    {Array.from({ length: 31 }, (_, i) => i + 1).map(d => (
-                      <option key={d} value={d}>{d}</option>
-                    ))}
-                  </select>
-                  <select
+                    <SelectTrigger className='h-10 rounded-xl'>
+                      <SelectValue placeholder='Ngày' />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {DAY_OPTIONS.map((d) => (
+                        <SelectItem key={d} value={String(d)}>
+                          {d}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+
+                  <Select
                     value={formData.month}
-                    onChange={(e) => setFormData({ ...formData, month: e.target.value })}
-                    className='flex-1 h-10 px-3 rounded-xl border border-border/50 bg-white/50 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all text-sm appearance-none'
+                    onValueChange={(month) =>
+                      setFormData({ ...formData, month })
+                    }
                   >
-                    <option value=''>Tháng</option>
-                    {Array.from({ length: 12 }, (_, i) => i + 1).map(m => (
-                      <option key={m} value={m}> {m}</option>
-                    ))}
-                  </select>
-                  <select
+                    <SelectTrigger className='h-10 rounded-xl'>
+                      <SelectValue placeholder='Tháng' />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {MONTH_OPTIONS.map((m) => (
+                        <SelectItem key={m} value={String(m)}>
+                          {m}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+
+                  <Select
                     value={formData.year}
-                    onChange={(e) => setFormData({ ...formData, year: e.target.value })}
-                    className='flex-1 h-10 px-3 rounded-xl border border-border/50 bg-white/50 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all text-sm appearance-none'
+                    onValueChange={(year) => setFormData({ ...formData, year })}
                   >
-                    <option value=''>Năm</option>
-                    {Array.from({ length: 100 }, (_, i) => 2024 - i).map(y => (
-                      <option key={y} value={y}>{y}</option>
-                    ))}
-                  </select>
+                    <SelectTrigger className='h-10 rounded-xl'>
+                      <SelectValue placeholder='Năm' />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {YEAR_OPTIONS.map((y) => (
+                        <SelectItem key={y} value={String(y)}>
+                          {y}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
 
-              <div className='grid grid-cols-3 items-center gap-4 pt-4'>
+              <div className='grid grid-cols-1 gap-3 pt-4 sm:grid-cols-3 sm:items-center sm:gap-4'>
                 <div />
-                <div className='col-span-2'>
+                <div className='sm:col-span-2'>
                   <Button
+                    type='button'
+                    size='lg'
                     disabled={isLoading}
-                    onClick={async () => {
-                      setIsLoading(true);
-                      await new Promise(r => setTimeout(r, 800)); // Simulate API call
-                      setIsLoading(false);
-                      toast.success('Cập nhật hồ sơ thành công!');
-                    }}
-                    className='bg-primary hover:bg-primary/90 text-white px-10 py-6 rounded-xl font-bold shadow-lg shadow-primary/20 transition-all hover:scale-[1.02] active:scale-[0.98]'
+                    aria-busy={isLoading}
+                    onClick={handleSave}
+                    className='rounded-xl px-10 font-bold shadow-md shadow-primary/20'
                   >
-                    {isLoading ? <Loader2 className='w-5 h-5 animate-spin' /> : 'Lưu'}
+                    {isLoading && <Spinner />}
+                    {isLoading ? 'Đang xử lý...' : 'Lưu'}
                   </Button>
                 </div>
               </div>
             </div>
 
-            {/* Avatar Right */}
-            <div className='lg:col-span-4 flex flex-col items-center justify-start pt-4 border-l border-border/50 space-y-4'>
-              <div className='relative group'>
-                <div className='w-32 h-32 rounded-full overflow-hidden border-4 border-white shadow-xl bg-muted flex items-center justify-center group-hover:opacity-90 transition-all'>
-                  {authUser?.avatarUrl ? (
+            <div className='flex flex-col items-center justify-start space-y-4 border-t border-border pt-8 lg:col-span-4 lg:border-t-0 lg:border-l lg:pt-4'>
+              <div className='group relative'>
+                <div className='flex size-32 items-center justify-center overflow-hidden rounded-full border-4 border-background bg-muted shadow-md transition-all group-hover:opacity-90'>
+                  {authUser.avatarUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
                     <img
                       src={authUser.avatarUrl}
-                      alt='Avatar'
-                      className='w-full h-full object-cover'
+                      alt='Ảnh đại diện'
+                      className='size-full object-cover'
                     />
                   ) : (
-                    <span className='text-3xl font-black text-muted-foreground/40'>{initials}</span>
+                    <span className='text-3xl font-black text-muted-foreground/40'>
+                      {initials}
+                    </span>
                   )}
-
-                  <div className='absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer'>
-                    <Camera className='w-8 h-8 text-white' />
+                  <div className='absolute inset-0 flex cursor-pointer items-center justify-center bg-black/40 opacity-0 transition-opacity group-hover:opacity-100'>
+                    <Camera className='size-8 text-white' />
                   </div>
                 </div>
               </div>
 
-              <Button variant='outline' className='rounded-xl border-border/50 hover:bg-primary/5 hover:text-primary transition-all font-semibold'>
+              <Button variant='outline' className='rounded-xl font-semibold'>
                 Chọn Ảnh
               </Button>
 
-              <div className='text-center space-y-1'>
-                <p className='text-xs text-muted-foreground'>Dung lượng file tối đa 1 MB</p>
-                <p className='text-xs text-muted-foreground'>Định dạng:.JPEG, .PNG</p>
+              <div className='space-y-1 text-center'>
+                <p className='text-xs text-muted-foreground'>
+                  Dung lượng file tối đa 1 MB
+                </p>
+                <p className='text-xs text-muted-foreground'>
+                  Định dạng: .JPEG, .PNG
+                </p>
               </div>
             </div>
           </div>
         </CardContent>
       </Card>
-    </div >
+    </div>
+  );
+}
+
+function ProfilePageSkeleton() {
+  return (
+    <div className='space-y-4'>
+      <Skeleton className='h-14 w-full rounded-md' />
+      <Card className='border-none bg-card/80 shadow-md'>
+        <CardContent className='p-8'>
+          <Skeleton className='h-7 w-48' />
+          <Skeleton className='mt-3 h-4 w-72' />
+          <div className='mt-8 grid grid-cols-1 gap-12 lg:grid-cols-12'>
+            <div className='space-y-6 lg:col-span-8'>
+              {Array.from({ length: 4 }).map((_, index) => (
+                <div
+                  key={index}
+                  className='grid grid-cols-1 gap-2 sm:grid-cols-3 sm:items-center sm:gap-4'
+                >
+                  <Skeleton className='h-4 w-28 sm:justify-self-end' />
+                  <Skeleton className='h-10 w-full sm:col-span-2' />
+                </div>
+              ))}
+            </div>
+            <div className='flex flex-col items-center gap-4 lg:col-span-4'>
+              <Skeleton className='h-32 w-32 rounded-full' />
+              <Skeleton className='h-10 w-28' />
+              <Skeleton className='h-4 w-40' />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   );
 }

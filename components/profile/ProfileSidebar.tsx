@@ -2,6 +2,7 @@
 
 import { useAuthStore } from '@/store/useAuthStore';
 import { cn } from '@/lib/utils';
+import { getInitials } from '@/lib/format';
 import {
   User,
   Bell,
@@ -54,20 +55,14 @@ export default function ProfileSidebar() {
   const authUser = useAuthStore((s) => s.authUser);
   const pathname = usePathname();
 
-  const initials =
-    authUser?.name
-      ?.split(' ')
-      .map((w: string) => w[0])
-      .slice(-2)
-      .join('')
-      .toUpperCase() ?? '?';
+  const initials = getInitials(authUser?.name);
 
   return (
     <div className='flex flex-col gap-6'>
       {/* User Summary */}
       <div className='flex items-center gap-3 px-2'>
         <div className='relative group'>
-          <div className='w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold overflow-hidden border-2 border-white shadow-sm'>
+          <div className='w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold overflow-hidden border-2 border-background shadow-sm'>
             {authUser?.avatarUrl ? (
               <img
                 src={authUser.avatarUrl}
@@ -104,10 +99,11 @@ export default function ProfileSidebar() {
               <div
                 className={cn(
                   'flex items-center gap-3 px-3 py-2 rounded-lg transition-all',
+                  item.subItems && isActive && 'bg-primary/5 text-primary',
                   !item.subItems && (pathname === item.href ? 'bg-primary/5 text-primary' : 'hover:bg-accent/50')
                 )}
               >
-                <div className={cn('p-1.5 rounded-md bg-white shadow-sm', item.color)}>
+                <div className={cn('p-1.5 rounded-md bg-card shadow-sm', item.color)}>
                   <Icon className='w-4 h-4' />
                 </div>
                 {item.href ? (

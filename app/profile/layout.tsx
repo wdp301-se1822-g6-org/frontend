@@ -7,7 +7,7 @@ export default function ProfileLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className='min-h-screen bg-[#F5F5F5] dark:bg-background transition-colors duration-300'>
+    <div className='min-h-screen bg-muted transition-colors duration-300'>
       <Navbar />
       <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-12'>
         <div className='grid grid-cols-1 md:grid-cols-12 gap-8'>

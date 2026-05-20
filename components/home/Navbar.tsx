@@ -6,7 +6,6 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
@@ -18,10 +17,7 @@ import {
   Menu,
   X,
   CalendarCheck,
-  History,
   Car,
-  Star,
-  User,
   LogOut,
   ChevronDown,
   Bell,
@@ -29,6 +25,8 @@ import {
 } from 'lucide-react';
 import { axiosInstance } from '@/lib/axios';
 import { cn } from '@/lib/utils';
+import { getTierMeta } from '@/constants';
+import { getInitials } from '@/lib/format';
 
 const navLinks = [
   { label: 'Đặt lịch', href: '#booking' },
@@ -36,20 +34,6 @@ const navLinks = [
   { label: 'Khuyến mãi', href: '#promotions' },
   { label: 'Liên hệ', href: '#contact' },
 ];
-
-const tierColors: Record<string, string> = {
-  member: 'bg-primary/10 text-primary',
-  silver: 'bg-slate-100 text-slate-600',
-  gold: 'bg-amber-100 text-amber-600',
-  platinum: 'bg-secondary/10 text-secondary',
-};
-
-const tierLabels: Record<string, string> = {
-  member: 'Member',
-  silver: 'Silver',
-  gold: 'Gold',
-  platinum: 'Platinum',
-};
 
 export function Navbar() {
   const authUser = useAuthStore((s) => s.authUser);
@@ -70,15 +54,9 @@ export function Navbar() {
     }
   };
 
-  const tier = (authUser as any)?.tier?.toLowerCase?.() ?? 'member';
-  const points = (authUser as any)?.loyaltyPoints ?? 0;
-  const initials =
-    authUser?.name
-      ?.split(' ')
-      .map((w: string) => w[0])
-      .slice(-2)
-      .join('')
-      .toUpperCase() ?? '?';
+  const tierMeta = getTierMeta(authUser?.tier);
+  const points = authUser?.loyaltyPoints ?? 0;
+  const initials = getInitials(authUser?.name);
 
   return (
     <nav className='fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border'>
@@ -129,14 +107,8 @@ export function Navbar() {
                     <button className='flex items-center gap-3 group cursor-pointer focus:outline-none hover:bg-accent/30 pl-1.5 pr-4 py-1.5 rounded-full transition-all'>
                       <div
                         className={cn(
-                          'relative p-0.5 rounded-full transition-all group-hover:scale-105 active:scale-95',
-                          tier === 'platinum'
-                            ? 'bg-linear-to-br from-secondary via-primary to-secondary'
-                            : tier === 'gold'
-                              ? 'bg-linear-to-br from-amber-400 via-yellow-200 to-amber-500'
-                              : tier === 'silver'
-                                ? 'bg-linear-to-br from-slate-300 via-slate-100 to-slate-400'
-                                : 'bg-linear-to-br from-primary/20 via-primary/10 to-primary/30',
+                          'relative p-0.5 rounded-full bg-linear-to-br transition-all group-hover:scale-105 active:scale-95',
+                          tierMeta.gradientClass,
                         )}
                       >
                         {authUser.avatarUrl ? (
@@ -187,10 +159,10 @@ export function Navbar() {
                           <span
                             className={cn(
                               'text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-[0.1em] shadow-xs',
-                              tierColors[tier] || tierColors.member,
+                              tierMeta.badgeClass,
                             )}
                           >
-                            {tierLabels[tier] || 'Member'}
+                            {tierMeta.label}
                           </span>
                           <span className='text-primary font-black text-xs'>
                             {points.toLocaleString()}{' '}
@@ -270,8 +242,9 @@ export function Navbar() {
 
           {/* Mobile hamburger */}
           <button
-            className='md:hidden text-white p-2'
+            className='md:hidden text-foreground p-2 rounded-md hover:bg-accent/60 transition-colors'
             onClick={() => setMenuOpen((v) => !v)}
+            aria-label={menuOpen ? 'Đóng menu' : 'Mở menu'}
           >
             {menuOpen ? (
               <X className='w-5 h-5' />
@@ -286,21 +259,24 @@ export function Navbar() {
       {menuOpen && (
         <div className='md:hidden bg-background border-t border-border px-4 py-4 flex flex-col gap-4 shadow-xl'>
           {authUser && (
-            <div className='flex items-center gap-3 pb-3 border-b border-white/10'>
-              <span className='w-9 h-9 rounded-full bg-cyan-500 flex items-center justify-center text-white text-sm font-bold'>
+            <div className='flex items-center gap-3 pb-3 border-b border-border'>
+              <span className='w-9 h-9 rounded-full bg-primary flex items-center justify-center text-white text-sm font-bold'>
                 {initials}
               </span>
               <div>
-                <div className='text-white text-sm font-medium'>
+                <div className='text-foreground text-sm font-medium'>
                   {authUser.name}
                 </div>
                 <div className='flex items-center gap-1.5 mt-0.5'>
                   <span
-                    className={`text-white text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${tierColors[tier] ?? 'bg-slate-500'}`}
+                    className={cn(
+                      'text-[10px] font-semibold px-1.5 py-0.5 rounded-full',
+                      tierMeta.badgeClass,
+                    )}
                   >
-                    {tierLabels[tier] ?? 'Member'}
+                    {tierMeta.label}
                   </span>
-                  <span className='text-white/40 text-xs'>
+                  <span className='text-foreground/45 text-xs'>
                     {points.toLocaleString()} pts
                   </span>
                 </div>
@@ -312,14 +288,14 @@ export function Navbar() {
             <a
               key={link.href}
               href={link.href}
-              className='text-foreground/10 hover:text-primary text-sm font-bold py-2'
+              className='text-foreground/70 hover:text-primary text-sm font-bold py-2'
               onClick={() => setMenuOpen(false)}
             >
               {link.label}
             </a>
           ))}
 
-          <div className='flex gap-3 pt-2 border-t border-white/10'>
+          <div className='flex gap-3 pt-2 border-t border-border'>
             {authUser ? (
               <Button
                 onClick={handleLogout}

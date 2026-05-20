@@ -7,6 +7,7 @@ import { useAuthStore } from '@/store/useAuthStore';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import Image from 'next/image';
+import { getRoleHome } from '@/constants';
 
 function LoginPage() {
   const router = useRouter();
@@ -22,15 +23,12 @@ function LoginPage() {
         setRefreshToken(res.refreshToken);
         setUser(res.user);
 
-        if (res.user.isAdmin) {
-          router.replace('/admin');
-        } else {
-          router.replace('/');
-        }
-        toast.success('Login successful');
+        // Điều hướng theo role — đồng nhất với app/(auth)/layout.tsx.
+        router.replace(getRoleHome(res.user?.role));
+        toast.success('Đăng nhập thành công!');
       },
       onError: () => {
-        toast.error('Invalid email or password');
+        toast.error('Email hoặc mật khẩu không đúng. Vui lòng kiểm tra lại.');
       },
     });
   };
