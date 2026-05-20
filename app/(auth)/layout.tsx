@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { AuthNavbar } from '@/components/auth/AuthNavbar';
 import { Footer } from '@/components/home/Footer';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -33,12 +34,28 @@ export default function AuthLayout({ children }: LayoutProps) {
       setAccessToken(null);
       setUser(null);
     }
-  }, [isInitialized, accessToken, authUser]);
+  }, [isInitialized, accessToken, authUser, router, setAccessToken, setUser]);
 
   if (!isInitialized) {
     return (
-      <main className='min-h-screen flex items-center justify-center bg-background'>
-        <div className='w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin' />
+      <main className='min-h-screen bg-background px-4 py-24'>
+        <div className='mx-auto grid max-w-5xl gap-10 lg:grid-cols-2 lg:items-center'>
+          <div className='hidden space-y-5 lg:block'>
+            <Skeleton className='h-24 w-24 rounded-full' />
+            <Skeleton className='h-12 w-56' />
+            <Skeleton className='h-5 w-80' />
+            <Skeleton className='h-5 w-64' />
+          </div>
+          <div className='rounded-2xl border border-border bg-card p-8 shadow-sm'>
+            <Skeleton className='mx-auto h-8 w-56' />
+            <Skeleton className='mx-auto mt-3 h-4 w-44' />
+            <div className='mt-8 space-y-5'>
+              <Skeleton className='h-12 w-full' />
+              <Skeleton className='h-12 w-full' />
+              <Skeleton className='h-12 w-full' />
+            </div>
+          </div>
+        </div>
       </main>
     );
   }
@@ -48,7 +65,7 @@ export default function AuthLayout({ children }: LayoutProps) {
   return (
     <div className='flex flex-col min-h-screen bg-background'>
       <AuthNavbar />
-      <main className='flex-1 flex flex-col mt-20'>
+      <main className='flex-1 flex flex-col mt-16'>
         {children}
       </main>
       <Footer />

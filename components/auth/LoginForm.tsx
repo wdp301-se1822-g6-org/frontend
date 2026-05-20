@@ -34,7 +34,7 @@ export function LoginForm({
   return (
     <div className={cn('flex flex-col gap-6', className)} {...props}>
       <Card className='border-primary/10 bg-white/80 shadow-2xl shadow-primary/5 backdrop-blur-xl'>
-        <CardHeader className='space-y-2 pb-8 text-center'>
+        <CardHeader className='space-y-1 pb-6 text-center'>
           <CardTitle className='font-heading text-3xl font-bold tracking-tight text-primary'>
             Chào mừng trở lại
           </CardTitle>
@@ -44,8 +44,8 @@ export function LoginForm({
         </CardHeader>
         <CardContent>
           <form onSubmit={form.handleSubmit(onSubmit)}>
-            <FieldGroup className='gap-6'>
-              <div className='grid gap-6'>
+            <FieldGroup className='gap-5'>
+              <div className='grid gap-5'>
                 <AuthFormField
                   control={form.control}
                   name='email'

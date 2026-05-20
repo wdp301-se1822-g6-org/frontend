@@ -29,7 +29,7 @@ export function SocialAuthSection({ disabled }: SocialAuthSectionProps) {
         type='button'
         disabled={disabled}
         onClick={() => toast.info('Đăng nhập Google chưa được cấu hình.')}
-        className='mt-8 h-12 w-full gap-3 rounded-xl border-primary/10 font-bold'
+        className='mt-5 h-12 w-full gap-3 rounded-xl border-primary/10 font-semibold'
       >
         <Image
           src='/logo-google.jpg'

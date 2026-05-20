@@ -40,7 +40,7 @@ export function RegisterForm({
   return (
     <div className={cn('flex flex-col gap-6', className)} {...props}>
       <Card className='border-primary/10 bg-white/80 shadow-2xl shadow-primary/5 backdrop-blur-xl'>
-        <CardHeader className='space-y-2 pb-8 text-center'>
+        <CardHeader className='space-y-1 pb-6 text-center'>
           <CardTitle className='font-heading text-3xl font-bold tracking-tight text-primary'>
             Tham gia ngay
           </CardTitle>
@@ -50,8 +50,9 @@ export function RegisterForm({
         </CardHeader>
         <CardContent>
           <form onSubmit={form.handleSubmit(onSubmit)}>
-            <FieldGroup className='gap-6'>
-              <div className='grid gap-6'>
+            <FieldGroup className='gap-5'>
+              {/* Lưới 2 cột trên màn ≥sm để form không bị quá dài, CTA không bị đẩy khuất. */}
+              <div className='grid grid-cols-1 gap-4 sm:grid-cols-2'>
                 <AuthFormField
                   control={form.control}
                   name='name'
@@ -60,6 +61,17 @@ export function RegisterForm({
                   icon={User}
                   placeholder='Họ và tên của bạn'
                   autoComplete='name'
+                  disabled={loading}
+                />
+                <AuthFormField
+                  control={form.control}
+                  name='phone'
+                  id='register-phone'
+                  label='Số điện thoại'
+                  icon={Phone}
+                  type='tel'
+                  placeholder='Số điện thoại'
+                  autoComplete='tel'
                   disabled={loading}
                 />
                 <AuthFormField
@@ -133,29 +145,18 @@ export function RegisterForm({
                   autoComplete='new-password'
                   disabled={loading}
                 />
-                <AuthFormField
-                  control={form.control}
-                  name='phone'
-                  id='register-phone'
-                  label='Số điện thoại'
-                  icon={Phone}
-                  type='tel'
-                  placeholder='Số điện thoại'
-                  autoComplete='tel'
-                  disabled={loading}
-                />
-
-                <Button
-                  type='submit'
-                  size='xl'
-                  disabled={loading}
-                  aria-busy={loading}
-                  className='mt-2 w-full rounded-xl shadow-lg shadow-primary/20'
-                >
-                  {loading && <Spinner />}
-                  {loading ? 'Đang tạo tài khoản...' : 'Tạo tài khoản'}
-                </Button>
               </div>
+
+              <Button
+                type='submit'
+                size='xl'
+                disabled={loading}
+                aria-busy={loading}
+                className='w-full rounded-xl shadow-lg shadow-primary/20'
+              >
+                {loading && <Spinner />}
+                {loading ? 'Đang tạo tài khoản...' : 'Tạo tài khoản'}
+              </Button>
 
               <SocialAuthSection disabled={loading} />
 
