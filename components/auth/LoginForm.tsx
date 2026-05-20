@@ -35,8 +35,8 @@ export function LoginForm({
     <div className={cn('flex flex-col gap-6', className)} {...props}>
       <Card className='border-primary/10 bg-white/80 shadow-2xl shadow-primary/5 backdrop-blur-xl'>
         <CardHeader className='space-y-2 pb-8 text-center'>
-          <CardTitle className='font-heading text-3xl font-black tracking-tight text-primary'>
-            CHÀO MỪNG TRỞ LẠI
+          <CardTitle className='font-heading text-3xl font-bold tracking-tight text-primary'>
+            Chào mừng trở lại
           </CardTitle>
           <p className='text-sm font-medium text-muted-foreground'>
             Vui lòng đăng nhập để tiếp tục
@@ -70,7 +70,7 @@ export function LoginForm({
                 />
 
                 <div className='flex justify-end'>
-                  <span className='cursor-pointer text-xs font-bold tracking-wider text-primary uppercase transition-colors hover:text-primary/80'>
+                  <span className='cursor-pointer text-sm font-medium text-primary transition-colors hover:text-primary/80 hover:underline'>
                     Quên mật khẩu?
                   </span>
                 </div>
@@ -80,10 +80,10 @@ export function LoginForm({
                   size='xl'
                   disabled={loading}
                   aria-busy={loading}
-                  className='w-full rounded-xl font-bold shadow-lg shadow-primary/20'
+                  className='w-full rounded-xl shadow-lg shadow-primary/20'
                 >
                   {loading && <Spinner />}
-                  {loading ? 'Đang đăng nhập...' : 'ĐĂNG NHẬP'}
+                  {loading ? 'Đang đăng nhập...' : 'Đăng nhập'}
                 </Button>
               </div>
 
@@ -93,10 +93,10 @@ export function LoginForm({
                 Bạn chưa có tài khoản?{' '}
                 <button
                   type='button'
-                  className='ml-1 font-bold text-primary hover:underline'
+                  className='ml-1 font-semibold text-primary hover:underline'
                   onClick={() => router.push('/register')}
                 >
-                  TẠO TÀI KHOẢN
+                  Tạo tài khoản
                 </button>
               </div>
             </FieldGroup>

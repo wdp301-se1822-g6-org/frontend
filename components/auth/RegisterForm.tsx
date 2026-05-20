@@ -41,8 +41,8 @@ export function RegisterForm({
     <div className={cn('flex flex-col gap-6', className)} {...props}>
       <Card className='border-primary/10 bg-white/80 shadow-2xl shadow-primary/5 backdrop-blur-xl'>
         <CardHeader className='space-y-2 pb-8 text-center'>
-          <CardTitle className='font-heading text-3xl font-black tracking-tight text-primary uppercase'>
-            Tham Gia Ngay
+          <CardTitle className='font-heading text-3xl font-bold tracking-tight text-primary'>
+            Tham gia ngay
           </CardTitle>
           <p className='text-sm font-medium text-muted-foreground'>
             Khám phá những ưu đãi tuyệt vời nhất
@@ -150,10 +150,10 @@ export function RegisterForm({
                   size='xl'
                   disabled={loading}
                   aria-busy={loading}
-                  className='mt-2 w-full rounded-xl font-bold shadow-lg shadow-primary/20'
+                  className='mt-2 w-full rounded-xl shadow-lg shadow-primary/20'
                 >
                   {loading && <Spinner />}
-                  {loading ? 'Đang tạo tài khoản...' : 'TẠO TÀI KHOẢN'}
+                  {loading ? 'Đang tạo tài khoản...' : 'Tạo tài khoản'}
                 </Button>
               </div>
 
@@ -163,10 +163,10 @@ export function RegisterForm({
                 Đã có tài khoản?{' '}
                 <button
                   type='button'
-                  className='ml-1 font-bold text-primary hover:underline'
+                  className='ml-1 font-semibold text-primary hover:underline'
                   onClick={() => router.push('/login')}
                 >
-                  ĐĂNG NHẬP
+                  Đăng nhập
                 </button>
               </div>
             </FieldGroup>
