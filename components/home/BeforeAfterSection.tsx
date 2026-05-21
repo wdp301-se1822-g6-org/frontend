@@ -64,7 +64,7 @@ export function BeforeAfterSection() {
   return (
     <section
       id='before-after'
-      className='py-24 bg-foreground relative overflow-hidden'
+      className='py-16 bg-foreground relative overflow-hidden'
     >
       {/* Background blobs */}
       <div className='absolute top-0 left-0 w-80 h-80 bg-primary/20 rounded-full blur-3xl -ml-40 -mt-40 pointer-events-none' />

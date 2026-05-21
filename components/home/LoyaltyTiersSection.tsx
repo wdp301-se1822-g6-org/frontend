@@ -94,7 +94,7 @@ export function LoyaltyTiersSection() {
   const router = useRouter();
 
   return (
-    <section id='loyalty' className='py-24 bg-background px-4 relative overflow-hidden'>
+    <section id='loyalty' className='py-16 bg-background px-4 relative overflow-hidden'>
       <div className='absolute top-0 left-0 w-full h-px bg-linear-to-r from-transparent via-primary/20 to-transparent' />
       <div className='max-w-7xl mx-auto relative z-10'>
         <div className='text-center mb-16'>

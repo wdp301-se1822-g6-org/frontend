@@ -1,11 +1,24 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { useRouter } from 'next/navigation';
 import { Check, Star } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-const packages = [
+type WashPackage = {
+  id: string;
+  name: string;
+  badge: string | null;
+  pricePerWash: string;
+  priceMonthly: string | null;
+  highlight: boolean;
+  /** Gradient nhận diện gói (kim cương / vàng / bạc / nhanh) — màu sản phẩm có chủ đích. */
+  gradient: string;
+  features: string[];
+};
+
+const packages: WashPackage[] = [
   {
     id: 'diamond',
     name: 'Gói Kim Cương',
@@ -13,7 +26,7 @@ const packages = [
     pricePerWash: '150,000đ',
     priceMonthly: '499,000đ',
     highlight: true,
-    color: 'from-cyan-500 to-blue-600',
+    gradient: 'from-cyan-500 to-blue-600',
     features: [
       'Rửa áp lực cao toàn xe',
       'Phủ nano bảo vệ sơn',
@@ -31,7 +44,7 @@ const packages = [
     pricePerWash: '100,000đ',
     priceMonthly: '349,000đ',
     highlight: false,
-    color: 'from-yellow-500 to-amber-600',
+    gradient: 'from-yellow-500 to-amber-600',
     features: [
       'Rửa áp lực cao toàn xe',
       'Phủ wax bảo vệ sơn',
@@ -47,7 +60,7 @@ const packages = [
     pricePerWash: '70,000đ',
     priceMonthly: '249,000đ',
     highlight: false,
-    color: 'from-slate-400 to-slate-600',
+    gradient: 'from-slate-400 to-slate-600',
     features: [
       'Rửa áp lực cao toàn xe',
       'Vệ sinh gầm xe',
@@ -62,7 +75,7 @@ const packages = [
     pricePerWash: '50,000đ',
     priceMonthly: null,
     highlight: false,
-    color: 'from-orange-400 to-orange-600',
+    gradient: 'from-orange-400 to-orange-600',
     features: [
       'Rửa nước áp lực',
       'Xịt khô nhanh',
@@ -75,60 +88,61 @@ export function PackagesSection() {
   const router = useRouter();
 
   return (
-    <section id='packages' className='py-24 bg-white px-4'>
-      <div className='max-w-7xl mx-auto'>
-        <div className='text-center mb-14'>
-          <div className='inline-flex items-center gap-2 bg-cyan-50 text-cyan-600 text-sm px-4 py-1.5 rounded-full mb-4 font-medium'>
-            <Star className='w-4 h-4 fill-current' />
+    <section id='booking' className='bg-card px-4 py-16'>
+      <div className='mx-auto max-w-7xl'>
+        <div className='mb-14 text-center'>
+          <Badge className='mb-4 gap-1.5 px-4 py-1.5 text-sm'>
+            <Star className='size-4 fill-current' />
             Bảng giá dịch vụ
-          </div>
-          <h2 className='text-4xl font-bold text-gray-900 mb-4'>
+          </Badge>
+          <h2 className='mb-4 font-heading text-4xl font-bold text-foreground'>
             Chọn gói rửa xe phù hợp
           </h2>
-          <p className='text-gray-500 max-w-xl mx-auto text-lg'>
-            Đa dạng gói dịch vụ từ cơ bản đến cao cấp, đáp ứng mọi nhu cầu
-            của bạn với chi phí tối ưu nhất.
+          <p className='mx-auto max-w-xl text-lg text-muted-foreground'>
+            Đa dạng gói dịch vụ từ cơ bản đến cao cấp, đáp ứng mọi nhu cầu của
+            bạn với chi phí tối ưu nhất.
           </p>
         </div>
 
-        <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6'>
+        <div className='grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4'>
           {packages.map((pkg) => (
-            <div
+            <article
               key={pkg.id}
               className={cn(
-                'relative rounded-2xl border flex flex-col overflow-hidden transition-all hover:shadow-xl hover:-translate-y-1',
+                'relative flex flex-col overflow-hidden rounded-xl border bg-card transition-all hover:-translate-y-1 hover:shadow-md',
                 pkg.highlight
-                  ? 'border-cyan-400 shadow-lg shadow-cyan-100 ring-2 ring-cyan-400/30'
-                  : 'border-gray-200 shadow-sm',
+                  ? 'border-primary shadow-md ring-1 ring-primary/20'
+                  : 'border-border shadow-xs',
               )}
             >
               {pkg.badge && (
                 <div
                   className={cn(
-                    'absolute top-4 right-4 text-xs font-semibold px-3 py-1 rounded-full text-white',
-                    `bg-gradient-to-r ${pkg.color}`,
+                    'absolute top-4 right-4 rounded-full bg-linear-to-r px-3 py-1 text-xs font-semibold text-white',
+                    pkg.gradient,
                   )}
                 >
                   {pkg.badge}
                 </div>
               )}
 
-              {/* Card Header */}
               <div
                 className={cn(
-                  'p-6 bg-gradient-to-br text-white',
-                  pkg.color,
+                  'bg-linear-to-br p-6 text-white',
+                  pkg.gradient,
                 )}
               >
-                <h3 className='text-lg font-bold mb-3'>{pkg.name}</h3>
+                <h3 className='mb-3 font-heading text-lg font-bold'>
+                  {pkg.name}
+                </h3>
                 <div>
                   <span className='text-3xl font-extrabold'>
                     {pkg.pricePerWash}
                   </span>
-                  <span className='text-white/70 text-sm'>/lần</span>
+                  <span className='text-sm text-white/70'>/lần</span>
                 </div>
                 {pkg.priceMonthly && (
-                  <div className='mt-1 text-white/80 text-sm'>
+                  <div className='mt-1 text-sm text-white/80'>
                     hoặc{' '}
                     <span className='font-semibold text-white'>
                       {pkg.priceMonthly}
@@ -138,30 +152,28 @@ export function PackagesSection() {
                 )}
               </div>
 
-              {/* Features */}
-              <div className='flex-1 p-6 flex flex-col gap-4'>
-                <ul className='space-y-2.5 flex-1'>
+              <div className='flex flex-1 flex-col gap-4 p-6'>
+                <ul className='flex-1 space-y-2.5'>
                   {pkg.features.map((feature) => (
-                    <li key={feature} className='flex items-start gap-2.5 text-sm text-gray-700'>
-                      <Check className='w-4 h-4 text-cyan-500 shrink-0 mt-0.5' />
+                    <li
+                      key={feature}
+                      className='flex items-start gap-2.5 text-sm text-foreground/80'
+                    >
+                      <Check className='mt-0.5 size-4 shrink-0 text-primary' />
                       {feature}
                     </li>
                   ))}
                 </ul>
 
                 <Button
+                  variant={pkg.highlight ? 'default' : 'outline'}
                   onClick={() => router.push('/register')}
-                  className={cn(
-                    'w-full h-10 rounded-full text-sm font-semibold mt-2 border-0',
-                    pkg.highlight
-                      ? 'bg-cyan-500 hover:bg-cyan-400 text-white shadow-md shadow-cyan-200'
-                      : 'bg-gray-100 hover:bg-gray-200 text-gray-800',
-                  )}
+                  className='mt-2 h-10 w-full rounded-full'
                 >
                   Đăng ký ngay
                 </Button>
               </div>
-            </div>
+            </article>
           ))}
         </div>
       </div>

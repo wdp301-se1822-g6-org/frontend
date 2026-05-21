@@ -32,7 +32,7 @@ export function HowItWorksSection() {
   const router = useRouter();
 
   return (
-    <section className='py-32 bg-primary px-4 relative overflow-hidden reveal-on-scroll'>
+    <section className='py-16 bg-primary px-4 relative overflow-hidden reveal-on-scroll'>
       <div className='absolute top-0 left-0 w-full h-24 bg-linear-to-b from-background to-transparent opacity-10' />
       
       <div className='max-w-7xl mx-auto relative z-10'>

@@ -20,6 +20,8 @@ export type User = {
   avatarUrl?: string;
   name: string;
   isActive: boolean;
+  tier?: string;
+  loyaltyPoints?: number;
   isEmailVerified?: boolean;
   isVerified?: boolean;
   emailVerified?: boolean;
@@ -42,4 +44,3 @@ export interface OtpVerifyDto {
 export interface OtpVerifyResponse {
   token: string; // JWT token with scope=email_verified (15m TTL)
 }
-

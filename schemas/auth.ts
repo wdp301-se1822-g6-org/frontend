@@ -16,7 +16,7 @@ export const registerSchema = z
     confirmPassword: z.string().min(1, 'Vui lòng nhập lại mật khẩu'),
 
     dateOfBirth: z
-      .date()
+      .date({ error: 'Vui lòng chọn ngày sinh' })
       .min(new Date(1900, 0, 1), 'Năm sinh không hợp lệ')
       .max(
         new Date(currentYear - 15, 11, 31),

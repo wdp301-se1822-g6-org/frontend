@@ -42,7 +42,7 @@ export function ContactSection() {
   };
 
   return (
-    <section id='contact' className='py-24 bg-muted/50 relative overflow-hidden'>
+    <section id='contact' className='py-16 bg-muted/50 relative overflow-hidden'>
       {/* Blobs */}
       <div className='absolute top-0 right-0 w-96 h-96 bg-primary/5 rounded-full blur-3xl -mr-48 -mt-48 pointer-events-none' />
       <div className='absolute bottom-0 left-0 w-72 h-72 bg-secondary/5 rounded-full blur-3xl -ml-36 -mb-36 pointer-events-none' />

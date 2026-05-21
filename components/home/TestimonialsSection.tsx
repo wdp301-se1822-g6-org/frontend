@@ -90,7 +90,7 @@ export function TestimonialsSection() {
   return (
     <section
       id='testimonials'
-      className='py-24 bg-background relative overflow-hidden'
+      className='py-16 bg-background relative overflow-hidden'
     >
       {/* Watermark text */}
       <div className='absolute inset-0 flex items-center justify-center pointer-events-none select-none'>

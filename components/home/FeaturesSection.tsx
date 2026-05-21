@@ -50,7 +50,7 @@ export function FeaturesSection() {
   return (
     <section
       id='services'
-      className='py-32 bg-background px-4 relative overflow-hidden'
+      className='py-16 bg-background px-4 relative overflow-hidden'
     >
       <div className='max-w-7xl mx-auto relative z-10'>
         <div className='text-center mb-20'>
