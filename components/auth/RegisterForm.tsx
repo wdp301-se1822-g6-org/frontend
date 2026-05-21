@@ -32,7 +32,6 @@ export function RegisterForm({
       confirmPassword: '',
       name: '',
       phone: '',
-      dateOfBirth: new Date(),
     },
   });
   const router = useRouter();
@@ -105,14 +104,17 @@ export function RegisterForm({
                           aria-invalid={fieldState.invalid}
                           className='h-12 rounded-xl border-primary/10 bg-card pl-11 transition-all focus:border-primary focus:ring-primary/20'
                           value={
-                            field.value
-                              ? new Date(field.value)
-                                  .toISOString()
-                                  .split('T')[0]
+                            field.value instanceof Date &&
+                            !Number.isNaN(field.value.getTime())
+                              ? field.value.toISOString().split('T')[0]
                               : ''
                           }
                           onChange={(e) =>
-                            field.onChange(new Date(e.target.value))
+                            field.onChange(
+                              e.target.value
+                                ? new Date(e.target.value)
+                                : undefined,
+                            )
                           }
                         />
                       </div>
