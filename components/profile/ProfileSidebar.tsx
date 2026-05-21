@@ -41,7 +41,7 @@ const menuItems = [
     title: 'Khách hàng thân thiết',
     icon: Star,
     color: 'text-yellow-500',
-    href: '/',
+    href: '/profile/loyalty',
   },
   {
     title: 'Voucher của tôi',

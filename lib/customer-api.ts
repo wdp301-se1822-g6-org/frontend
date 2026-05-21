@@ -35,3 +35,14 @@ export const deleteVehicle = (id: string) =>
 
 export const setDefaultVehicle = (id: string) =>
   axiosInstance.patch(`/me/vehicles/${id}/set-default`);
+
+// ─── Loyalty & Tiers (Customer) ─────────────────────────
+export const getMyLoyalty = () =>
+  axiosInstance.get('/me/loyalty');
+
+export const getTierConfigs = () =>
+  axiosInstance.get('/tier-configs');
+
+export const getTierConfig = (id: string) =>
+  axiosInstance.get(`/tier-configs/${id}`);
+
