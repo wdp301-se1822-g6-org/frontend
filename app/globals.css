@@ -183,5 +183,9 @@
   html {
     @apply font-sans;
     scrollbar-gutter: stable;
+    /* Bù chiều cao navbar cố định (h-16) khi nhảy tới anchor #section,
+       để tiêu đề section không bị navbar che. */
+    scroll-padding-top: 5rem;
+    scroll-behavior: smooth;
   }
 }

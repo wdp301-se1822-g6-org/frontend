@@ -88,7 +88,7 @@ export function PackagesSection() {
   const router = useRouter();
 
   return (
-    <section id='booking' className='bg-card px-4 py-20'>
+    <section id='booking' className='bg-card px-4 py-16'>
       <div className='mx-auto max-w-7xl'>
         <div className='mb-14 text-center'>
           <Badge className='mb-4 gap-1.5 px-4 py-1.5 text-sm'>

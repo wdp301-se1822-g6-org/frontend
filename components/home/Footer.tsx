@@ -67,10 +67,10 @@ const socialIcons = [
 
 const footerLinks = {
   services: [
-    { label: 'Gói Kim Cương', href: '#packages' },
-    { label: 'Gói Vàng', href: '#packages' },
-    { label: 'Gói Bạc', href: '#packages' },
-    { label: 'Gói Nhanh', href: '#packages' },
+    { label: 'Gói Kim Cương', href: '#booking' },
+    { label: 'Gói Vàng', href: '#booking' },
+    { label: 'Gói Bạc', href: '#booking' },
+    { label: 'Gói Nhanh', href: '#booking' },
     { label: 'Thẻ quà tặng', href: '#' },
   ],
   support: [
@@ -83,13 +83,10 @@ const footerLinks = {
 
 export function Footer() {
   return (
-    <footer
-      id='contact'
-      className='bg-background text-foreground px-4 border-t border-border'
-    >
+    <footer className='bg-background text-foreground px-4 border-t border-border'>
       <div className='max-w-7xl mx-auto'>
         {/* Main footer */}
-        <div className='py-20 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12'>
+        <div className='py-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10'>
           {/* Brand */}
           <div className='lg:col-span-1'>
             <div className='flex items-center gap-3 mb-6'>

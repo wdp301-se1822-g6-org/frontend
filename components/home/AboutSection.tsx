@@ -48,7 +48,7 @@ export function AboutSection() {
     <section
       id='about'
       ref={sectionRef}
-      className='py-24 bg-background overflow-hidden relative'
+      className='py-16 bg-background overflow-hidden relative'
     >
       {/* Background decorations */}
       <div className='absolute top-0 right-0 w-96 h-96 bg-primary/5 rounded-full blur-3xl -mr-48 -mt-48 pointer-events-none' />

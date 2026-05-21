@@ -41,7 +41,7 @@ const amenities = [
 
 export function AmenitiesSection() {
   return (
-    <section className='py-32 bg-background px-4 relative overflow-hidden reveal-on-scroll'>
+    <section className='py-16 bg-background px-4 relative overflow-hidden reveal-on-scroll'>
       {/* Decorative background elements */}
       <div className='absolute top-1/2 left-0 w-72 h-72 bg-primary/5 rounded-full blur-[100px] -translate-y-1/2 -ml-36' />
       <div className='absolute top-0 right-0 w-96 h-96 bg-secondary/5 rounded-full blur-[120px] -mr-48 -mt-48' />

@@ -3,19 +3,9 @@
 import Image from 'next/image';
 import { Camera } from 'lucide-react';
 
-const images = [
-  { src: '/h1.jpg', size: 'lg', title: 'Perfect Shine' },
-  { src: '/h2.jpg', size: 'sm', title: 'Deep Cleaning' },
-  { src: '/h3.jpg', size: 'sm', title: 'Interior Detail' },
-  { src: '/h4.jpg', size: 'md', title: 'Premium Foam' },
-  { src: '/h5.jpg', size: 'md', title: 'Luxury Care' },
-  { src: '/h6.jpg', size: 'sm', title: 'Engine Clean' },
-  { src: '/h7.jpg', size: 'lg', title: 'Final Touch' },
-];
-
 export function ShowcaseSection() {
   return (
-    <section className='py-32 bg-background px-4 relative overflow-hidden reveal-on-scroll'>
+    <section className='py-16 bg-background px-4 relative overflow-hidden reveal-on-scroll'>
       <div className='max-w-7xl mx-auto'>
         <div className='text-center mb-20'>
           <div className='inline-flex items-center gap-2 bg-primary/10 text-primary text-[10px] font-black px-4 py-2 rounded-full mb-6 uppercase tracking-[0.2em]'>
