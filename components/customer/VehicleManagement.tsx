@@ -73,7 +73,7 @@ export default function VehicleManagement() {
     fetchData();
   }, []);
 
-  const fetchData = async () => {
+  async function fetchData() {
     setIsLoading(true);
     try {
       const [vehiclesRes, typesRes] = await Promise.all([
@@ -84,9 +84,10 @@ export default function VehicleManagement() {
       const tData = typesRes.data?.data || typesRes.data || [];
       setVehicles(Array.isArray(vData) ? vData : []);
       setVehicleTypes(Array.isArray(tData) ? tData : []);
-    } catch (error: any) {
-      console.error('Lỗi khi tải dữ liệu xe:', error);
-      toast.error(error.response?.data?.message || 'Không thể tải danh sách phương tiện');
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { message?: string } } };
+      console.error('Lỗi khi tải dữ liệu xe:', err);
+      toast.error(err.response?.data?.message || 'Không thể tải danh sách phương tiện');
     } finally {
       setIsLoading(false);
     }
@@ -164,9 +165,10 @@ export default function VehicleManagement() {
       }
       setIsFormOpen(false);
       await fetchData();
-    } catch (error: any) {
-      console.error('Lỗi lưu xe:', error);
-      toast.error(error.response?.data?.message || 'Có lỗi xảy ra, vui lòng thử lại');
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { message?: string } } };
+      console.error('Lỗi lưu xe:', err);
+      toast.error(err.response?.data?.message || 'Có lỗi xảy ra, vui lòng thử lại');
     } finally {
       setIsSubmitLoading(false);
     }
@@ -180,9 +182,10 @@ export default function VehicleManagement() {
       toast.success('Đã xóa phương tiện thành công!');
       setIsDeleteOpen(false);
       await fetchData();
-    } catch (error: any) {
-      console.error('Lỗi xóa xe:', error);
-      toast.error(error.response?.data?.message || 'Không thể xóa phương tiện');
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { message?: string } } };
+      console.error('Lỗi xóa xe:', err);
+      toast.error(err.response?.data?.message || 'Không thể xóa phương tiện');
     } finally {
       setIsSubmitLoading(false);
     }
@@ -193,9 +196,10 @@ export default function VehicleManagement() {
       await setDefaultVehicle(id);
       toast.success('Đã đặt làm phương tiện mặc định!');
       await fetchData();
-    } catch (error: any) {
-      console.error('Lỗi cài đặt mặc định:', error);
-      toast.error(error.response?.data?.message || 'Không thể đặt làm mặc định');
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { message?: string } } };
+      console.error('Lỗi cài đặt mặc định:', err);
+      toast.error(err.response?.data?.message || 'Không thể đặt làm mặc định');
     }
   };
 
