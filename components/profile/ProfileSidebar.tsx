@@ -20,6 +20,7 @@ const menuItems = [
     color: 'text-blue-500',
     subItems: [
       { label: 'Hồ Sơ', href: '/profile' },
+      { label: 'Xe Của Tôi', href: '/profile/vehicles' },
       { label: 'Đổi Mật Khẩu', href: '/' },
     ],
   },
