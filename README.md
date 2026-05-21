@@ -142,3 +142,9 @@ Open your browser at:
 ```bash
 http://localhost:3000
 ```
+
+| admin | <admin@washauto.local> | Admin@123 |
+| manager | <manager@washauto.local> | Manager@123 |
+| cashier | <cashier@washauto.local> | Cashier@123 |
+| washer | <washer@washauto.local> | Washer@123 |
+kha@gmail.com, 123123123

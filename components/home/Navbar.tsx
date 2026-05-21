@@ -228,7 +228,7 @@ export function Navbar() {
                         Đặt lịch rửa xe
                       </DropdownMenuItem>
                       <DropdownMenuItem
-                        // onClick={() => router.push('/vehicles')}
+                        onClick={() => router.push('/profile/vehicles')}
                         className='p-3 rounded-lg cursor-pointer flex items-center gap-3 text-foreground/70 font-bold hover:bg-primary/5 hover:text-primary transition-colors focus:bg-primary/5 focus:text-primary'
                       >
                         <Car className='w-5 h-5 text-primary' />
