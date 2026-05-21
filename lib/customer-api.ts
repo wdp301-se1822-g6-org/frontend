@@ -1,0 +1,56 @@
+import { axiosInstance } from '@/lib/axios';
+
+// ─── Vehicle Types (Public) ────────────────────────────
+export const getActiveVehicleTypes = () =>
+  axiosInstance.get('/vehicle-types');
+
+// ─── Vehicles (Customer) ──────────────────────────────
+export const getMyVehicles = () =>
+  axiosInstance.get('/me/vehicles');
+
+export const getMyVehicle = (id: string) =>
+  axiosInstance.get(`/me/vehicles/${id}`);
+
+export const createVehicle = (data: {
+  vehicleTypeId: string;
+  licensePlate: string;
+  nickname?: string;
+  brand?: string;
+  model?: string;
+  color?: string;
+  isDefault?: boolean;
+}) => axiosInstance.post('/me/vehicles', data);
+
+export const updateVehicle = (id: string, data: {
+  vehicleTypeId?: string;
+  licensePlate?: string;
+  nickname?: string;
+  brand?: string;
+  model?: string;
+  color?: string;
+}) => axiosInstance.patch(`/me/vehicles/${id}`, data);
+
+export const deleteVehicle = (id: string) =>
+  axiosInstance.delete(`/me/vehicles/${id}`);
+
+export const setDefaultVehicle = (id: string) =>
+  axiosInstance.patch(`/me/vehicles/${id}/set-default`);
+
+// ─── Loyalty & Tiers (Customer) ─────────────────────────
+export const getMyLoyalty = () =>
+  axiosInstance.get('/me/loyalty');
+
+export const getTierConfigs = () =>
+  axiosInstance.get('/tier-configs');
+
+export const getTierConfig = (id: string) =>
+  axiosInstance.get(`/tier-configs/${id}`);
+
+// ─── Auth OTP (Customer) ────────────────────────────────
+export const sendOtp = (data: { email: string }) =>
+  axiosInstance.post('/auth/otp/send', data);
+
+export const verifyOtp = (data: { email: string; code: string }) =>
+  axiosInstance.post('/auth/otp/verify', data);
+
+

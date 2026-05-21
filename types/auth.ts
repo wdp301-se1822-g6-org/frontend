@@ -22,4 +22,25 @@ export type User = {
   isActive: boolean;
   tier?: string;
   loyaltyPoints?: number;
+  isEmailVerified?: boolean;
+  isVerified?: boolean;
+  emailVerified?: boolean;
 };
+
+export interface OtpSendDto {
+  email: string;
+}
+
+export interface OtpSendResponse {
+  message: string;
+  token?: string;
+}
+
+export interface OtpVerifyDto {
+  email: string;
+  code: string; // 6-digit verification code
+}
+
+export interface OtpVerifyResponse {
+  token: string; // JWT token with scope=email_verified (15m TTL)
+}
