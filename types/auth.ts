@@ -20,4 +20,6 @@ export type User = {
   avatarUrl?: string;
   name: string;
   isActive: boolean;
+  tier?: string;
+  loyaltyPoints?: number;
 };
