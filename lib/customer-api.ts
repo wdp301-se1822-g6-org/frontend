@@ -46,3 +46,11 @@ export const getTierConfigs = () =>
 export const getTierConfig = (id: string) =>
   axiosInstance.get(`/tier-configs/${id}`);
 
+// ─── Auth OTP (Customer) ────────────────────────────────
+export const sendOtp = (data: { email: string }) =>
+  axiosInstance.post('/auth/otp/send', data);
+
+export const verifyOtp = (data: { email: string; code: string }) =>
+  axiosInstance.post('/auth/otp/verify', data);
+
+
