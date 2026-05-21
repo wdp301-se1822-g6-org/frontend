@@ -204,9 +204,10 @@ export default function VehicleManagement() {
   };
 
   // Helper to get type name
-  const getTypeName = (typeId: string) => {
+  const getTypeName = (typeId: string): string => {
+    if (!typeId) return 'Chưa phân loại';
     const found = vehicleTypes.find(t => (t._id || t.id) === typeId);
-    return found ? found.name : 'Chưa phân loại';
+    return found?.name || 'Chưa phân loại';
   };
 
   // Helper to render beautiful license plate
@@ -266,8 +267,8 @@ export default function VehicleManagement() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
           {vehicles.map((vehicle) => {
-            const isMotorbike = getTypeName(vehicle.vehicleTypeId).toLowerCase().includes('motor') || 
-                                getTypeName(vehicle.vehicleTypeId).toLowerCase().includes('xe máy');
+            const typeName = getTypeName(vehicle.vehicleTypeId).toLowerCase();
+            const isMotorbike = typeName.includes('motor') || typeName.includes('xe máy');
             const vId = vehicle._id || vehicle.id || '';
             
             return (
