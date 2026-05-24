@@ -29,7 +29,7 @@ const menuItems = [
     title: 'Lịch sử rửa xe',
     icon: Car,
     color: 'text-orange-500',
-    href: '/',
+    href: '/profile/orders',
   },
   {
     title: 'Thông Báo',

@@ -1,42 +1,234 @@
 'use client';
 
 import { AdminTopbar } from '@/components/admin/AdminTopbar';
-import { adminGetShifts, adminCreateShift, adminUpdateShift, adminToggleShift } from '@/lib/admin-api';
+import {
+  adminGetShifts,
+  adminCreateShift,
+  adminUpdateShift,
+  adminToggleShift,
+  adminGetUsers
+} from '@/lib/admin-api';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useState } from 'react';
-import { Plus, Pencil, Power, X } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Plus, Pencil, Power, X, Calendar, Clock, User, Briefcase, MapPin, RefreshCw } from 'lucide-react';
+import { toast } from 'sonner';
 
-type Shift = { _id?: string; id?: string; name: string; startTime?: string; endTime?: string; maxBookings?: number; isActive?: boolean };
+type Shift = {
+  _id?: string;
+  id?: string;
+  staffId?: any;
+  shiftType?: 'cashier' | 'washer';
+  stationName?: string;
+  startAt?: string;
+  endAt?: string;
+  maxBookings?: number;
+  currentBookings?: number;
+  status?: string;
+  note?: string;
+};
 
-function ShiftModal({ item, onClose, onSave }: { item?: Shift | null; onClose: () => void; onSave: (d: Record<string, unknown>) => void }) {
-  const [form, setForm] = useState({ name: item?.name ?? '', startTime: item?.startTime ?? '08:00', endTime: item?.endTime ?? '10:00', maxBookings: item?.maxBookings ?? 10 });
+type UserData = {
+  _id?: string;
+  id?: string;
+  fullName?: string;
+  name?: string;
+  email?: string;
+  role?: string;
+};
+
+function ShiftModal({
+  item,
+  onClose,
+  onSave,
+  staffList,
+}: {
+  item?: Shift | null;
+  onClose: () => void;
+  onSave: (d: Record<string, any>) => void;
+  staffList: UserData[];
+}) {
+  // Format ISO string to datetime-local string (YYYY-MM-DDThh:mm)
+  const formatForInput = (isoString?: string) => {
+    if (!isoString) return '';
+    const date = new Date(isoString);
+    const pad = (num: number) => String(num).padStart(2, '0');
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+  };
+
+  const [form, setForm] = useState({
+    staffId: typeof item?.staffId === 'object' ? item?.staffId?._id ?? item?.staffId?.id ?? '' : item?.staffId ?? '',
+    shiftType: item?.shiftType ?? 'washer',
+    stationName: item?.stationName ?? 'Bay 1',
+    startAt: formatForInput(item?.startAt),
+    endAt: formatForInput(item?.endAt),
+    maxBookings: item?.maxBookings ?? 10,
+    note: item?.note ?? '',
+  });
+
+  // Tự động cập nhật shiftType tương ứng khi chọn staffId
+  useEffect(() => {
+    if (form.staffId) {
+      const selectedStaff = staffList.find((s) => (s._id ?? s.id) === form.staffId);
+      if (selectedStaff && (selectedStaff.role === 'washer' || selectedStaff.role === 'cashier')) {
+        setForm((prev) => ({ ...prev, shiftType: selectedStaff.role as 'washer' | 'cashier' }));
+      }
+    }
+  }, [form.staffId, staffList]);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!form.staffId) {
+      toast.error('Vui lòng chọn nhân viên ca trực.');
+      return;
+    }
+    if (!form.startAt || !form.endAt) {
+      toast.error('Vui lòng nhập đầy đủ thời gian bắt đầu và kết thúc.');
+      return;
+    }
+
+    // Mở khóa cho phép admin tự do gán ca làm việc tùy thích
+
+    const start = new Date(form.startAt);
+    const end = new Date(form.endAt);
+    if (start >= end) {
+      toast.error('Thời gian bắt đầu phải nhỏ hơn thời gian kết thúc.');
+      return;
+    }
+
+    onSave({
+      staffId: form.staffId,
+      shiftType: form.shiftType,
+      stationName: form.stationName,
+      startAt: start.toISOString(),
+      endAt: end.toISOString(),
+      maxBookings: Number(form.maxBookings),
+      note: form.note,
+    });
+  };
+
   return (
-    <div className='fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4' onClick={onClose}>
-      <div className='bg-white rounded-2xl p-8 w-full max-w-md shadow-2xl' onClick={(e) => e.stopPropagation()}>
-        <div className='flex items-center justify-between mb-6'>
-          <h3 className='font-black text-foreground text-lg'>{item ? 'Sửa ca làm việc' : 'Thêm ca mới'}</h3>
-          <button onClick={onClose}><X className='w-5 h-5 text-foreground/40' /></button>
+    <div className='fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4' onClick={onClose}>
+      <form
+        onSubmit={handleSubmit}
+        className='bg-white rounded-3xl p-8 w-full max-w-md shadow-2xl border border-slate-100 animate-in fade-in zoom-in-95 duration-150 flex flex-col gap-5 max-h-[90vh] overflow-y-auto'
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className='flex items-center justify-between pb-3 border-b border-slate-100'>
+          <h3 className='font-black text-slate-800 text-lg'>{item ? 'Sửa ca trực nhân viên' : 'Thêm ca trực mới'}</h3>
+          <button type='button' onClick={onClose}>
+            <X className='w-5 h-5 text-slate-400 hover:text-slate-600' />
+          </button>
         </div>
+
         <div className='flex flex-col gap-4'>
-          {[
-            { label: 'Tên ca', key: 'name', type: 'text' },
-            { label: 'Giờ bắt đầu', key: 'startTime', type: 'time' },
-            { label: 'Giờ kết thúc', key: 'endTime', type: 'time' },
-            { label: 'Tối đa booking', key: 'maxBookings', type: 'number' },
-          ].map(({ label, key, type }) => (
-            <div key={key}>
-              <label className='block text-xs font-black uppercase tracking-widest text-foreground/40 mb-1.5'>{label}</label>
-              <input type={type} value={(form as Record<string, string | number>)[key]}
-                onChange={(e) => setForm({ ...form, [key]: type === 'number' ? Number(e.target.value) : e.target.value })}
-                className='w-full border border-border rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-primary/50' />
-            </div>
-          ))}
+          {/* Chọn nhân viên */}
+          <div>
+            <label className='block text-xs font-black uppercase tracking-widest text-slate-400 mb-1.5'>Nhân viên ca trực</label>
+            <select
+              value={form.staffId}
+              onChange={(e) => setForm({ ...form, staffId: e.target.value })}
+              className='w-full border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo-500/50 bg-white font-semibold text-slate-700 shadow-sm cursor-pointer'
+            >
+              <option value=''>-- Chọn nhân viên --</option>
+              {staffList.map((s) => {
+                const sId = s._id ?? s.id ?? '';
+                return (
+                  <option key={sId} value={sId}>
+                    {s.fullName ?? s.name} ({s.role === 'washer' ? 'Rửa xe' : 'Thu ngân'})
+                  </option>
+                );
+              })}
+            </select>
+          </div>
+
+          {/* Loại ca (Shift Type) */}
+          <div>
+            <label className='block text-xs font-black uppercase tracking-widest text-slate-400 mb-1.5'>Loại ca làm việc</label>
+            <select
+              value={form.shiftType}
+              onChange={(e) => setForm({ ...form, shiftType: e.target.value as 'washer' | 'cashier' })}
+              className='w-full border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo-500/50 bg-white font-semibold text-slate-700 shadow-sm cursor-pointer'
+            >
+              <option value='washer'>Nhân viên rửa xe (Washer)</option>
+              <option value='cashier'>Thu ngân (Cashier)</option>
+            </select>
+          </div>
+
+          {/* Tên trạm làm việc (Station Name) */}
+          <div>
+            <label className='block text-xs font-black uppercase tracking-widest text-slate-400 mb-1.5'>Tên trạm / Bãi làm việc</label>
+            <input
+              type='text'
+              value={form.stationName}
+              onChange={(e) => setForm({ ...form, stationName: e.target.value })}
+              placeholder='Ví dụ: Bay 1, Quầy thu ngân'
+              className='w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-indigo-500/50 shadow-sm text-slate-700 font-semibold'
+            />
+          </div>
+
+          {/* Giờ bắt đầu (startAt) */}
+          <div>
+            <label className='block text-xs font-black uppercase tracking-widest text-slate-400 mb-1.5'>Thời gian bắt đầu</label>
+            <input
+              type='datetime-local'
+              value={form.startAt}
+              onChange={(e) => setForm({ ...form, startAt: e.target.value })}
+              className='w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-indigo-500/50 shadow-sm text-slate-700 font-semibold'
+            />
+          </div>
+
+          {/* Giờ kết thúc (endAt) */}
+          <div>
+            <label className='block text-xs font-black uppercase tracking-widest text-slate-400 mb-1.5'>Thời gian kết thúc</label>
+            <input
+              type='datetime-local'
+              value={form.endAt}
+              onChange={(e) => setForm({ ...form, endAt: e.target.value })}
+              className='w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-indigo-500/50 shadow-sm text-slate-700 font-semibold'
+            />
+          </div>
+
+          {/* Tối đa booking */}
+          <div>
+            <label className='block text-xs font-black uppercase tracking-widest text-slate-400 mb-1.5'>Giới hạn đặt lịch tối đa</label>
+            <input
+              type='number'
+              min={1}
+              value={form.maxBookings}
+              onChange={(e) => setForm({ ...form, maxBookings: Number(e.target.value) })}
+              className='w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-indigo-500/50 shadow-sm text-slate-700 font-semibold'
+            />
+          </div>
+
+          {/* Ghi chú */}
+          <div>
+            <label className='block text-xs font-black uppercase tracking-widest text-slate-400 mb-1.5'>Ghi chú / Mô tả</label>
+            <input
+              type='text'
+              value={form.note}
+              onChange={(e) => setForm({ ...form, note: e.target.value })}
+              placeholder='Ghi chú ca trực...'
+              className='w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-indigo-500/50 shadow-sm text-slate-700 font-semibold'
+            />
+          </div>
         </div>
-        <div className='flex gap-3 mt-6'>
-          <button onClick={onClose} className='flex-1 py-2.5 rounded-xl border border-border text-sm font-semibold hover:bg-muted'>Huỷ</button>
-          <button onClick={() => onSave(form)} className='flex-1 py-2.5 rounded-xl bg-primary text-white text-sm font-black hover:bg-primary/90'>Lưu</button>
+
+        <div className='flex gap-3 mt-4 border-t border-slate-100 pt-4'>
+          <button
+            type='button'
+            onClick={onClose}
+            className='flex-1 py-3 rounded-xl border border-slate-200 text-sm font-bold text-slate-500 hover:bg-slate-50 transition-all shadow-sm'
+          >
+            Huỷ
+          </button>
+          <button
+            type='submit'
+            className='flex-1 py-3 rounded-xl bg-indigo-600 text-white text-sm font-black hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-600/10'
+          >
+            Lưu ca trực
+          </button>
         </div>
-      </div>
+      </form>
     </div>
   );
 }
@@ -45,71 +237,224 @@ export default function AdminShiftsPage() {
   const qc = useQueryClient();
   const [editShift, setEditShift] = useState<Shift | null | false>(false);
 
-  const { data, isLoading } = useQuery({ queryKey: ['admin-shifts'], queryFn: () => adminGetShifts() });
-  const shifts: Shift[] = data?.data?.data ?? data?.data ?? [];
+  // Lấy danh sách Shifts (StaffShifts)
+  const { data: shiftsRes, isLoading, refetch, isRefetching } = useQuery({
+    queryKey: ['admin-shifts'],
+    queryFn: () => adminGetShifts({ limit: 100 }),
+  });
 
-  const createShift = useMutation({ mutationFn: adminCreateShift, onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-shifts'] }); setEditShift(false); } });
-  const updateShift = useMutation({ mutationFn: ({ id, data }: { id: string; data: Record<string, unknown> }) => adminUpdateShift(id, data), onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-shifts'] }); setEditShift(false); } });
-  const toggleShift = useMutation({ mutationFn: ({ id, isActive }: { id: string; isActive: boolean }) => adminToggleShift(id, isActive), onSuccess: () => qc.invalidateQueries({ queryKey: ['admin-shifts'] }) });
+  // Lấy danh sách nhân viên (washers & cashiers) để giao việc
+  const { data: usersRes } = useQuery({
+    queryKey: ['admin-shifts-users'],
+    queryFn: async () => {
+      const washers = await adminGetUsers({ role: 'washer', limit: 100 });
+      const cashiers = await adminGetUsers({ role: 'cashier', limit: 100 });
+      
+      const wList = washers?.data?.data ?? washers?.data ?? [];
+      const cList = cashiers?.data?.data ?? cashiers?.data ?? [];
+      
+      return [...wList, ...cList];
+    },
+  });
 
-  const handleSave = (d: Record<string, unknown>) => {
-    if (editShift && (editShift as Shift)._id) updateShift.mutate({ id: (editShift as Shift)._id!, data: d });
-    else createShift.mutate(d);
+  const shifts: Shift[] = shiftsRes?.data?.data ?? shiftsRes?.data ?? [];
+  const staffList: UserData[] = usersRes ?? [];
+
+  const createShift = useMutation({
+    mutationFn: adminCreateShift,
+    onSuccess: () => {
+      toast.success('Thêm ca trực nhân viên mới thành công!');
+      qc.invalidateQueries({ queryKey: ['admin-shifts'] });
+      setEditShift(false);
+    },
+    onError: (err: any) => {
+      const errMsg = err?.response?.data?.message ?? 'Đã xảy ra lỗi khi tạo ca trực.';
+      toast.error(`Thêm thất bại: ${errMsg}`);
+    }
+  });
+
+  const updateShift = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Record<string, any> }) => adminUpdateShift(id, data),
+    onSuccess: () => {
+      toast.success('Cập nhật ca trực nhân viên thành công!');
+      qc.invalidateQueries({ queryKey: ['admin-shifts'] });
+      setEditShift(false);
+    },
+    onError: (err: any) => {
+      const errMsg = err?.response?.data?.message ?? 'Đã xảy ra lỗi khi cập nhật ca trực.';
+      toast.error(`Cập nhật thất bại: ${errMsg}`);
+    }
+  });
+
+  const toggleShift = useMutation({
+    mutationFn: ({ id, status }: { id: string; status: string }) => adminToggleShift(id, status as any),
+    onSuccess: () => {
+      toast.success('Cập nhật trạng thái ca trực thành công!');
+      qc.invalidateQueries({ queryKey: ['admin-shifts'] });
+    },
+    onError: (err: any) => {
+      const errMsg = err?.response?.data?.message ?? 'Không thể cập nhật trạng thái ca trực.';
+      toast.error(`Lỗi: ${errMsg}`);
+    }
+  });
+
+  const handleSave = (d: Record<string, any>) => {
+    if (editShift && (editShift as Shift)._id) {
+      updateShift.mutate({ id: (editShift as Shift)._id!, data: d });
+    } else {
+      createShift.mutate(d);
+    }
   };
 
   return (
     <>
-      <AdminTopbar title='Quản lý ca làm việc' subtitle='Cấu hình các ca và thời gian hoạt động' />
-      <main className='flex-1 p-8 overflow-y-auto'>
-        <div className='max-w-4xl mx-auto'>
-          <div className='flex items-center justify-between mb-6'>
-            <h2 className='font-black text-foreground'>Danh sách ca làm việc</h2>
-            <button onClick={() => setEditShift(null)}
-              className='flex items-center gap-2 bg-primary text-white text-xs font-black px-4 py-2.5 rounded-xl hover:bg-primary/90 transition-all shadow-lg shadow-primary/20'>
-              <Plus className='w-4 h-4' />Thêm ca mới
-            </button>
+      <AdminTopbar title='Phân ca làm việc' subtitle='Quản lý ca trực làm việc thực tế của nhân viên thu ngân và thợ rửa xe' />
+      <main className='flex-1 p-8 overflow-y-auto bg-slate-50/50'>
+        <div className='max-w-6xl mx-auto'>
+          
+          {/* Header Action */}
+          <div className='flex items-center justify-between mb-8 border-b border-slate-200/60 pb-3'>
+            <h2 className='font-black text-slate-800 text-base'>Danh sách ca trực hoạt động</h2>
+            <div className='flex gap-2.5'>
+              <button
+                onClick={() => refetch()}
+                className='flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-500 bg-white hover:border-slate-300 transition-all shadow-sm'
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${isRefetching ? 'animate-spin' : ''}`} /> Làm mới
+              </button>
+              <button
+                onClick={() => setEditShift(null)}
+                className='flex items-center gap-2 bg-indigo-600 text-white text-xs font-black px-4 py-2.5 rounded-xl hover:bg-indigo-700 transition-all shadow-md shadow-indigo-600/10'
+              >
+                <Plus className='w-4 h-4' />Thêm ca trực nhân viên
+              </button>
+            </div>
           </div>
 
-          <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
-            {isLoading ? Array.from({ length: 6 }).map((_, i) => <div key={i} className='h-28 bg-white rounded-2xl border border-border animate-pulse' />) :
-              shifts.length === 0 ? (
-                <div className='col-span-2 py-16 text-center text-foreground/40 font-semibold bg-white rounded-2xl border border-border/50'>
-                  Chưa có ca nào
-                </div>
-              ) : shifts.map((s) => {
+          {/* Shifts grid */}
+          <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
+            {isLoading ? (
+              Array.from({ length: 6 }).map((_, i) => (
+                <div key={i} className='h-36 bg-white rounded-3xl border border-slate-100 animate-pulse shadow-sm' />
+              ))
+            ) : shifts.length === 0 ? (
+              <div className='col-span-full py-20 text-center text-slate-400 font-semibold bg-white rounded-3xl border border-slate-100 shadow-sm max-w-md mx-auto w-full'>
+                Chưa có ca làm việc nào của nhân viên được phân công.
+              </div>
+            ) : (
+              shifts.map((s) => {
                 const id = s._id ?? s.id ?? '';
+                const staffIdStr = typeof s.staffId === 'object' ? s.staffId?._id ?? s.staffId?.id : s.staffId;
+                const staffUser = staffList.find((u) => (u._id ?? u.id) === staffIdStr);
+                const staffName = staffUser?.fullName ?? staffUser?.name ?? (typeof s.staffId === 'object' ? s.staffId?.fullName ?? s.staffId?.name : '') ?? 'Chưa xác định';
+                const startTime = s.startAt ? new Date(s.startAt).toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' }) : '—';
+                const endTime = s.endAt ? new Date(s.endAt).toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' }) : '—';
+                const isCancelled = s.status === 'cancelled';
+                const isActive = s.status === 'active';
+
                 return (
-                  <div key={id} className='bg-white rounded-2xl border border-border/50 shadow-sm p-6 flex items-center justify-between gap-4 hover:-translate-y-0.5 transition-all'>
-                    <div>
-                      <div className='flex items-center gap-3 mb-2'>
-                        <p className='font-black text-foreground text-base'>{s.name}</p>
-                        <span className={`px-2 py-0.5 rounded-lg text-[10px] font-black uppercase ${s.isActive !== false ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'}`}>
-                          {s.isActive !== false ? 'Hoạt động' : 'Tắt'}
+                  <div
+                    key={id}
+                    className={`bg-white rounded-3xl border shadow-sm p-6 flex flex-col justify-between gap-4 transition-all hover:shadow-md ${
+                      isCancelled ? 'border-slate-100 bg-slate-50/50 opacity-70' :
+                      isActive ? 'border-indigo-100 ring-2 ring-indigo-500/5' :
+                      'border-slate-100/80'
+                    }`}
+                  >
+                    <div className='flex flex-col gap-2.5'>
+                      {/* Name & status badge */}
+                      <div className='flex items-center justify-between'>
+                        <span className={`inline-flex px-2 py-0.5 rounded-lg text-xs font-bold ${
+                          s.shiftType === 'washer' ? 'bg-indigo-50 text-indigo-700 border border-indigo-100' :
+                          'bg-emerald-50 text-emerald-700 border border-emerald-100'
+                        }`}>
+                          {s.shiftType === 'washer' ? 'Rửa xe' : 'Thu ngân'}
+                        </span>
+                        
+                        <span className={`inline-flex px-2 py-0.5 rounded-lg text-[10px] font-black uppercase ${
+                          s.status === 'active' ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' :
+                          s.status === 'completed' ? 'bg-slate-100 text-slate-500' :
+                          s.status === 'cancelled' ? 'bg-rose-50 text-rose-700 border border-rose-100' :
+                          'bg-blue-50 text-blue-700 border border-blue-100'
+                        }`}>
+                          {s.status === 'active' ? 'Đang chạy' :
+                           s.status === 'completed' ? 'Hoàn thành' :
+                           s.status === 'cancelled' ? 'Đã hủy' : 'Đã lên lịch'}
                         </span>
                       </div>
-                      <p className='text-foreground/60 text-sm'>
-                        🕐 {s.startTime} – {s.endTime}
-                      </p>
-                      {s.maxBookings && <p className='text-foreground/40 text-xs mt-1'>Tối đa {s.maxBookings} booking</p>}
+
+                      {/* Staff user name */}
+                      <div className='flex items-center gap-1.5 text-slate-800 font-bold mt-1.5'>
+                        <User className='w-4 h-4 text-slate-400 shrink-0' />
+                        {staffName}
+                      </div>
+
+                      {/* Station details */}
+                      <div className='flex items-center gap-1.5 text-slate-500 text-xs font-medium'>
+                        <MapPin className='w-3.5 h-3.5 text-slate-400 shrink-0' />
+                        Trạm trực: <span className='font-bold text-slate-700'>{s.stationName ?? 'Chưa xác định'}</span>
+                      </div>
+
+                      {/* Work time */}
+                      <div className='flex items-center gap-1.5 text-slate-500 text-xs font-medium'>
+                        <Clock className='w-3.5 h-3.5 text-slate-400 shrink-0' />
+                        {startTime} – {endTime}
+                      </div>
+                      
+                      {/* Note */}
+                      {s.note && (
+                        <div className='text-[11px] text-slate-400 bg-slate-50 px-2 py-1.5 rounded-xl border border-slate-100/50 mt-1 italic'>
+                          "{s.note}"
+                        </div>
+                      )}
                     </div>
-                    <div className='flex items-center gap-2'>
-                      <button onClick={() => setEditShift(s)}
-                        className='w-8 h-8 rounded-xl border border-border flex items-center justify-center hover:border-primary/30 hover:text-primary transition-all'>
-                        <Pencil className='w-3.5 h-3.5' />
-                      </button>
-                      <button onClick={() => toggleShift.mutate({ id, isActive: !(s.isActive !== false) })}
-                        className='w-8 h-8 rounded-xl border border-border flex items-center justify-center hover:border-yellow-300 hover:text-yellow-600 transition-all'>
-                        <Power className='w-3.5 h-3.5' />
-                      </button>
+
+                    {/* Operational Actions */}
+                    <div className='border-t border-slate-100 pt-3 flex items-center justify-between mt-1'>
+                      <span className='text-[10px] font-bold text-slate-400 uppercase tracking-wide'>
+                        Khả dụng: <span className='font-black text-slate-800'>{s.currentBookings ?? 0} / {s.maxBookings} xe</span>
+                      </span>
+                      
+                      <div className='flex items-center gap-1.5'>
+                        {/* Edit Button */}
+                        {!isCancelled && s.status !== 'completed' && (
+                          <button
+                            onClick={() => setEditShift(s)}
+                            title='Chỉnh sửa ca làm'
+                            className='w-7 h-7 rounded-lg border border-slate-200 flex items-center justify-center hover:border-indigo-300 hover:text-indigo-600 bg-white transition-all'
+                          >
+                            <Pencil className='w-3 h-3' />
+                          </button>
+                        )}
+                        
+                        {/* Cancel/Active toggle button */}
+                        {s.status === 'scheduled' && (
+                          <button
+                            onClick={() => toggleShift.mutate({ id, status: 'cancelled' })}
+                            title='Hủy bỏ ca trực'
+                            className='w-7 h-7 rounded-lg border border-slate-200 flex items-center justify-center hover:border-rose-300 hover:text-rose-600 bg-white transition-all text-slate-400'
+                          >
+                            <Power className='w-3 h-3' />
+                          </button>
+                        )}
+                      </div>
                     </div>
                   </div>
                 );
-              })}
+              })
+            )}
           </div>
         </div>
       </main>
 
-      {editShift !== false && <ShiftModal item={editShift} onClose={() => setEditShift(false)} onSave={handleSave} />}
+      {editShift !== false && (
+        <ShiftModal
+          item={editShift}
+          onClose={() => setEditShift(false)}
+          onSave={handleSave}
+          staffList={staffList}
+        />
+      )}
     </>
   );
 }

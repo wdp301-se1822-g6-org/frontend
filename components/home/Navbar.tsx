@@ -29,10 +29,10 @@ import { getTierMeta } from '@/constants';
 import { getInitials } from '@/lib/format';
 
 const navLinks = [
-  { label: 'Đặt lịch', href: '#booking' },
-  { label: 'Hạng thành viên', href: '#loyalty' },
-  { label: 'Khuyến mãi', href: '#promotions' },
-  { label: 'Liên hệ', href: '#contact' },
+  { label: 'Đặt lịch', href: '/booking' },
+  { label: 'Hạng thành viên', href: '/#loyalty' },
+  { label: 'Khuyến mãi', href: '/#promotions' },
+  { label: 'Liên hệ', href: '/#contact' },
 ];
 
 export function Navbar() {
@@ -193,7 +193,7 @@ export function Navbar() {
                         Tài khoản của tôi
                       </DropdownMenuItem>
                       <DropdownMenuItem
-                        onClick={() => router.push('/#booking')}
+                        onClick={() => router.push('/booking')}
                         className='p-3 rounded-lg cursor-pointer flex items-center gap-3 text-foreground/70 font-bold hover:bg-primary/5 hover:text-primary transition-colors focus:bg-primary/5 focus:text-primary'
                       >
                         <CalendarCheck className='w-5 h-5 text-primary' />

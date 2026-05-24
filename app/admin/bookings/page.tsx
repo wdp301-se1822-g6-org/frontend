@@ -4,7 +4,7 @@ import { AdminTopbar } from '@/components/admin/AdminTopbar';
 import { adminGetBookings, adminUpdateBookingStatus } from '@/lib/admin-api';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
-import { Search, Filter, RefreshCw, ChevronDown } from 'lucide-react';
+import { Search, RefreshCw, ChevronDown } from 'lucide-react';
 
 interface BookingData {
   _id?: string;
@@ -23,14 +23,16 @@ interface BookingData {
 }
 
 const statusConfig: Record<string, { label: string; cls: string }> = {
-  completed:   { label: 'Hoàn thành',  cls: 'bg-emerald-50 text-emerald-700' },
-  in_progress: { label: 'Đang xử lý', cls: 'bg-blue-50 text-blue-700' },
-  confirmed:   { label: 'Xác nhận',    cls: 'bg-primary/10 text-primary' },
-  pending:     { label: 'Chờ xử lý',   cls: 'bg-yellow-50 text-yellow-700' },
-  cancelled:   { label: 'Đã huỷ',      cls: 'bg-rose-50 text-rose-700' },
+  completed:       { label: 'Hoàn thành',       cls: 'bg-emerald-50 text-emerald-700' },
+  in_progress:     { label: 'Đang rửa xe',      cls: 'bg-indigo-50 text-indigo-700' },
+  confirmed:       { label: 'Đã xác nhận',      cls: 'bg-blue-50 text-blue-700' },
+  checked_in:      { label: 'Đã check-in',      cls: 'bg-sky-50 text-sky-700' },
+  pending_payment: { label: 'Chờ thanh toán',   cls: 'bg-amber-50 text-amber-700' },
+  cancelled:       { label: 'Đã hủy',           cls: 'bg-rose-50 text-rose-700' },
+  no_show:         { label: 'Vắng mặt',         cls: 'bg-slate-100 text-slate-600' },
 };
 
-const statusOptions = ['all', 'pending', 'confirmed', 'in_progress', 'completed', 'cancelled'];
+const statusOptions = ['all', 'pending_payment', 'confirmed', 'checked_in', 'in_progress', 'completed', 'cancelled', 'no_show'];
 
 export default function AdminBookingsPage() {
   const qc = useQueryClient();
@@ -163,10 +165,10 @@ export default function AdminBookingsPage() {
                           </td>
                           <td className='px-5 py-4 text-foreground/60 text-xs'>
                             <div>{b.shiftId?.name ?? '—'}</div>
-                            <div className='text-foreground/40'>{b.bookingDate ? new Date(b.bookingDate).toLocaleDateString('vi-VN') : '—'}</div>
+                            <div className='text-foreground/40'>{(b.scheduledAt ?? b.bookingDate) ? new Date((b.scheduledAt ?? b.bookingDate) as string).toLocaleDateString('vi-VN') : '—'}</div>
                           </td>
                           <td className='px-5 py-4 font-black text-foreground'>
-                            {b.totalPrice != null ? `${Number(b.totalPrice).toLocaleString('vi-VN')}đ` : '—'}
+                            {(b.amount ?? b.totalPrice) != null ? `${Number(b.amount ?? b.totalPrice).toLocaleString('vi-VN')}đ` : '—'}
                           </td>
                           <td className='px-5 py-4'>
                             <span className={`inline-flex px-2.5 py-1 rounded-lg text-[11px] font-black uppercase tracking-wider ${s.cls}`}>

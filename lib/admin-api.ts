@@ -28,22 +28,24 @@ export const adminUpdateUserStatus = (id: string, status: string) =>
 export const adminResetUserPassword = (id: string, newPassword: string) =>
   axiosInstance.post(`/admin/users/${id}/reset-password`, { newPassword });
 
-// ─── Bookings ──────────────────────────────────────────
-export const adminGetBookings = (params?: Record<string, unknown>) =>
-  axiosInstance.get('/admin/bookings', { params });
-
-export const adminGetBooking = (id: string) =>
-  axiosInstance.get(`/admin/bookings/${id}`);
-
-export const adminUpdateBookingStatus = (id: string, status: string) =>
-  axiosInstance.patch(`/admin/bookings/${id}/status`, { status });
-
-// ─── Orders ────────────────────────────────────────────
+// ─── Orders/Bookings (Manager) ──────────────────────────
 export const adminGetOrders = (params?: Record<string, unknown>) =>
   axiosInstance.get('/admin/orders', { params });
 
 export const adminGetOrder = (id: string) =>
   axiosInstance.get(`/admin/orders/${id}`);
+
+export const adminUpdateOrderStatus = (id: string, status: string, reason?: string) =>
+  axiosInstance.patch(`/admin/orders/${id}/status`, { status, reason });
+
+export const adminMarkOrderPaid = (id: string) =>
+  axiosInstance.post(`/admin/orders/${id}/mark-paid`);
+
+// Tương thích ngược với UI cũ dùng tên bookings
+export const adminGetBookings = adminGetOrders;
+export const adminGetBooking = adminGetOrder;
+export const adminUpdateBookingStatus = (id: string, status: string) =>
+  adminUpdateOrderStatus(id, status);
 
 // ─── Service Types ─────────────────────────────────────
 export const adminGetServiceTypes = () =>
@@ -100,3 +102,19 @@ export const adminGetVehicles = (params?: Record<string, unknown>) =>
 
 export const adminGetVehicle = (id: string) =>
   axiosInstance.get(`/admin/vehicles/${id}`);
+
+// ─── Work Orders (Manager) ──────────────────────────────
+export const adminCreateWorkOrder = (orderId: string) =>
+  axiosInstance.post('/admin/work-orders', { orderId });
+
+export const adminGetWorkOrders = (params?: Record<string, unknown>) =>
+  axiosInstance.get('/admin/work-orders', { params });
+
+export const adminGetWorkOrder = (id: string) =>
+  axiosInstance.get(`/admin/work-orders/${id}`);
+
+export const adminAssignWasher = (id: string, washerId: string) =>
+  axiosInstance.patch(`/admin/work-orders/${id}/assign`, { washerId });
+
+export const adminQcWorkOrder = (id: string, passed: boolean, note?: string) =>
+  axiosInstance.patch(`/admin/work-orders/${id}/qc`, { passed, note });

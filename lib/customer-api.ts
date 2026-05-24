@@ -53,4 +53,56 @@ export const sendOtp = (data: { email: string }) =>
 export const verifyOtp = (data: { email: string; code: string }) =>
   axiosInstance.post('/auth/otp/verify', data);
 
+// ─── Service Types (Public) ────────────────────────────
+export const getActiveServiceTypes = () =>
+  axiosInstance.get('/service-types');
+
+export const getServiceType = (id: string) =>
+  axiosInstance.get(`/service-types/${id}`);
+
+// ─── Orders (Customer) ─────────────────────────────────
+export const getMyOrders = () =>
+  axiosInstance.get('/me/orders');
+
+export const getMyOrder = (id: string) =>
+  axiosInstance.get(`/me/orders/${id}`);
+
+export const createOrder = (data: {
+  vehicleId?: string;
+  vehicle?: {
+    vehicleTypeId: string;
+    licensePlate: string;
+    nickname?: string;
+    brand?: string;
+    model?: string;
+    color?: string;
+    isDefault?: boolean;
+  };
+  serviceTypeId: string;
+  scheduledAt: string;
+  paymentMethod: 'online' | 'cash';
+  note?: string;
+}) => axiosInstance.post('/me/orders', data);
+
+export const rescheduleOrder = (
+  id: string,
+  data: { staffShiftId: string; scheduledAt: string }
+) => axiosInstance.patch(`/me/orders/${id}/reschedule`, data);
+
+export const cancelOrder = (id: string, data: { reason?: string }) =>
+  axiosInstance.patch(`/me/orders/${id}/cancel`, data);
+
+// ─── Available Slots & Shifts ──────────────────────────
+export const getAvailableSlots = (params: {
+  serviceTypeId: string;
+  from: string;
+  to: string;
+}) => axiosInstance.get('/me/orders/available-slots', { params });
+
+export const getAvailableShifts = (params: {
+  from: string;
+  to: string;
+  shiftType?: 'cashier' | 'washer';
+}) => axiosInstance.get('/shifts/available', { params });
+
 
