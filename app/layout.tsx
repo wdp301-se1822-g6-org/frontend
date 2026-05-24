@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, Plus_Jakarta_Sans } from "next/font/google";
 import AppProvider from "@/providers/AppProvider";
+import ChatbotWidget from "@/components/shared/ChatbotWidget";
 import "./globals.css";
 
 const inter = Inter({
@@ -32,7 +33,10 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col">
-        <AppProvider>{children}</AppProvider>
+        <AppProvider>
+          {children}
+          <ChatbotWidget />
+        </AppProvider>
       </body>
     </html>
   );
