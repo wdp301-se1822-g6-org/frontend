@@ -6,6 +6,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import {
   CreditCard,
   CalendarCheck,
+  ClipboardList,
   LogOut,
   ChevronLeft,
   ChevronRight,
@@ -17,6 +18,7 @@ import { axiosInstance } from '@/lib/axios';
 const navItems = [
   { href: '/cashier',        icon: CreditCard,   label: 'Quầy thu ngân' },
   { href: '/cashier/orders', icon: CalendarCheck, label: 'Lịch hẹn đặt trước' },
+  { href: '/cashier/work-orders', icon: ClipboardList, label: 'Vận hành rửa xe' },
 ];
 
 export function CashierSidebar() {
