@@ -4,28 +4,20 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
-  LayoutDashboard,
-  CalendarCheck,
   Wrench,
   LogOut,
   ChevronLeft,
   ChevronRight,
-  Car,
-  Clock,
 } from 'lucide-react';
 import { useState } from 'react';
 import { useAuthStore } from '@/store/useAuthStore';
 import { axiosInstance } from '@/lib/axios';
 
 const navItems = [
-  { href: '/manager',             icon: LayoutDashboard, label: 'Tổng quan' },
-  { href: '/manager/orders',      icon: CalendarCheck,   label: 'Đơn đặt lịch' },
-  { href: '/manager/work-orders', icon: Wrench,          label: 'Vận hành rửa xe' },
-  { href: '/manager/vehicles',    icon: Car,             label: 'Quản lý xe' },
-  { href: '/manager/shifts',      icon: Clock,           label: 'Ca làm việc' },
+  { href: '/washer', icon: Wrench, label: 'Lịch rửa xe' },
 ];
 
-export function ManagerSidebar() {
+export function WasherSidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const [collapsed, setCollapsed] = useState(false);
@@ -49,7 +41,7 @@ export function ManagerSidebar() {
       .map((w: string) => w[0])
       .slice(-2)
       .join('')
-      .toUpperCase() ?? 'M';
+      .toUpperCase() ?? 'W';
 
   return (
     <aside
@@ -70,7 +62,7 @@ export function ManagerSidebar() {
           />
           {!collapsed && (
             <span className='text-white font-black text-xl tracking-tighter truncate'>
-              WAVE <span className='text-indigo-400 text-xs font-bold ml-1 uppercase'>Manager</span>
+              WAVE <span className='text-indigo-400 text-xs font-bold ml-1 uppercase'>Washer</span>
             </span>
           )}
         </Link>
@@ -92,7 +84,7 @@ export function ManagerSidebar() {
         {navItems.map(({ href, icon: Icon, label }) => {
           const isActive =
             pathname === href ||
-            (href !== '/manager' && pathname.startsWith(href));
+            (href !== '/washer' && pathname.startsWith(href));
           return (
             <Link
               key={href}
@@ -128,7 +120,7 @@ export function ManagerSidebar() {
 
         <button
           onClick={handleLogout}
-          className='flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 transition-all w-full text-left'
+          className='flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-400 hover:text-rose-400 hover:bg-rose-50/10 transition-all w-full text-left'
         >
           <LogOut className='w-5 h-5 shrink-0' />
           {!collapsed && <span className='text-sm font-semibold'>Đăng xuất</span>}
