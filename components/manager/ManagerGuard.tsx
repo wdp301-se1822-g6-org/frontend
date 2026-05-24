@@ -6,11 +6,11 @@ import { useEffect } from 'react';
 import { ShieldAlert } from 'lucide-react';
 
 /**
- * AdminGuard — bọc bất kỳ nội dung admin nào.
+ * ManagerGuard — bọc bất kỳ nội dung manager nào.
  * - Chưa đăng nhập → redirect /login
- * - Đã đăng nhập nhưng không phải admin → trang lỗi 403
+ * - Đã đăng nhập nhưng không phải manager → trang lỗi 403
  */
-export function AdminGuard({ children }: { children: React.ReactNode }) {
+export function ManagerGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const { authUser, _hasHydrated, isInitialized, initAuth } = useAuthStore();
 
@@ -45,8 +45,8 @@ export function AdminGuard({ children }: { children: React.ReactNode }) {
     return null;
   }
 
-  // Không phải admin
-  if (authUser.role !== 'admin') {
+  // Không phải manager
+  if (authUser.role !== 'manager') {
     return (
       <div className='min-h-screen flex items-center justify-center bg-muted/30 p-4'>
         <div className='bg-white rounded-3xl border border-border shadow-2xl shadow-primary/5 p-12 max-w-md w-full text-center'>
@@ -55,8 +55,8 @@ export function AdminGuard({ children }: { children: React.ReactNode }) {
           </div>
           <h1 className='text-2xl font-black text-foreground mb-3'>Không có quyền truy cập</h1>
           <p className='text-foreground/50 text-sm leading-relaxed mb-8'>
-            Trang này chỉ dành cho quản trị viên.
-            Tài khoản của bạn ({authUser.role}) không có quyền truy cập dashboard admin.
+            Trang này chỉ dành cho Quản lý (Manager).
+            Tài khoản của bạn ({authUser.role}) không có quyền truy cập dashboard manager.
           </p>
           <button
             onClick={() => router.replace('/')}
@@ -69,6 +69,6 @@ export function AdminGuard({ children }: { children: React.ReactNode }) {
     );
   }
 
-  // Admin hợp lệ
+  // Manager hợp lệ
   return <>{children}</>;
 }
