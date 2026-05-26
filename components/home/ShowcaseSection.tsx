@@ -34,57 +34,57 @@ export function ShowcaseSection() {
           </p>
         </div>
 
-        <div className='grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 lg:gap-8 h-[320px] sm:h-[440px] md:h-[600px] lg:h-[800px]'>
+        <div className='grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 lg:gap-8'>
           {/* Image 2 */}
-          <div className='relative group overflow-hidden rounded-[2.5rem] shadow-2xl'>
+          <div className='relative group overflow-hidden rounded-[1.5rem] sm:rounded-[2rem] lg:rounded-[2.5rem] shadow-2xl aspect-video sm:aspect-4/3 lg:aspect-2/1'>
             <Image
               src='/h2.jpg'
               alt='Showcase'
               fill
-              sizes='(max-width: 768px) 100vw, 50vw'
+              sizes='(max-width: 640px) 100vw, 50vw'
               className='object-cover transition-transform duration-700 group-hover:scale-110'
             />
-            <div className='absolute inset-0 bg-linear-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-10'>
-              <span className='text-white font-black text-3xl tracking-tighter'>
+            <div className='absolute inset-0 bg-linear-to-t from-black/60 via-transparent to-transparent opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity flex items-end p-5 sm:p-8 lg:p-10'>
+              <span className='text-white font-black text-xl sm:text-2xl lg:text-3xl tracking-tighter'>
                 Deep Cleaning
               </span>
             </div>
           </div>
 
           {/* Image 3 */}
-          <div className='relative group overflow-hidden rounded-[2.5rem] shadow-2xl'>
+          <div className='relative group overflow-hidden rounded-[1.5rem] sm:rounded-[2rem] lg:rounded-[2.5rem] shadow-2xl aspect-video sm:aspect-4/3 lg:aspect-2/1'>
             <Image
               src='/h3.jpg'
               alt='Showcase'
               fill
-              sizes='(max-width: 768px) 100vw, 50vw'
+              sizes='(max-width: 640px) 100vw, 50vw'
               className='object-cover transition-transform duration-700 group-hover:scale-110'
             />
-            <div className='absolute inset-0 bg-linear-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-10'>
-              <span className='text-white font-black text-3xl tracking-tighter'>
+            <div className='absolute inset-0 bg-linear-to-t from-black/60 via-transparent to-transparent opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity flex items-end p-5 sm:p-8 lg:p-10'>
+              <span className='text-white font-black text-xl sm:text-2xl lg:text-3xl tracking-tighter'>
                 Interior Perfection
               </span>
             </div>
           </div>
 
           {/* Image 5 */}
-          <div className='relative group overflow-hidden rounded-[2.5rem] shadow-2xl'>
+          <div className='relative group overflow-hidden rounded-[1.5rem] sm:rounded-[2rem] lg:rounded-[2.5rem] shadow-2xl aspect-video sm:aspect-4/3 lg:aspect-2/1'>
             <Image
               src='/h5.jpg'
               alt='Showcase'
               fill
-              sizes='(max-width: 768px) 100vw, 50vw'
+              sizes='(max-width: 640px) 100vw, 50vw'
               className='object-cover transition-transform duration-700 group-hover:scale-110'
             />
           </div>
 
           {/* Image 6 */}
-          <div className='relative group overflow-hidden rounded-[2.5rem] shadow-2xl'>
+          <div className='relative group overflow-hidden rounded-[1.5rem] sm:rounded-[2rem] lg:rounded-[2.5rem] shadow-2xl aspect-video sm:aspect-4/3 lg:aspect-2/1'>
             <Image
               src='/h6.jpg'
               alt='Showcase'
               fill
-              sizes='(max-width: 768px) 100vw, 50vw'
+              sizes='(max-width: 640px) 100vw, 50vw'
               className='object-cover transition-transform duration-700 group-hover:scale-110'
             />
           </div>

@@ -32,14 +32,14 @@ export function AuthNavbar() {
 
             {/* Separator & Page Title */}
             <div className='h-6 w-px bg-border mx-2 hidden sm:block' />
-            <span className='text-xl font-bold text-foreground hidden sm:block'>
+            <span className='text-xl font-semibold text-foreground hidden sm:block'>
               {isLoginPage ? 'Đăng nhập' : 'Đăng ký'}
             </span>
           </div>
 
           <Link
             href={isLoginPage ? '/register' : '/login'}
-            className='text-primary font-bold hover:underline transition-all'
+            className='text-primary font-semibold hover:underline transition-all'
           >
             {isLoginPage ? 'Bạn chưa có tài khoản?' : 'Bạn đã có tài khoản?'}
           </Link>
