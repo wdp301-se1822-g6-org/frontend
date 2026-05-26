@@ -26,9 +26,6 @@ const QUICK_QUESTIONS = [
 export default function ChatbotWidget() {
   const pathname = usePathname();
 
-  // Chatbot chỉ hiển thị duy nhất trên trang chủ (URL là '/')
-  if (pathname !== '/') return null;
-
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -138,6 +135,9 @@ export default function ChatbotWidget() {
       toast.success('Đã làm mới cuộc hội thoại thành công.');
     }
   };
+
+  // Chatbot chỉ hiển thị duy nhất trên trang chủ (URL là '/')
+  if (pathname !== '/') return null;
 
   return (
     <div className="fixed bottom-6 right-6 z-50">
