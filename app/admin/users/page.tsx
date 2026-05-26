@@ -23,7 +23,9 @@ interface UserData {
 
 const roleConfig: Record<string, { label: string; cls: string }> = {
   admin:    { label: 'Admin',    cls: 'bg-primary/10 text-primary' },
-  staff:    { label: 'Nhân viên', cls: 'bg-purple-50 text-purple-700' },
+  manager:  { label: 'Quản lý',   cls: 'bg-blue-50 text-blue-700' },
+  cashier:  { label: 'Thu ngân',  cls: 'bg-amber-50 text-amber-700' },
+  washer:   { label: 'Thợ rửa xe', cls: 'bg-indigo-50 text-indigo-700' },
   customer: { label: 'Khách hàng', cls: 'bg-muted text-foreground/60' },
 };
 
@@ -42,9 +44,10 @@ export default function AdminUsersPage() {
   const [newPwd, setNewPwd] = useState('');
 
   const { data, isLoading, refetch } = useQuery({
-    queryKey: ['admin-users', page, roleFilter],
+    queryKey: ['admin-users', roleFilter],
     queryFn: () => adminGetUsers({
-      page, limit: 10,
+      page: 1,
+      limit: 100,
       ...(roleFilter !== 'all' ? { role: roleFilter } : {}),
     }),
   });
@@ -65,11 +68,18 @@ export default function AdminUsersPage() {
   });
 
   const users: UserData[] = data?.data?.data ?? data?.data ?? [];
-  const total: number = data?.data?.total ?? users.length;
 
   const filtered = search
-    ? users.filter((u: UserData) => JSON.stringify(u).toLowerCase().includes(search.toLowerCase()))
+    ? users.filter((u: UserData) => {
+        const searchStr = `${u.fullName || u.name || ''} ${u.email || ''} ${u.role || ''}`.toLowerCase();
+        return searchStr.includes(search.toLowerCase());
+      })
     : users;
+
+  const itemsPerPage = 10;
+  const totalItems = filtered.length;
+  const totalPages = Math.ceil(totalItems / itemsPerPage) || 1;
+  const paginatedUsers = filtered.slice((page - 1) * itemsPerPage, page * itemsPerPage);
 
   return (
     <>
@@ -82,7 +92,7 @@ export default function AdminUsersPage() {
             <div className='relative flex-1 min-w-[200px] max-w-xs'>
               <Search className='absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/30' />
               <input type='text' placeholder='Tìm kiếm người dùng...'
-                value={search} onChange={(e) => setSearch(e.target.value)}
+                value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }}
                 className='w-full pl-9 pr-4 py-2.5 rounded-xl bg-white border border-border text-sm focus:outline-none focus:border-primary/50 transition-all' />
             </div>
             <div className='relative'>
@@ -90,7 +100,9 @@ export default function AdminUsersPage() {
                 className='appearance-none bg-white border border-border rounded-xl px-4 py-2.5 pr-8 text-sm font-semibold focus:outline-none cursor-pointer'>
                 <option value='all'>Tất cả vai trò</option>
                 <option value='admin'>Admin</option>
-                <option value='staff'>Nhân viên</option>
+                <option value='manager'>Quản lý</option>
+                <option value='cashier'>Thu ngân</option>
+                <option value='washer'>Thợ rửa xe</option>
                 <option value='customer'>Khách hàng</option>
               </select>
               <ChevronDown className='absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/40 pointer-events-none' />
@@ -99,7 +111,7 @@ export default function AdminUsersPage() {
               className='flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-border text-sm font-semibold hover:border-primary/30 transition-all'>
               <RefreshCw className='w-4 h-4 text-foreground/50' />Làm mới
             </button>
-            <span className='ml-auto text-xs font-semibold text-foreground/40'>Tổng: {total} tài khoản</span>
+            <span className='ml-auto text-xs font-semibold text-foreground/40'>Tổng: {totalItems} tài khoản</span>
           </div>
 
           {/* Table */}
@@ -120,10 +132,10 @@ export default function AdminUsersPage() {
                         <td key={j} className='px-5 py-4'><div className='h-4 bg-muted animate-pulse rounded-lg' /></td>
                       ))}</tr>
                     ))
-                  ) : filtered.length === 0 ? (
+                  ) : paginatedUsers.length === 0 ? (
                     <tr><td colSpan={6} className='px-5 py-16 text-center text-foreground/40 font-semibold'>Không có dữ liệu</td></tr>
                   ) : (
-                    filtered.map((u: UserData) => {
+                    paginatedUsers.map((u: UserData) => {
                       const role = roleConfig[u.role ?? ''] ?? { label: u.role, cls: 'bg-muted text-foreground/60' };
                       const status = statusConfig[u.status ?? 'active'] ?? statusConfig.active;
                       const id = u._id ?? u.id ?? '';
@@ -150,11 +162,13 @@ export default function AdminUsersPage() {
                           <td className='px-5 py-4'>
                             <div className='flex items-center gap-2'>
                               {/* Role select */}
-                              <select defaultValue={u.role}
+                              <select value={u.role}
                                 onChange={(e) => changeRole.mutate({ id, role: e.target.value })}
                                 className='text-xs border border-border rounded-lg px-2 py-1 bg-white focus:outline-none cursor-pointer'>
                                 <option value='customer'>Khách hàng</option>
-                                <option value='staff'>Nhân viên</option>
+                                <option value='washer'>Thợ rửa xe</option>
+                                <option value='cashier'>Thu ngân</option>
+                                <option value='manager'>Quản lý</option>
                                 <option value='admin'>Admin</option>
                               </select>
                               {/* Toggle status */}
@@ -179,13 +193,13 @@ export default function AdminUsersPage() {
               </table>
             </div>
             {/* Pagination */}
-            {total > 10 && (
+            {totalItems > itemsPerPage && (
               <div className='flex items-center justify-between px-5 py-4 border-t border-border/50 bg-muted/20'>
-                <span className='text-xs font-semibold text-foreground/40'>Trang {page} / {Math.ceil(total / 10)}</span>
+                <span className='text-xs font-semibold text-foreground/40'>Trang {page} / {totalPages}</span>
                 <div className='flex gap-2'>
                   <button onClick={() => setPage(Math.max(1, page - 1))} disabled={page === 1}
                     className='px-3 py-1.5 rounded-lg border border-border text-xs font-semibold disabled:opacity-40 hover:border-primary/30'>Trước</button>
-                  <button onClick={() => setPage(page + 1)} disabled={page >= Math.ceil(total / 10)}
+                  <button onClick={() => setPage(page + 1)} disabled={page >= totalPages}
                     className='px-3 py-1.5 rounded-lg border border-border text-xs font-semibold disabled:opacity-40 hover:border-primary/30'>Sau</button>
                 </div>
               </div>
