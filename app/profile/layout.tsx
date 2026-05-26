@@ -1,4 +1,4 @@
-import { AuthGuard } from '@/components/auth/AuthGuard';
+import ProtectedRoute from '@/components/shared/ProtectedRoute';
 import { Navbar } from '@/components/home/Navbar';
 import ProfileSidebar from '@/components/profile/ProfileSidebar';
 
@@ -8,7 +8,7 @@ export default function ProfileLayout({
   children: React.ReactNode;
 }) {
   return (
-    <AuthGuard>
+    <ProtectedRoute allowedRoles={['customer']}>
       <div className='min-h-screen bg-[#F5F5F5] dark:bg-background transition-colors duration-300'>
         <Navbar />
         <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-12'>
@@ -25,6 +25,6 @@ export default function ProfileLayout({
           </div>
         </div>
       </div>
-    </AuthGuard>
+    </ProtectedRoute>
   );
 }

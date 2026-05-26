@@ -11,12 +11,14 @@ import { TestimonialsSection } from '@/components/home/TestimonialsSection';
 import { ContactSection } from '@/components/home/ContactSection';
 import { AmenitiesSection } from '@/components/home/AmenitiesSection';
 import { ShowcaseSection } from '@/components/home/ShowcaseSection';
+import { HomeGuard } from '@/components/home/HomeGuard';
 import { Footer } from '@/components/home/Footer';
 import { ScrollToTop } from '@/components/home/ScrollToTop';
 
 export default function HomePage() {
   return (
     <main className='flex flex-col'>
+      <HomeGuard />
       <Navbar />
       <HeroSection />
       <BrandMarquee />

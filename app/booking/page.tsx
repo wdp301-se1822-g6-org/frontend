@@ -344,7 +344,15 @@ function BookingFlow() {
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Banner header */}
-        <div className="text-center mb-8">
+        <div className="relative text-center mb-8">
+          <Button
+            variant="ghost"
+            onClick={() => router.push('/')}
+            className="absolute left-0 top-0 sm:top-1 text-muted-foreground hover:text-foreground flex items-center gap-1 cursor-pointer rounded-xl px-3"
+          >
+            <ChevronLeft className="w-4 h-4" />
+            <span className="hidden sm:inline">Về trang chủ</span>
+          </Button>
           <h1 className="text-3xl sm:text-4xl font-extrabold text-foreground tracking-tight mb-2">
             Đặt Lịch Rửa Xe Của Bạn
           </h1>

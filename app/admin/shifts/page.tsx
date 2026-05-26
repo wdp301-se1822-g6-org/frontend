@@ -84,6 +84,8 @@ function ShiftModal({
     note: item?.note ?? '',
   });
 
+  const minDateTime = !item ? formatForInput(new Date().toISOString()) : undefined;
+
   // Tự động cập nhật shiftType tương ứng khi chọn staffId
   useEffect(() => {
     if (form.staffId) {
@@ -109,6 +111,13 @@ function ShiftModal({
 
     const start = new Date(form.startAt);
     const end = new Date(form.endAt);
+    
+    // Chỉ chặn thời gian quá khứ đối với ca tạo mới
+    if (!item && start < new Date()) {
+      toast.error('Thời gian bắt đầu không được ở trong quá khứ.');
+      return;
+    }
+
     if (start >= end) {
       toast.error('Thời gian bắt đầu phải nhỏ hơn thời gian kết thúc.');
       return;
@@ -190,8 +199,18 @@ function ShiftModal({
             <label className='block text-xs font-black uppercase tracking-widest text-slate-400 mb-1.5'>Thời gian bắt đầu</label>
             <input
               type='datetime-local'
+              min={minDateTime}
               value={form.startAt}
-              onChange={(e) => setForm({ ...form, startAt: e.target.value })}
+              onChange={(e) => {
+                const val = e.target.value;
+                if (val === "") {
+                  setForm({ ...form, startAt: val });
+                } else if (!item && minDateTime && val < minDateTime) {
+                  setForm({ ...form, startAt: minDateTime });
+                } else {
+                  setForm({ ...form, startAt: val });
+                }
+              }}
               className='w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-indigo-500/50 shadow-sm text-slate-700 font-semibold'
             />
           </div>
@@ -201,8 +220,19 @@ function ShiftModal({
             <label className='block text-xs font-black uppercase tracking-widest text-slate-400 mb-1.5'>Thời gian kết thúc</label>
             <input
               type='datetime-local'
+              min={form.startAt || minDateTime}
               value={form.endAt}
-              onChange={(e) => setForm({ ...form, endAt: e.target.value })}
+              onChange={(e) => {
+                const val = e.target.value;
+                const currentMin = form.startAt || minDateTime;
+                if (val === "") {
+                  setForm({ ...form, endAt: val });
+                } else if (!item && currentMin && val < currentMin) {
+                  setForm({ ...form, endAt: currentMin });
+                } else {
+                  setForm({ ...form, endAt: val });
+                }
+              }}
               className='w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-indigo-500/50 shadow-sm text-slate-700 font-semibold'
             />
           </div>
