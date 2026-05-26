@@ -1,6 +1,6 @@
 'use client';
 
-import { WasherGuard } from '@/components/washer/WasherGuard';
+import ProtectedRoute from '@/components/shared/ProtectedRoute';
 import { WasherSidebar } from '@/components/washer/WasherSidebar';
 
 interface LayoutProps {
@@ -9,13 +9,13 @@ interface LayoutProps {
 
 export default function WasherLayout({ children }: LayoutProps) {
   return (
-    <WasherGuard>
+    <ProtectedRoute allowedRoles={['washer']}>
       <div className='flex min-h-screen bg-slate-50 text-slate-900'>
         <WasherSidebar />
         <div className='flex-1 flex flex-col min-w-0 min-h-screen overflow-hidden'>
           {children}
         </div>
       </div>
-    </WasherGuard>
+    </ProtectedRoute>
   );
 }
