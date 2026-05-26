@@ -7,7 +7,12 @@ import { Input } from '@/components/ui/input';
 import { useRouter } from 'next/navigation';
 import { Lock, Mail, User, Calendar1, Phone, ArrowLeft } from 'lucide-react';
 import { Controller, useForm } from 'react-hook-form';
-import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
+import {
+  Field,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+} from '@/components/ui/field';
 import { RegisterFormData, registerSchema } from '@/schemas/auth';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Spinner } from '@/components/ui/spinner';
@@ -46,8 +51,22 @@ export function RegisterForm({
   };
 
   return (
-    <div className={cn('flex flex-col gap-6', className)} {...props}>
-      <Card className='border-primary/10 bg-white/80 shadow-2xl shadow-primary/5 backdrop-blur-xl'>
+    <div
+      className={cn('flex flex-col gap-6', className)}
+      {...props}
+    >
+      <Card className='relative border-primary/10 bg-white/80 shadow-2xl shadow-primary/5 backdrop-blur-xl px-4 py-10'>
+        {step === 2 && (
+          <button
+            type='button'
+            onClick={() => setStep(1)}
+            disabled={loading}
+            aria-label='Quay lại'
+            className='absolute top-4 left-4 inline-flex size-9 items-center justify-center rounded-full text-primary transition-colors hover:bg-primary/10 disabled:opacity-50'
+          >
+            <ArrowLeft className='size-5' />
+          </button>
+        )}
         <CardHeader className='space-y-1 pb-6 text-center'>
           <CardTitle className='font-heading text-3xl font-bold tracking-tight text-primary'>
             Tham gia ngay
@@ -171,17 +190,6 @@ export function RegisterForm({
                   />
 
                   <div className='flex gap-3'>
-                    <Button
-                      type='button'
-                      size='xl'
-                      variant='outline'
-                      onClick={() => setStep(1)}
-                      disabled={loading}
-                      className='rounded-xl'
-                    >
-                      <ArrowLeft className='size-4' />
-                      Quay lại
-                    </Button>
                     <Button
                       type='submit'
                       size='xl'

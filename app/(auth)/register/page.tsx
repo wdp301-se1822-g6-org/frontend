@@ -50,7 +50,7 @@ export default function RegisterPage() {
       <div className='pointer-events-none absolute -bottom-45 left-1/2 h-105 w-105 -translate-x-1/2 rounded-full bg-indigo-200/40 blur-[120px]' />
 
       <div className='relative z-10 flex min-h-[calc(100vh-8rem)] items-center justify-center px-4 py-12'>
-        <div className='w-full max-w-xl'>
+        <div className='w-full max-w-md'>
           <RegisterForm onSubmit={handleSubmit} loading={register.isPending} />
         </div>
       </div>
