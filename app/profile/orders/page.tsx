@@ -307,7 +307,7 @@ export default function MyOrdersPage() {
       {/* Title */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-border pb-4">
         <div>
-          <h1 className="text-xl font-bold text-foreground">Lịch Sử Rửa Xe</h1>
+          <h1 className="font-heading text-xl font-bold text-foreground">Lịch Sử Rửa Xe</h1>
           <p className="text-sm text-muted-foreground">Theo dõi và quản lý lịch hẹn rửa xe của bạn tại WAVE</p>
         </div>
         <Button
@@ -493,7 +493,7 @@ export default function MyOrdersPage() {
             <CardContent className="p-6">
               
               <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-5">
-                <h3 className="text-base font-bold text-foreground flex items-center gap-2">
+                <h3 className="font-heading text-base font-bold text-foreground flex items-center gap-2">
                   <Calendar className="w-5 h-5 text-primary" /> Đổi lịch hẹn rửa xe
                 </h3>
                 <button 
@@ -624,7 +624,7 @@ export default function MyOrdersPage() {
                   <AlertCircle className="w-5 h-5" />
                 </div>
                 <div className="space-y-1">
-                  <h3 className="text-base font-bold text-foreground">Bạn muốn hủy lịch rửa xe này?</h3>
+                  <h3 className="font-heading text-base font-bold text-foreground">Bạn muốn hủy lịch rửa xe này?</h3>
                   <p className="text-xs text-muted-foreground leading-normal">
                     Lịch hẹn vào lúc <span className="font-bold text-foreground">
                       {new Date(cancellingOrder.scheduledAt).toLocaleTimeString('vi-VN', {hour:'2-digit', minute:'2-digit'})} ngày {new Date(cancellingOrder.scheduledAt).toLocaleDateString('vi-VN')}

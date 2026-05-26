@@ -249,7 +249,7 @@ export default function WasherDashboard() {
               <div className='w-16 h-16 rounded-2xl bg-indigo-50 flex items-center justify-center mx-auto mb-6 text-indigo-600'>
                 <Car className='w-8 h-8' />
               </div>
-              <h3 className='text-lg font-black text-slate-800 mb-2'>Trống lịch trình</h3>
+              <h3 className='font-heading text-lg font-black text-slate-800 mb-2'>Trống lịch trình</h3>
               <p className='text-slate-400 text-sm leading-relaxed'>
                 {activeTab === 'todo'
                   ? 'Hiện tại ông chủ chưa có xe nào được phân công. Hãy nghỉ ngơi chút hoặc nhắc Cashier/Manager giao xe nhé!'
@@ -288,7 +288,7 @@ export default function WasherDashboard() {
                           {plate}
                         </div>
                         <div>
-                          <h4 className='font-bold text-slate-800 text-sm'>{service}</h4>
+                          <h4 className='font-heading font-bold text-slate-800 text-sm'>{service}</h4>
                           <p className='text-xs text-slate-400 font-medium'>Định danh: <span className='text-slate-600 font-bold'>{customer}</span></p>
                         </div>
                       </div>

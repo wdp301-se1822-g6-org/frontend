@@ -46,7 +46,13 @@ const testimonials = [
   },
 ];
 
-function StarRow({ rating, size = 'sm' }: { rating: number; size?: 'sm' | 'md' | 'lg' }) {
+function StarRow({
+  rating,
+  size = 'sm',
+}: {
+  rating: number;
+  size?: 'sm' | 'md' | 'lg';
+}) {
   const cls = size === 'lg' ? 'w-6 h-6' : size === 'md' ? 'w-5 h-5' : 'w-4 h-4';
   return (
     <div className='flex gap-0.5'>
@@ -64,16 +70,20 @@ export function TestimonialsSection() {
   const [active, setActive] = useState(0);
   const [animating, setAnimating] = useState(false);
 
-  const goTo = useCallback((idx: number) => {
-    if (animating) return;
-    setAnimating(true);
-    setTimeout(() => {
-      setActive(idx);
-      setAnimating(false);
-    }, 300);
-  }, [animating]);
+  const goTo = useCallback(
+    (idx: number) => {
+      if (animating) return;
+      setAnimating(true);
+      setTimeout(() => {
+        setActive(idx);
+        setAnimating(false);
+      }, 300);
+    },
+    [animating],
+  );
 
-  const prev = () => goTo((active - 1 + testimonials.length) % testimonials.length);
+  const prev = () =>
+    goTo((active - 1 + testimonials.length) % testimonials.length);
   const next = () => goTo((active + 1) % testimonials.length);
 
   // Auto-play
@@ -90,7 +100,7 @@ export function TestimonialsSection() {
   return (
     <section
       id='testimonials'
-      className='py-16 bg-background relative overflow-hidden'
+      className='py-12 sm:py-16 bg-background relative overflow-hidden'
     >
       {/* Watermark text */}
       <div className='absolute inset-0 flex items-center justify-center pointer-events-none select-none'>
@@ -110,22 +120,23 @@ export function TestimonialsSection() {
 
       <div className='max-w-7xl mx-auto px-4 relative z-10'>
         {/* Heading */}
-        <div className='text-center mb-16'>
+        <div className='text-center mb-10 sm:mb-16'>
           <p className='text-[11px] font-black uppercase tracking-[0.3em] text-primary mb-3'>
             Đánh giá từ khách hàng
           </p>
-          <h2 className='text-4xl sm:text-5xl font-black text-foreground tracking-tight mb-4'>
+          <h1 className='text-[1.75rem] sm:text-4xl lg:text-5xl font-heading text-foreground leading-[1.15] mb-4 tracking-tight animate-fade-in-up [animation-delay:200ms] opacity-0 fill-mode-forwards'>
             Khách hàng nói gì về <span className='text-primary'>WAVE</span>?
-          </h2>
+          </h1>
           <p className='text-foreground/50 max-w-xl mx-auto text-base font-medium leading-relaxed'>
-            Hàng nghìn chủ xe sang đã tin tưởng và hài lòng với chất lượng phục vụ 5 sao của chúng tôi.
+            Hàng nghìn chủ xe sang đã tin tưởng và hài lòng với chất lượng phục
+            vụ 5 sao của chúng tôi.
           </p>
         </div>
 
         {/* Cards carousel */}
         <div className='relative'>
           <div
-            className='grid grid-cols-1 md:grid-cols-2 gap-8 transition-opacity duration-300'
+            className='grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 lg:gap-8 transition-opacity duration-300'
             style={{ opacity: animating ? 0 : 1 }}
           >
             {visible.map((idx) => {
@@ -133,11 +144,13 @@ export function TestimonialsSection() {
               return (
                 <div
                   key={`${idx}-${t.name}`}
-                  className='bg-white rounded-[2rem] p-8 shadow-xl shadow-primary/5 border border-border/50 hover:-translate-y-1 transition-all duration-300 flex gap-5'
+                  className='bg-white rounded-[1.5rem] sm:rounded-[2rem] p-5 sm:p-8 shadow-xl shadow-primary/5 border border-border/50 hover:-translate-y-1 transition-all duration-300 flex gap-4 sm:gap-5'
                 >
                   {/* Avatar */}
                   <div className='shrink-0'>
-                    <div className={`w-14 h-14 rounded-full ${t.color} flex items-center justify-center text-white font-black text-lg shadow-lg`}>
+                    <div
+                      className={`w-14 h-14 rounded-full ${t.color} flex items-center justify-center text-white font-black text-lg shadow-lg`}
+                    >
                       {t.avatar}
                     </div>
                   </div>
@@ -146,15 +159,24 @@ export function TestimonialsSection() {
                   <div className='flex flex-col gap-3 flex-1'>
                     {/* Name + time */}
                     <div>
-                      <p className='font-black text-foreground text-base tracking-tight'>{t.name}</p>
-                      <p className='text-foreground/40 text-xs font-semibold uppercase tracking-wider'>{t.time}</p>
+                      <p className='font-black text-foreground text-base tracking-tight'>
+                        {t.name}
+                      </p>
+                      <p className='text-foreground/40 text-xs font-semibold uppercase tracking-wider'>
+                        {t.time}
+                      </p>
                     </div>
 
                     {/* Stars */}
-                    <StarRow rating={t.rating} size='sm' />
+                    <StarRow
+                      rating={t.rating}
+                      size='sm'
+                    />
 
                     {/* Title */}
-                    <p className='font-black text-foreground/80 text-sm'>{t.title}</p>
+                    <p className='font-black text-foreground/80 text-sm'>
+                      {t.title}
+                    </p>
 
                     {/* Review text */}
                     <p className='text-foreground/55 text-sm leading-relaxed italic relative'>
@@ -201,36 +223,46 @@ export function TestimonialsSection() {
         </div>
 
         {/* Overall rating summary bar */}
-        <div className='mt-16 flex flex-col lg:flex-row items-center gap-10 bg-linear-to-r from-primary to-secondary rounded-[2.5rem] p-10 lg:px-16 text-white shadow-2xl shadow-primary/20 relative overflow-hidden'>
-          <div className='absolute top-0 right-0 w-72 h-72 bg-white/10 rounded-full blur-3xl -mr-36 -mt-36 pointer-events-none' />
-          <div className='absolute bottom-0 left-0 w-40 h-40 bg-black/10 rounded-full blur-2xl -ml-20 -mb-20 pointer-events-none' />
+        <div className='mt-12 sm:mt-16 flex flex-col lg:flex-row items-center gap-6 sm:gap-8 lg:gap-10 bg-linear-to-br from-primary/8 via-purple-100/40 to-fuchsia-100/40 border border-primary/15 rounded-[2rem] sm:rounded-[2.5rem] p-6 sm:p-8 lg:p-10 lg:px-16 shadow-sm relative overflow-hidden'>
+          <div className='absolute -top-24 -right-16 w-72 h-72 bg-primary/10 rounded-full blur-3xl pointer-events-none' />
+          <div className='absolute -bottom-24 -left-16 w-72 h-72 bg-fuchsia-300/15 rounded-full blur-3xl pointer-events-none' />
+          <div className='absolute inset-0 bg-[radial-gradient(circle_at_center,var(--primary)_1px,transparent_1px)] bg-size-[24px_24px] opacity-[0.06] pointer-events-none' />
 
           {/* Score */}
           <div className='flex items-center gap-5 relative z-10'>
-            <span className='text-7xl font-black tracking-tighter'>4.9</span>
+            <span className='text-5xl sm:text-6xl lg:text-7xl font-black tracking-tighter bg-linear-to-br from-primary via-purple-500 to-fuchsia-500 bg-clip-text text-transparent'>
+              4.9
+            </span>
             <div>
-              <StarRow rating={5} size='lg' />
-              <span className='text-white/70 text-xs font-black uppercase tracking-widest mt-1 block'>
+              <StarRow
+                rating={5}
+                size='lg'
+              />
+              <span className='text-muted-foreground text-xs font-black uppercase tracking-widest mt-1 block'>
                 Đánh giá trung bình
               </span>
             </div>
           </div>
 
-          <div className='w-px h-16 bg-white/20 hidden lg:block relative z-10' />
+          <div className='w-px h-16 bg-primary/15 hidden lg:block relative z-10' />
 
           {/* Description */}
-          <p className='text-white/75 text-sm font-medium max-w-xs relative z-10 leading-relaxed'>
+          <p className='text-muted-foreground text-sm font-medium max-w-xs relative z-10 leading-relaxed'>
             Dựa trên hơn 10,000 lượt đánh giá thực tế từ khách hàng thân thiết.
           </p>
 
-          <div className='flex gap-12 ml-auto relative z-10'>
+          <div className='flex gap-8 sm:gap-12 lg:ml-auto relative z-10'>
             <div className='text-center'>
-              <p className='text-4xl font-black'>10K+</p>
-              <p className='text-white/60 text-[10px] font-black uppercase tracking-widest mt-1'>Đánh giá 5 sao</p>
+              <p className='text-3xl sm:text-4xl font-black text-foreground'>10K+</p>
+              <p className='text-muted-foreground text-[10px] font-black uppercase tracking-widest mt-1'>
+                Đánh giá 5 sao
+              </p>
             </div>
             <div className='text-center'>
-              <p className='text-4xl font-black'>50K+</p>
-              <p className='text-white/60 text-[10px] font-black uppercase tracking-widest mt-1'>Xe đã phục vụ</p>
+              <p className='text-3xl sm:text-4xl font-black text-foreground'>50K+</p>
+              <p className='text-muted-foreground text-[10px] font-black uppercase tracking-widest mt-1'>
+                Xe đã phục vụ
+              </p>
             </div>
           </div>
         </div>

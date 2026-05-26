@@ -53,7 +53,7 @@ export function CashierGuard({ children }: { children: React.ReactNode }) {
           <div className='w-16 h-16 rounded-2xl bg-rose-50 flex items-center justify-center mx-auto mb-6'>
             <ShieldAlert className='w-8 h-8 text-rose-500' />
           </div>
-          <h1 className='text-2xl font-black text-foreground mb-3'>Không có quyền truy cập</h1>
+          <h1 className='font-heading text-2xl font-black text-foreground mb-3'>Không có quyền truy cập</h1>
           <p className='text-foreground/50 text-sm leading-relaxed mb-8'>
             Trang này chỉ dành cho Thu ngân (Cashier).
             Tài khoản của bạn ({authUser.role}) không có quyền truy cập Workspace cashier.

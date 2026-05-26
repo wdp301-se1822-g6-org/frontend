@@ -21,7 +21,7 @@ function TierModal({ item, onClose, onSave }: { item: Tier; onClose: () => void;
     <div className='fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4' onClick={onClose}>
       <div className='bg-white rounded-2xl p-8 w-full max-w-md shadow-2xl' onClick={(e) => e.stopPropagation()}>
         <div className='flex items-center justify-between mb-6'>
-          <h3 className='font-black text-foreground text-lg'>Sửa hạng: {item.name}</h3>
+          <h3 className='font-heading font-black text-foreground text-lg'>Sửa hạng: {item.name}</h3>
           <button onClick={onClose}><X className='w-5 h-5 text-foreground/40' /></button>
         </div>
         <div className='flex flex-col gap-4'>
@@ -82,7 +82,7 @@ export default function AdminTiersPage() {
                     <div className={`bg-linear-to-br ${gradient} p-6 text-white relative overflow-hidden`}>
                       <div className='absolute top-0 right-0 w-20 h-20 bg-white/10 rounded-full blur-xl -mr-8 -mt-8' />
                       <Crown className='w-8 h-8 mb-3 relative z-10' />
-                      <h3 className='font-black text-xl capitalize relative z-10'>{t.name}</h3>
+                      <h3 className='font-heading font-black text-xl capitalize relative z-10'>{t.name}</h3>
                       <span className={`mt-2 inline-flex px-2 py-0.5 rounded-full text-[10px] font-black uppercase ${t.isActive !== false ? 'bg-white/20' : 'bg-black/20'} relative z-10`}>
                         {t.isActive !== false ? 'Hoạt động' : 'Tắt'}
                       </span>

@@ -42,29 +42,30 @@ export function ContactSection() {
   };
 
   return (
-    <section id='contact' className='py-16 bg-muted/50 relative overflow-hidden'>
+    <section
+      id='contact'
+      className='py-12 sm:py-16 bg-muted/50 relative overflow-hidden'
+    >
       {/* Blobs */}
       <div className='absolute top-0 right-0 w-96 h-96 bg-primary/5 rounded-full blur-3xl -mr-48 -mt-48 pointer-events-none' />
       <div className='absolute bottom-0 left-0 w-72 h-72 bg-secondary/5 rounded-full blur-3xl -ml-36 -mb-36 pointer-events-none' />
 
       <div className='max-w-7xl mx-auto px-4 relative z-10'>
         {/* Heading */}
-        <div className='text-center mb-16'>
+        <div className='text-center mb-10 sm:mb-16'>
           <p className='text-[11px] font-black uppercase tracking-[0.3em] text-primary mb-3'>
             Địa điểm & Liên hệ
           </p>
-          <h2 className='text-4xl sm:text-5xl font-black text-foreground tracking-tight'>
-            Dịch vụ rửa xe{' '}
-            <span className='text-primary'>WAVE</span>
-          </h2>
+          <h1 className='text-[1.75rem] sm:text-4xl lg:text-5xl font-heading text-foreground leading-[1.15] mb-4 tracking-tight animate-fade-in-up [animation-delay:200ms] opacity-0 fill-mode-forwards'>
+            Dịch vụ rửa xe <span className='text-primary'>WAVE</span>
+          </h1>
         </div>
 
-        <div className='grid grid-cols-1 lg:grid-cols-2 gap-10 items-start'>
-
+        <div className='grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-10 items-start'>
           {/* LEFT — Locations */}
           <div className='flex flex-col gap-5'>
-            <p className='text-sm font-black uppercase tracking-widest text-foreground/40 mb-2'>
-              — Hệ thống chi nhánh
+            <p className='text-sm font-semibold uppercase tracking-widest text-foreground/40 mb-2'>
+              Hệ thống chi nhánh
             </p>
             {locations.map((loc) => (
               <div
@@ -79,7 +80,9 @@ export function ContactSection() {
                     <p className='font-black text-foreground text-sm tracking-tight mb-1 group-hover:text-primary transition-colors'>
                       {loc.name}
                     </p>
-                    <p className='text-foreground/50 text-xs leading-relaxed mb-2'>{loc.address}</p>
+                    <p className='text-foreground/50 text-xs leading-relaxed mb-2'>
+                      {loc.address}
+                    </p>
                     <div className='flex flex-wrap gap-4'>
                       <span className='flex items-center gap-1.5 text-xs font-semibold text-foreground/60'>
                         <Phone className='w-3 h-3 text-primary' />
@@ -98,19 +101,27 @@ export function ContactSection() {
           </div>
 
           {/* RIGHT — Contact Form */}
-          <div className='bg-primary rounded-[2.5rem] p-10 shadow-2xl shadow-primary/30 relative overflow-hidden'>
+          <div className='bg-linear-to-br from-primary/8 via-purple-100/40 to-fuchsia-100/40 border border-primary/15 rounded-[1.75rem] sm:rounded-[2.5rem] p-6 sm:p-10 shadow-sm relative overflow-hidden'>
             {/* Decorative blobs inside card */}
-            <div className='absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full blur-2xl -mr-16 -mt-16 pointer-events-none' />
-            <div className='absolute bottom-0 left-0 w-32 h-32 bg-black/10 rounded-full blur-2xl -ml-12 -mb-12 pointer-events-none' />
+            <div className='absolute -top-16 -right-16 w-56 h-56 bg-primary/10 rounded-full blur-3xl pointer-events-none' />
+            <div className='absolute -bottom-12 -left-12 w-44 h-44 bg-fuchsia-300/15 rounded-full blur-3xl pointer-events-none' />
+            <div className='absolute inset-0 bg-[radial-gradient(circle_at_center,var(--primary)_1px,transparent_1px)] bg-size-[24px_24px] opacity-[0.06] pointer-events-none' />
 
             <div className='relative z-10'>
-              <h3 className='text-2xl font-black text-white mb-2 tracking-tight'>Liên hệ với chúng tôi</h3>
-              <p className='text-white/60 text-sm mb-8'>Chúng tôi sẽ phản hồi trong vòng 24 giờ.</p>
+              <h3 className='font-heading text-xl sm:text-2xl font-semibold text-foreground mb-2 tracking-tight'>
+                Liên hệ với chúng tôi
+              </h3>
+              <p className='text-muted-foreground text-sm mb-8'>
+                Chúng tôi sẽ phản hồi trong vòng 24 giờ.
+              </p>
 
-              <form onSubmit={handleSubmit} className='flex flex-col gap-5'>
+              <form
+                onSubmit={handleSubmit}
+                className='flex flex-col gap-5'
+              >
                 {/* Name */}
                 <div>
-                  <label className='block text-white/70 text-xs font-black uppercase tracking-widest mb-2'>
+                  <label className='block text-foreground/70 text-xs font-semibold uppercase tracking-widest mb-2'>
                     Họ và tên
                   </label>
                   <input
@@ -120,13 +131,13 @@ export function ContactSection() {
                     value={form.name}
                     onChange={(e) => setForm({ ...form, name: e.target.value })}
                     placeholder='Nguyễn Văn A'
-                    className='w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white placeholder-white/30 text-sm font-medium focus:outline-none focus:border-white/50 focus:bg-white/15 transition-all'
+                    className='w-full bg-white/70 border border-primary/15 rounded-xl px-4 py-3 text-foreground placeholder-foreground/30 text-sm font-medium focus:outline-none focus:border-primary/50 focus:bg-white transition-all'
                   />
                 </div>
 
                 {/* Email */}
                 <div>
-                  <label className='block text-white/70 text-xs font-black uppercase tracking-widest mb-2'>
+                  <label className='block text-foreground/70 text-xs font-semibold uppercase tracking-widest mb-2'>
                     Email
                   </label>
                   <div className='relative'>
@@ -135,17 +146,19 @@ export function ContactSection() {
                       type='email'
                       required
                       value={form.email}
-                      onChange={(e) => setForm({ ...form, email: e.target.value })}
+                      onChange={(e) =>
+                        setForm({ ...form, email: e.target.value })
+                      }
                       placeholder='email@example.com'
-                      className='w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white placeholder-white/30 text-sm font-medium focus:outline-none focus:border-white/50 focus:bg-white/15 transition-all pr-10'
+                      className='w-full bg-white/70 border border-primary/15 rounded-xl px-4 py-3 text-foreground placeholder-foreground/30 text-sm font-medium focus:outline-none focus:border-primary/50 focus:bg-white transition-all pr-10'
                     />
-                    <Mail className='absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30' />
+                    <Mail className='absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-primary/50' />
                   </div>
                 </div>
 
                 {/* Message */}
                 <div>
-                  <label className='block text-white/70 text-xs font-black uppercase tracking-widest mb-2'>
+                  <label className='block text-foreground/70 text-xs font-semibold uppercase tracking-widest mb-2'>
                     Tin nhắn
                   </label>
                   <textarea
@@ -153,16 +166,18 @@ export function ContactSection() {
                     required
                     rows={4}
                     value={form.message}
-                    onChange={(e) => setForm({ ...form, message: e.target.value })}
+                    onChange={(e) =>
+                      setForm({ ...form, message: e.target.value })
+                    }
                     placeholder='Bạn muốn hỏi về dịch vụ nào?'
-                    className='w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white placeholder-white/30 text-sm font-medium focus:outline-none focus:border-white/50 focus:bg-white/15 transition-all resize-none'
+                    className='w-full bg-white/70 border border-primary/15 rounded-xl px-4 py-3 text-foreground placeholder-foreground/30 text-sm font-medium focus:outline-none focus:border-primary/50 focus:bg-white transition-all resize-none'
                   />
                 </div>
 
                 {/* Submit */}
                 <button
                   type='submit'
-                  className='flex items-center justify-center gap-3 bg-white text-primary font-black px-8 py-4 rounded-xl text-sm uppercase tracking-widest hover:bg-white/90 hover:-translate-y-0.5 transition-all duration-200 shadow-lg shadow-black/10 mt-2'
+                  className='flex items-center justify-center gap-3 bg-primary text-white font-semibold px-8 py-4 rounded-xl text-sm uppercase tracking-widest hover:bg-primary/90 hover:-translate-y-0.5 transition-all duration-200 shadow-lg shadow-primary/25 mt-2'
                 >
                   {sent ? (
                     <>✓ Đã gửi thành công!</>

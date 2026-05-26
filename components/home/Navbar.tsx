@@ -74,13 +74,13 @@ export function Navbar() {
               height={34}
               className='rounded-full object-cover shadow-sm'
             />
-            <span className='text-foreground font-black text-2xl tracking-tighter'>
+            <span className='font-heading text-foreground font-black text-2xl tracking-tighter'>
               WAVE
             </span>
           </Link>
 
           {/* Nav links */}
-          <div className='hidden md:flex items-center gap-7'>
+          <div className='hidden lg:flex items-center gap-5 xl:gap-7'>
             {navLinks.map((link) => (
               <a
                 key={link.href}
@@ -93,7 +93,7 @@ export function Navbar() {
           </div>
 
           {/* Right: auth */}
-          <div className='hidden md:flex items-center gap-4'>
+          <div className='hidden md:flex items-center gap-2 sm:gap-4'>
             {authUser ? (
               <div className='flex items-center gap-4'>
                 {/* Notification Bell */}
@@ -128,7 +128,7 @@ export function Navbar() {
                           </div>
                         )}
                       </div>
-                      <span className='text-foreground text-sm font-bold tracking-tight'>
+                      <span className='hidden lg:inline text-foreground text-sm font-bold tracking-tight max-w-[10rem] truncate'>
                         {authUser.name}
                       </span>
                       <ChevronDown className='w-4 h-4 text-foreground/30 transition-transform group-data-[state=open]:rotate-180' />
@@ -137,7 +137,7 @@ export function Navbar() {
 
                   <DropdownMenuContent
                     align='end'
-                    className='w-72 p-2 bg-white/95 backdrop-blur-xl border-border/50 text-foreground shadow-2xl rounded-2xl'
+                    className='w-[min(90vw,18rem)] p-2 bg-white/95 backdrop-blur-xl border-border/50 text-foreground shadow-2xl rounded-2xl'
                   >
                     <div className='p-4 mb-2 bg-linear-to-br from-primary/5 to-secondary/5 rounded-xl border border-primary/10'>
                       <div className='flex items-center gap-3 mb-4'>
@@ -145,7 +145,7 @@ export function Navbar() {
                           {initials}
                         </div>
                         <div className='flex flex-col'>
-                          <span className='font-black text-lg text-foreground tracking-tight'>
+                          <span className='font-heading font-black text-lg text-foreground tracking-tight'>
                             {authUser.name}
                           </span>
                           <span className='text-foreground/50 text-xs font-medium'>

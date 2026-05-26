@@ -133,7 +133,7 @@ export default function LoyaltyPage() {
     return (
       <div className='bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900 rounded-2xl p-6 text-center text-red-600 dark:text-red-400 space-y-3 max-w-lg mx-auto mt-8'>
         <Info className='w-8 h-8 mx-auto' />
-        <h3 className='font-bold text-lg'>Đã xảy ra lỗi</h3>
+        <h3 className='font-heading font-bold text-lg'>Đã xảy ra lỗi</h3>
         <p className='text-sm'>Không thể kết nối đến máy chủ để lấy thông tin Loyalty. Vui lòng thử lại sau.</p>
       </div>
     );
@@ -143,7 +143,7 @@ export default function LoyaltyPage() {
     <div className='space-y-8 animate-fade-in'>
       {/* Page Header */}
       <div>
-        <h1 className='text-2xl font-black text-foreground flex items-center gap-2'>
+        <h1 className='font-heading text-2xl font-black text-foreground flex items-center gap-2'>
           <Award className='w-7 h-7 text-primary' /> Khách Hàng Thân Thiết
         </h1>
         <p className='text-sm text-muted-foreground'>
@@ -166,7 +166,7 @@ export default function LoyaltyPage() {
             <div className='flex justify-between items-start z-10'>
               <div className='space-y-1'>
                 <p className='text-[10px] font-black uppercase tracking-widest text-white/60'>E-Membership Card</p>
-                <h3 className='font-black tracking-wider text-lg'>WASH AUTO</h3>
+                <h3 className='font-heading font-black tracking-wider text-lg'>WASH AUTO</h3>
               </div>
               <div className={`px-3 py-1 rounded-full text-xs font-black uppercase tracking-wide border flex items-center gap-1.5 backdrop-blur-md ${currentStyle.badgeBg}`}>
                 <Crown className='w-3.5 h-3.5' /> {loyalty?.tierName || 'Member'}
@@ -214,7 +214,7 @@ export default function LoyaltyPage() {
             <CardContent className='p-6 space-y-6'>
               <div className='flex items-center justify-between border-b border-border/50 pb-4'>
                 <div>
-                  <h3 className='font-bold text-foreground flex items-center gap-2'>
+                  <h3 className='font-heading font-bold text-foreground flex items-center gap-2'>
                     <TrendingUp className='w-5 h-5 text-primary' /> Hoạt Động Tháng Này
                   </h3>
                   <p className='text-xs text-muted-foreground'>Lượt rửa xe tích luỹ trong tháng {new Date().getMonth() + 1}</p>
@@ -352,7 +352,7 @@ export default function LoyaltyPage() {
       {/* Tiers Comparison Grid */}
       <div className='space-y-4'>
         <div>
-          <h2 className='text-lg font-bold text-foreground flex items-center gap-2'>
+          <h2 className='font-heading text-lg font-bold text-foreground flex items-center gap-2'>
             <Crown className='w-5 h-5 text-yellow-500' /> Bảng So Sánh Quyền Lợi Các Hạng Thành Viên
           </h2>
           <p className='text-xs text-muted-foreground'>Khám phá lộ trình thăng hạng và các quyền lợi độc quyền kèm theo.</p>
@@ -382,7 +382,7 @@ export default function LoyaltyPage() {
                 <div className={`bg-gradient-to-br ${style.gradient} p-5 text-white relative overflow-hidden`}>
                   <div className='absolute top-0 right-0 w-16 h-16 bg-white/10 rounded-full blur-xl -mr-6 -mt-6' />
                   <Crown className='w-6 h-6 mb-2 relative z-10' />
-                  <h3 className='font-black text-lg capitalize tracking-wide relative z-10'>{t.tierName}</h3>
+                  <h3 className='font-heading font-black text-lg capitalize tracking-wide relative z-10'>{t.tierName}</h3>
                   <p className='text-[10px] text-white/70 mt-1 relative z-10 flex items-center gap-1 font-medium'>
                     <TrendingUp className='w-3 h-3' /> Yêu cầu: {t.minVisitsPerMonth} lượt rửa/tháng
                   </p>

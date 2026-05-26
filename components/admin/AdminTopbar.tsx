@@ -17,7 +17,7 @@ export function AdminTopbar({ title, subtitle }: AdminTopbarProps) {
     <header className='sticky top-0 z-20 bg-background/95 backdrop-blur-sm border-b border-border flex items-center justify-between px-8 py-4 gap-4'>
       {/* Title */}
       <div>
-        <h1 className='text-xl font-black text-foreground tracking-tight'>{title}</h1>
+        <h1 className='font-heading text-xl font-black text-foreground tracking-tight'>{title}</h1>
         {subtitle && <p className='text-foreground/40 text-xs font-medium mt-0.5'>{subtitle}</p>}
       </div>
 

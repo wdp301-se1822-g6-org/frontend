@@ -190,7 +190,7 @@ export default function CashierPOSPage() {
         {/* Sidebar: POS statistics */}
         <div className='w-full lg:w-80 flex flex-col gap-6 shrink-0'>
           <div className='bg-white rounded-2xl border border-slate-100 p-6 shadow-sm flex flex-col gap-5'>
-            <h3 className='font-black text-slate-800 text-base border-b border-slate-100 pb-3'>Thống kê quầy thu ngân</h3>
+            <h3 className='font-heading font-black text-slate-800 text-base border-b border-slate-100 pb-3'>Thống kê quầy thu ngân</h3>
             
             <div className='flex flex-col gap-4'>
               <div className='flex justify-between items-center'>
@@ -228,7 +228,7 @@ export default function CashierPOSPage() {
                 <CreditCard className='w-5 h-5' />
               </div>
               <div>
-                <h3 className='font-black text-slate-800 text-base'>Thu tiền hóa đơn</h3>
+                <h3 className='font-heading font-black text-slate-800 text-base'>Thu tiền hóa đơn</h3>
                 <p className='text-xs text-slate-400'>Xác nhận thanh toán cho khách hàng {payTarget.userId?.fullName ?? payTarget.customerName}</p>
               </div>
             </div>
