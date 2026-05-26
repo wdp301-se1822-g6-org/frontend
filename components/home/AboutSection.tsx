@@ -78,9 +78,7 @@ export function AboutSection() {
         <div className='grid grid-cols-1 lg:grid-cols-12 gap-8 items-center'>
           {/* LEFT - Worker Image */}
           <div className='lg:col-span-3 flex justify-center order-1 lg:order-none'>
-            <div
-              className='relative rounded-[2rem] overflow-hidden shadow-2xl shadow-primary/10 border border-border/50 group w-full max-w-[300px] aspect-[3/5]'
-            >
+            <div className='relative rounded-[2rem] overflow-hidden shadow-2xl shadow-primary/10 border border-border/50 group w-full max-w-[300px] aspect-[3/5]'>
               <Image
                 src='/about-worker.png'
                 alt='Nhân viên rửa xe chuyên nghiệp'
@@ -181,9 +179,7 @@ export function AboutSection() {
           {/* RIGHT - Car Image + Stats */}
           <div className='lg:col-span-4 flex flex-col gap-6'>
             {/* Car image */}
-            <div
-              className='relative rounded-[2rem] overflow-hidden shadow-2xl shadow-primary/10 border border-border/50 group h-[360px] sm:h-[440px] lg:h-[500px]'
-            >
+            <div className='relative rounded-[2rem] overflow-hidden shadow-2xl shadow-primary/10 border border-border/50 group h-[360px] sm:h-[440px] lg:h-[500px]'>
               <Image
                 src='/about-car.png'
                 alt='Xe sạch sau khi rửa chuyên nghiệp'

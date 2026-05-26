@@ -59,7 +59,6 @@ export function HeroSection() {
                 className='text-foreground/70 hover:text-primary group'
               >
                 Khám phá dịch vụ
-                <Waves className='w-5 h-5 ml-1 group-hover:translate-x-1 transition-transform' />
               </Button>
             </div>
 
