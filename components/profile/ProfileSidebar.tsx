@@ -65,6 +65,7 @@ export default function ProfileSidebar() {
         <div className='relative group'>
           <div className='w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold overflow-hidden border-2 border-background shadow-sm'>
             {authUser?.avatarUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={authUser.avatarUrl}
                 alt={authUser.name}

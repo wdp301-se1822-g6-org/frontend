@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import {
   CalendarCheck,
   History,
@@ -91,10 +92,12 @@ export function FeaturesSection() {
                   Live Booking Enabled
                 </span>
               </div>
-              <img
+              <Image
+                fill
+                sizes='(max-width: 1024px) 100vw, 50vw'
                 src='/feature-booking.png'
                 alt='Đặt lịch trực tuyến'
-                className='absolute inset-0 w-full h-full object-contain object-bottom p-4'
+                className='object-contain object-bottom p-4'
               />
             </div>
           </div>
@@ -103,10 +106,12 @@ export function FeaturesSection() {
           <div className='lg:col-span-2 bg-primary rounded-[2rem] sm:rounded-[2.5rem] p-6 sm:p-8 lg:p-10 shadow-2xl shadow-primary/20 flex flex-col justify-end text-white group hover:-translate-y-2 transition-all duration-500 animate-fade-in-up [animation-delay:600ms] opacity-0 fill-mode-forwards relative overflow-hidden min-h-[20rem]'>
             <div className='absolute top-0 right-0 w-48 h-48 bg-white/10 rounded-full blur-3xl -mr-20 -mt-20' />
             <div className='absolute -top-4 right-0 w-[58%] h-[55%] pointer-events-none'>
-              <img
+              <Image
+                fill
+                sizes='(max-width: 1024px) 100vw, 50vw'
                 src='/feature-cars.png'
                 alt='Quản lý xe cá nhân'
-                className='w-full h-full object-contain object-right-top mt-6 drop-shadow-2xl'
+                className='object-contain object-right-top mt-6 drop-shadow-2xl'
               />
             </div>
             <div className='relative z-10 max-w-full'>
@@ -137,11 +142,15 @@ export function FeaturesSection() {
             <p className='text-foreground/50 text-xs leading-relaxed text-justify'>
               {features[1].desc}
             </p>
-            <img
-              src='/feature-history.png'
-              alt='Lịch sử rửa xe'
-              className='mt-4 w-full h-32 object-contain object-bottom'
-            />
+            <div className='relative mt-4 w-full h-32'>
+              <Image
+                fill
+                sizes='(max-width: 1024px) 100vw, 50vw'
+                src='/feature-history.png'
+                alt='Lịch sử rửa xe'
+                className='object-contain object-bottom'
+              />
+            </div>
           </div>
 
           <div className='bg-white rounded-[2rem] sm:rounded-[2.5rem] p-6 sm:p-8 shadow-xl shadow-primary/5 border border-border/50 group hover:-translate-y-2 transition-all duration-500 animate-fade-in-up [animation-delay:800ms] opacity-0 fill-mode-forwards relative overflow-hidden flex flex-col'>
@@ -156,11 +165,15 @@ export function FeaturesSection() {
             <p className='text-foreground/50 text-xs leading-relaxed text-justify'>
               {features[3].desc}
             </p>
-            <img
-              src='/feature-rewards.png'
-              alt='Tích điểm & Đổi thưởng'
-              className='mt-4 w-full h-32 object-contain object-bottom'
-            />
+            <div className='relative mt-4 w-full h-32'>
+              <Image
+                fill
+                sizes='(max-width: 1024px) 100vw, 50vw'
+                src='/feature-rewards.png'
+                alt='Tích điểm & Đổi thưởng'
+                className='object-contain object-bottom'
+              />
+            </div>
           </div>
         </div>
       </div>

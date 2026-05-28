@@ -82,6 +82,8 @@ axiosInstance.interceptors.response.use(
           originalRequest.headers.Authorization = `Bearer ${newToken}`;
           return axiosInstance(originalRequest);
         }
+        processQueue(error, null);
+        return Promise.reject(error);
       } catch (refreshError) {
         processQueue(refreshError, null);
         return Promise.reject(refreshError);

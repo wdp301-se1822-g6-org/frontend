@@ -1,12 +1,12 @@
 'use client';
 
 import { AdminTopbar } from '@/components/admin/AdminTopbar';
-import { adminGetServiceTypes, adminCreateServiceType, adminUpdateServiceType, adminToggleServiceType, adminGetVehicleTypes, adminCreateVehicleType, adminUpdateVehicleType, adminToggleVehicleType } from '@/lib/admin-api';
+import { adminGetServiceTypes, adminCreateServiceType, adminUpdateServiceType, adminToggleServiceType, adminGetVehicleTypes, adminToggleVehicleType } from '@/lib/admin-api';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { Plus, Pencil, Power, X } from 'lucide-react';
 
-type ServiceType = { _id?: string; id?: string; name: string; description?: string; basePrice?: number; duration?: number; isActive?: boolean };
+type ServiceType = { _id?: string; id?: string; name: string; description?: string; basePrice?: number; duration?: number; estimatedMinutes?: number; pointsMultiplier?: number; checklistTemplate?: unknown[]; isActive?: boolean };
 type VehicleType = { _id?: string; id?: string; name: string; description?: string; priceMultiplier?: number; isActive?: boolean };
 
 function ServiceModal({ item, onClose, onSave }: { item?: ServiceType | null; onClose: () => void; onSave: (d: Record<string, unknown>) => void }) {
@@ -14,9 +14,9 @@ function ServiceModal({ item, onClose, onSave }: { item?: ServiceType | null; on
     name: item?.name ?? '',
     description: item?.description ?? '',
     basePrice: item?.basePrice ?? 0,
-    estimatedMinutes: (item as any)?.estimatedMinutes ?? item?.duration ?? 30,
-    pointsMultiplier: (item as any)?.pointsMultiplier ?? 1,
-    checklistTemplate: (item as any)?.checklistTemplate ?? [],
+    estimatedMinutes: item?.estimatedMinutes ?? item?.duration ?? 30,
+    pointsMultiplier: item?.pointsMultiplier ?? 1,
+    checklistTemplate: item?.checklistTemplate ?? [],
   });
   return (
     <div className='fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4' onClick={onClose}>
@@ -34,7 +34,7 @@ function ServiceModal({ item, onClose, onSave }: { item?: ServiceType | null; on
           ].map(({ label, key, type }) => (
             <div key={key}>
               <label className='block text-xs font-black uppercase tracking-widest text-foreground/40 mb-1.5'>{label}</label>
-              <input type={type} value={(form as Record<string, string | number | unknown>)[key] as any} onChange={(e) => setForm({ ...form, [key]: type === 'number' ? Number(e.target.value) : e.target.value })}
+              <input type={type} value={(form as unknown as Record<string, string | number>)[key]} onChange={(e) => setForm({ ...form, [key]: type === 'number' ? Number(e.target.value) : e.target.value })}
                 className='w-full border border-border rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-primary/50' />
             </div>
           ))}
@@ -97,7 +97,7 @@ export default function AdminServicesPage() {
                         <p className='text-foreground/50 text-xs mt-0.5'>{s.description}</p>
                         <div className='flex gap-4 mt-2'>
                           <span className='text-xs font-black text-primary'>{s.basePrice?.toLocaleString('vi-VN')}đ</span>
-                          <span className='text-xs text-foreground/40'>{(s as any).estimatedMinutes ?? s.duration} phút</span>
+                          <span className='text-xs text-foreground/40'>{s.estimatedMinutes ?? s.duration} phút</span>
                         </div>
                       </div>
                       <div className='flex items-center gap-2 shrink-0'>

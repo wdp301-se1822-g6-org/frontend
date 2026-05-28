@@ -13,7 +13,6 @@ import {
   Info, 
   CreditCard,
   Loader2,
-  ChevronRight,
   User2
 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -31,7 +30,21 @@ import {
 import { getMyVehicles } from '@/lib/customer-api';
 import { cn } from '@/lib/utils';
 import { formatCurrency } from '@/lib/format';
-import { Order, OrderStatus } from '@/types/order';
+import { Order, OrderStatus, AvailableSlot, StaffShift } from '@/types/order';
+
+interface CustomerVehicle {
+  _id?: string;
+  id?: string;
+  nickname?: string;
+  brand?: string;
+  licensePlate?: string;
+}
+
+interface ServiceTypeOption {
+  _id?: string;
+  id?: string;
+  name?: string;
+}
 
 const TABS = [
   { id: 'all', label: 'Tất cả' },
@@ -47,7 +60,7 @@ export default function MyOrdersPage() {
   const router = useRouter();
   const { data: orders = [], isLoading: isLoadingOrders, refetch } = useMyOrders();
   const { data: serviceTypes = [] } = useActiveServiceTypes();
-  const [vehicles, setVehicles] = useState<any[]>([]);
+  const [vehicles, setVehicles] = useState<CustomerVehicle[]>([]);
   
   const cancelMutation = useCancelOrder();
   const rescheduleMutation = useRescheduleOrder();
@@ -78,7 +91,7 @@ export default function MyOrdersPage() {
 
   // Map serviceTypeId -> Name
   const getServiceName = (id: string) => {
-    const service = serviceTypes.find((s: any) => (s._id || s.id) === id);
+    const service = serviceTypes.find((s: ServiceTypeOption) => (s._id || s.id) === id);
     return service?.name || 'Gói dịch vụ';
   };
 
@@ -88,7 +101,7 @@ export default function MyOrdersPage() {
     if (!vehicle) return { name: 'Phương tiện', plate: '' };
     return {
       name: vehicle.nickname || vehicle.brand || 'Xe của tôi',
-      plate: vehicle.licensePlate
+      plate: vehicle.licensePlate || ''
     };
   };
 
@@ -195,10 +208,10 @@ export default function MyOrdersPage() {
       setRescheduleSlot('');
       setRescheduleDate('');
       refetch();
-    } catch (error: any) {
+    } catch (error) {
       toast.dismiss();
       console.error(error);
-      toast.error(error.response?.data?.message || 'Không thể dời lịch. Vui lòng thử lại!');
+      toast.error((error as { response?: { data?: { message?: string } } }).response?.data?.message || 'Không thể dời lịch. Vui lòng thử lại!');
     }
   };
 
@@ -216,7 +229,7 @@ export default function MyOrdersPage() {
     
     // Filter shifts that fully cover target time
     const targetDate = new Date(targetTime).getTime();
-    return shifts.filter((s: any) => {
+    return shifts.filter((s: StaffShift) => {
       const start = new Date(s.startAt).getTime();
       const end = new Date(s.endAt).getTime();
       return targetDate >= start && targetDate < end && (s.currentBookings < s.maxBookings);
@@ -236,9 +249,9 @@ export default function MyOrdersPage() {
       setCancellingOrder(null);
       setCancelReason('');
       refetch();
-    } catch (error: any) {
+    } catch (error) {
       console.error(error);
-      toast.error(error.response?.data?.message || 'Hủy lịch thất bại. Vui lòng thử lại!');
+      toast.error((error as { response?: { data?: { message?: string } } }).response?.data?.message || 'Hủy lịch thất bại. Vui lòng thử lại!');
     }
   };
 
@@ -552,7 +565,7 @@ export default function MyOrdersPage() {
                     </p>
                   ) : (
                     <div className="grid grid-cols-3 sm:grid-cols-4 gap-2.5 max-h-[160px] overflow-y-auto pr-1">
-                      {availableSlots.map((slot: any) => {
+                      {availableSlots.map((slot: AvailableSlot) => {
                         const isSelected = slot.scheduledAt === rescheduleSlot;
                         const isFull = slot.remainingCapacity <= 0;
                         const timeStr = new Date(slot.scheduledAt).toLocaleTimeString('vi-VN', {

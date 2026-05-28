@@ -12,10 +12,9 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import {
   Wrench, Users, ShieldCheck, CheckCircle2,
-  XCircle, Clock, AlertTriangle, MessageSquare, ChevronDown, RefreshCw,
+  XCircle, Clock, MessageSquare, ChevronDown, RefreshCw,
   Camera, Eye
 } from 'lucide-react';
-import { useEffect } from 'react';
 import { toast } from 'sonner';
 
 interface UserData {
@@ -65,22 +64,19 @@ interface WorkOrderData {
 export default function ManagerWorkOrdersPage() {
   const qc = useQueryClient();
   const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'in_progress' | 'completed'>('all');
-  const [selectedWorkOrder, setSelectedWorkOrder] = useState<string | null>(null);
-  const [inspectionPhotos, setInspectionPhotos] = useState<Record<string, { preWash: string[]; postWash: string[] }>>({});
-  const [previewPhoto, setPreviewPhoto] = useState<string | null>(null);
-
-  // Tự động load ảnh kiểm định từ localStorage
-  useEffect(() => {
+  const [inspectionPhotos] = useState<Record<string, { preWash: string[]; postWash: string[] }>>(() => {
     const stored = localStorage.getItem('wave_inspection_photos');
     if (stored) {
       try {
-        setInspectionPhotos(JSON.parse(stored));
-      } catch (e) {
-        // ignore
+        return JSON.parse(stored);
+      } catch {
+        return {};
       }
     }
-  }, []);
-  
+    return {};
+  });
+  const [previewPhoto, setPreviewPhoto] = useState<string | null>(null);
+
   // States cho Dialog giao việc
   const [isAssignOpen, setIsAssignOpen] = useState(false);
   const [assignTarget, setAssignTarget] = useState<WorkOrderData | null>(null);
@@ -157,8 +153,8 @@ export default function ManagerWorkOrdersPage() {
       qc.invalidateQueries({ queryKey: ['manager-work-orders'] });
       qc.invalidateQueries({ queryKey: ['manager-dashboard-workorders'] });
     },
-    onError: (err: any) => {
-      const errMsg = err?.response?.data?.message ?? 'Không thể gán thợ.';
+    onError: (err) => {
+      const errMsg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message ?? 'Không thể gán thợ.';
       toast.error(`Lỗi: ${errMsg}`);
     }
   });
@@ -170,9 +166,9 @@ export default function ManagerWorkOrdersPage() {
       
       // Nếu QC Passed, ta cập nhật Order Status sang completed
       if (passed && qcTarget) {
-        const oId = typeof qcTarget.orderId === 'string' 
-          ? qcTarget.orderId 
-          : (qcTarget.orderId as any)?._id || (qcTarget.orderId as any)?.id;
+        const oId = typeof qcTarget.orderId === 'string'
+          ? qcTarget.orderId
+          : (qcTarget.orderId as { _id?: string; id?: string })?._id || (qcTarget.orderId as { _id?: string; id?: string })?.id;
         if (oId) {
           await adminUpdateOrderStatus(oId, 'completed');
         }
@@ -187,8 +183,8 @@ export default function ManagerWorkOrdersPage() {
       qc.invalidateQueries({ queryKey: ['manager-dashboard-workorders'] });
       qc.invalidateQueries({ queryKey: ['manager-orders'] });
     },
-    onError: (err: any) => {
-      const errMsg = err?.response?.data?.message ?? 'Không thể lưu đánh giá QC.';
+    onError: (err) => {
+      const errMsg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message ?? 'Không thể lưu đánh giá QC.';
       toast.error(`Lỗi: ${errMsg}`);
     }
   });
@@ -254,7 +250,7 @@ export default function ManagerWorkOrdersPage() {
               </div>
               <h3 className='font-heading text-lg font-black text-slate-800 mb-2'>Không tìm thấy phiếu rửa xe nào</h3>
               <p className='text-slate-400 text-sm leading-relaxed'>
-                Hiện tại không có xe nào ở trạng thái này. Vui lòng kiểm tra mục "Đơn đặt lịch" để tiến hành Check-in nhận xe mới.
+                Hiện tại không có xe nào ở trạng thái này. Vui lòng kiểm tra mục &quot;Đơn đặt lịch&quot; để tiến hành Check-in nhận xe mới.
               </p>
             </div>
           ) : (
@@ -335,7 +331,7 @@ export default function ManagerWorkOrdersPage() {
                             )}
                             QC lần trước: {wo.qcPassed ? 'ĐẠT' : 'KHÔNG ĐẠT'}
                           </p>
-                          {wo.qcNote && <p className='text-slate-400 mt-0.5 italic'>"{wo.qcNote}"</p>}
+                          {wo.qcNote && <p className='text-slate-400 mt-0.5 italic'>&quot;{wo.qcNote}&quot;</p>}
                         </div>
                       )}
 
@@ -355,6 +351,7 @@ export default function ManagerWorkOrdersPage() {
                                   onClick={() => setPreviewPhoto(photo)}
                                   className='relative w-12 h-12 rounded-lg overflow-hidden border border-slate-200 shadow-sm bg-slate-50 cursor-pointer hover:border-amber-500 transition-all shrink-0 group'
                                 >
+                                  {/* eslint-disable-next-line @next/next/no-img-element */}
                                   <img src={photo} alt='Pre-wash' className='w-full h-full object-cover group-hover:scale-105 transition-transform' />
                                   <div className='absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center'>
                                     <Eye className='w-3 h-3 text-white' />
@@ -381,6 +378,7 @@ export default function ManagerWorkOrdersPage() {
                                   onClick={() => setPreviewPhoto(photo)}
                                   className='relative w-12 h-12 rounded-lg overflow-hidden border border-slate-200 shadow-sm bg-slate-50 cursor-pointer hover:border-emerald-500 transition-all shrink-0 group'
                                 >
+                                  {/* eslint-disable-next-line @next/next/no-img-element */}
                                   <img src={photo} alt='Post-wash' className='w-full h-full object-cover group-hover:scale-105 transition-transform' />
                                   <div className='absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center'>
                                     <Eye className='w-3 h-3 text-white' />
@@ -577,6 +575,7 @@ export default function ManagerWorkOrdersPage() {
       {previewPhoto && (
         <div className='fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4' onClick={() => setPreviewPhoto(null)}>
           <div className='relative max-w-3xl w-full max-h-[85vh] flex items-center justify-center animate-in fade-in zoom-in-95 duration-150'>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={previewPhoto} alt='Enlarged Preview' className='rounded-2xl max-w-full max-h-[80vh] object-contain shadow-2xl border border-white/10' />
             <button 
               onClick={() => setPreviewPhoto(null)} 

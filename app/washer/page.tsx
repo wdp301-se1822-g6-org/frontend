@@ -9,8 +9,6 @@ import {
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import {
-  Wrench,
-  Clock,
   CheckCircle2,
   RefreshCw,
   Play,
@@ -23,7 +21,6 @@ import {
   Plus,
   Eye
 } from 'lucide-react';
-import { useEffect } from 'react';
 import { toast } from 'sonner';
 
 interface WorkOrderData {
@@ -58,20 +55,18 @@ export default function WasherDashboard() {
   
   // Lưu trạng thái checklist của từng Work Order đang rửa xe (ID -> mảng boolean)
   const [checklists, setChecklists] = useState<Record<string, boolean[]>>({});
-  const [inspectionPhotos, setInspectionPhotos] = useState<Record<string, { preWash: string[]; postWash: string[] }>>({});
-  const [previewPhoto, setPreviewPhoto] = useState<string | null>(null);
-
-  // Tự động tải ảnh từ localStorage khi render
-  useEffect(() => {
+  const [inspectionPhotos, setInspectionPhotos] = useState<Record<string, { preWash: string[]; postWash: string[] }>>(() => {
     const stored = localStorage.getItem('wave_inspection_photos');
     if (stored) {
       try {
-        setInspectionPhotos(JSON.parse(stored));
-      } catch (e) {
-        // ignore
+        return JSON.parse(stored);
+      } catch {
+        return {};
       }
     }
-  }, []);
+    return {};
+  });
+  const [previewPhoto, setPreviewPhoto] = useState<string | null>(null);
 
   const handleUploadPhotos = (woId: string, files: FileList | null, type: 'pre' | 'post') => {
     if (!files) return;
@@ -160,8 +155,8 @@ export default function WasherDashboard() {
       }));
       qc.invalidateQueries({ queryKey: ['washer-work-orders'] });
     },
-    onError: (err: any) => {
-      const errMsg = err?.response?.data?.message ?? 'Không thể bắt đầu rửa xe.';
+    onError: (err: unknown) => {
+      const errMsg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message ?? 'Không thể bắt đầu rửa xe.';
       toast.error(`Lỗi: ${errMsg}`);
     }
   });
@@ -175,8 +170,8 @@ export default function WasherDashboard() {
       toast.success('Tuyệt vời! Đã báo cáo hoàn thành rửa xe. Chờ Cashier kiểm duyệt QC.');
       qc.invalidateQueries({ queryKey: ['washer-work-orders'] });
     },
-    onError: (err: any) => {
-      const errMsg = err?.response?.data?.message ?? 'Không thể gửi báo cáo hoàn thành.';
+    onError: (err: unknown) => {
+      const errMsg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message ?? 'Không thể gửi báo cáo hoàn thành.';
       toast.error(`Lỗi: ${errMsg}`);
     }
   });
@@ -312,7 +307,7 @@ export default function WasherDashboard() {
                       {isPending && (
                         <div className='text-center py-6 max-w-sm mx-auto'>
                           <p className='text-slate-500 text-sm mb-4 leading-relaxed font-medium'>
-                            Xe đã được Cashier giao cho bạn phụ trách. Hãy click "Bắt đầu làm việc" để nhận xe vào khoang rửa.
+                            Xe đã được Cashier giao cho bạn phụ trách. Hãy click &quot;Bắt đầu làm việc&quot; để nhận xe vào khoang rửa.
                           </p>
                           <button
                             onClick={() => startWashMutation.mutate(wo.id)}
@@ -387,6 +382,7 @@ export default function WasherDashboard() {
                                   <>
                                     {inspectionPhotos[wo.id].preWash.map((photo, pIdx) => (
                                       <div key={pIdx} className='group relative aspect-square rounded-xl overflow-hidden border border-slate-200 shadow-sm bg-slate-50'>
+                                        {/* eslint-disable-next-line @next/next/no-img-element */}
                                         <img src={photo} alt='Pre-wash' className='w-full h-full object-cover group-hover:scale-105 transition-transform duration-200' />
                                         <div className='absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-150 flex items-center justify-center gap-2'>
                                           <button 
@@ -448,6 +444,7 @@ export default function WasherDashboard() {
                                   <>
                                     {inspectionPhotos[wo.id].postWash.map((photo, pIdx) => (
                                       <div key={pIdx} className='group relative aspect-square rounded-xl overflow-hidden border border-slate-200 shadow-sm bg-slate-50'>
+                                        {/* eslint-disable-next-line @next/next/no-img-element */}
                                         <img src={photo} alt='Post-wash' className='w-full h-full object-cover group-hover:scale-105 transition-transform duration-200' />
                                         <div className='absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-150 flex items-center justify-center gap-2'>
                                           <button 
@@ -548,7 +545,7 @@ export default function WasherDashboard() {
                                 <span>Ghi chú từ quản lý:</span>
                               </div>
                               {wo.qcNote ? (
-                                <p className='text-slate-500 mt-1.5 italic bg-slate-50 p-2 rounded-lg border border-slate-100/50'>"{wo.qcNote}"</p>
+                                <p className='text-slate-500 mt-1.5 italic bg-slate-50 p-2 rounded-lg border border-slate-100/50'>&quot;{wo.qcNote}&quot;</p>
                               ) : (
                                 <p className='text-slate-400 mt-1 italic'>Không có ghi chú thêm.</p>
                               )}
@@ -569,6 +566,7 @@ export default function WasherDashboard() {
       {previewPhoto && (
         <div className='fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4' onClick={() => setPreviewPhoto(null)}>
           <div className='relative max-w-3xl w-full max-h-[85vh] flex items-center justify-center animate-in fade-in zoom-in-95 duration-150'>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={previewPhoto} alt='Enlarged Preview' className='rounded-2xl max-w-full max-h-[80vh] object-contain shadow-2xl border border-white/10' />
             <button 
               onClick={() => setPreviewPhoto(null)} 

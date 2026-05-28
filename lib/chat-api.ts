@@ -3,7 +3,7 @@ import { axiosInstance } from '@/lib/axios';
 export interface SendMessageResponse {
   sessionId: string;
   reply: string;
-  toolsCalled?: any[];
+  toolsCalled?: unknown[];
 }
 
 export interface ChatMessage {

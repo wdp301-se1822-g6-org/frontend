@@ -10,7 +10,6 @@ import {
   Award,
   Calendar,
   Coins,
-  ChevronRight,
   TrendingUp,
   Info,
   Loader2,

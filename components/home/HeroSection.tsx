@@ -2,7 +2,6 @@
 
 import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
-import { Waves } from 'lucide-react';
 
 import Image from 'next/image';
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { 
   Car, 
@@ -30,6 +30,9 @@ import { getMyVehicles, getActiveVehicleTypes, createVehicle } from '@/lib/custo
 import { useActiveServiceTypes, useAvailableSlots, useCreateOrder } from '@/hooks/orders/useOrders';
 import { cn } from '@/lib/utils';
 import { formatCurrency } from '@/lib/format';
+import type { ServiceType as ServiceTypeBase, AvailableSlot } from '@/types/order';
+
+type ServiceTypeItem = ServiceTypeBase & { _id?: string };
 
 interface Vehicle {
   id?: string;
@@ -60,13 +63,12 @@ export default function BookingPage() {
 
 function BookingFlow() {
   const router = useRouter();
-  const queryClient = useActiveServiceTypes();
   const createOrderMutation = useCreateOrder();
 
   const [step, setStep] = useState(1);
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [vehicleTypes, setVehicleTypes] = useState<VehicleType[]>([]);
-  const [isLoadingVehicles, setIsLoadingVehicles] = useState(false);
+  const [isLoadingVehicles, setIsLoadingVehicles] = useState(true);
 
   // Form states
   const [selectedVehicleId, setSelectedVehicleId] = useState<string>('');
@@ -88,13 +90,7 @@ function BookingFlow() {
   });
   const [isSavingVehicle, setIsSavingVehicle] = useState(false);
 
-  // Fetch initial data for Step 1
-  useEffect(() => {
-    fetchVehiclesAndTypes();
-  }, []);
-
-  async function fetchVehiclesAndTypes() {
-    setIsLoadingVehicles(true);
+  const fetchVehiclesAndTypes = useCallback(async () => {
     try {
       const [vehiclesRes, typesRes] = await Promise.all([
         getMyVehicles(),
@@ -113,8 +109,12 @@ function BookingFlow() {
         setSelectedVehicleId(vData[0]._id || vData[0].id || '');
       }
 
-      if (tData.length > 0 && !newVehicleData.vehicleTypeId) {
-        setNewVehicleData(prev => ({ ...prev, vehicleTypeId: tData[0]._id || tData[0].id || '' }));
+      if (tData.length > 0) {
+        setNewVehicleData(prev =>
+          prev.vehicleTypeId
+            ? prev
+            : { ...prev, vehicleTypeId: tData[0]._id || tData[0].id || '' }
+        );
       }
     } catch (error) {
       console.error('Lỗi khi tải dữ liệu phương tiện:', error);
@@ -122,15 +122,57 @@ function BookingFlow() {
     } finally {
       setIsLoadingVehicles(false);
     }
-  }
+  }, []);
+
+  // Fetch initial data for Step 1
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const [vehiclesRes, typesRes] = await Promise.all([
+          getMyVehicles(),
+          getActiveVehicleTypes()
+        ]);
+        if (!active) return;
+        const vData = vehiclesRes.data?.data || vehiclesRes.data || [];
+        const tData = typesRes.data?.data || typesRes.data || [];
+        setVehicles(vData);
+        setVehicleTypes(tData);
+
+        const defaultVehicle = vData.find((v: Vehicle) => v.isDefault);
+        if (defaultVehicle) {
+          setSelectedVehicleId(defaultVehicle._id || defaultVehicle.id || '');
+        } else if (vData.length > 0) {
+          setSelectedVehicleId(vData[0]._id || vData[0].id || '');
+        }
+
+        if (tData.length > 0) {
+          setNewVehicleData(prev =>
+            prev.vehicleTypeId
+              ? prev
+              : { ...prev, vehicleTypeId: tData[0]._id || tData[0].id || '' }
+          );
+        }
+      } catch (error) {
+        console.error('Lỗi khi tải dữ liệu phương tiện:', error);
+        toast.error('Không thể tải danh sách xe. Vui lòng tải lại trang.');
+      } finally {
+        if (active) setIsLoadingVehicles(false);
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, []);
 
   // Pre-select today or tomorrow as date when step 3 starts
-  useEffect(() => {
-    if (step === 3 && !selectedDate) {
+  const goToStep3 = () => {
+    if (!selectedDate) {
       const today = new Date();
       setSelectedDate(today.toISOString().split('T')[0]);
     }
-  }, [step, selectedDate]);
+    setStep(3);
+  };
 
   // Date range for picking (Next 7 days)
   const dateOptions = useMemo(() => {
@@ -185,7 +227,7 @@ function BookingFlow() {
   }, [vehicles, selectedVehicleId]);
 
   const selectedService = useMemo(() => {
-    return serviceTypes.find((s: any) => (s._id || s.id) === selectedServiceId);
+    return serviceTypes.find((s: ServiceTypeItem) => (s._id || s.id) === selectedServiceId);
   }, [serviceTypes, selectedServiceId]);
 
   // Bộ lọc dịch vụ thông minh dựa trên Loại xe đã chọn ở Bước 1
@@ -201,7 +243,7 @@ function BookingFlow() {
     const isMotorbike = selectedVehicleType.toLowerCase().includes('motor') || 
                         selectedVehicleType.toLowerCase().includes('xe máy');
                         
-    return serviceTypes.filter((service: any) => {
+    return serviceTypes.filter((service: ServiceTypeItem) => {
       const nameLower = service.name.toLowerCase();
       const descLower = (service.description || '').toLowerCase();
       
@@ -246,9 +288,9 @@ function BookingFlow() {
         setSelectedVehicleId(addedVehicle._id || addedVehicle.id || '');
       }
       setIsAddingVehicle(false);
-    } catch (error: any) {
+    } catch (error) {
       console.error('Lỗi khi thêm xe nhanh:', error);
-      toast.error(error.response?.data?.message || 'Có lỗi xảy ra khi thêm xe');
+      toast.error((error as { response?: { data?: { message?: string } } }).response?.data?.message || 'Có lỗi xảy ra khi thêm xe');
     } finally {
       setIsSavingVehicle(false);
     }
@@ -280,9 +322,9 @@ function BookingFlow() {
         // Trực tiếp đưa về trang đơn hàng
         router.push('/profile/orders?success=true');
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error('Lỗi đặt lịch:', error);
-      toast.error(error.response?.data?.message || 'Đặt lịch thất bại. Vui lòng thử lại!');
+      toast.error((error as { response?: { data?: { message?: string } } }).response?.data?.message || 'Đặt lịch thất bại. Vui lòng thử lại!');
     }
   };
 
@@ -591,7 +633,7 @@ function BookingFlow() {
                       <p className="text-center py-10 text-muted-foreground text-sm">Chưa có dịch vụ nào phù hợp với loại xe này.</p>
                     ) : (
                       <div className="space-y-4">
-                        {filteredServiceTypes.map((service: any) => {
+                        {filteredServiceTypes.map((service: ServiceTypeItem) => {
                           const isSelected = (service._id || service.id) === selectedServiceId;
                           return (
                             <button
@@ -666,7 +708,7 @@ function BookingFlow() {
                       </Button>
                       <Button
                         disabled={!selectedServiceId}
-                        onClick={() => setStep(3)}
+                        onClick={goToStep3}
                         className="bg-primary hover:bg-primary/95 text-white rounded-xl font-bold px-6 py-2.5 shadow-lg shadow-primary/20 cursor-pointer transition-all hover:scale-102 flex items-center gap-1.5"
                       >
                         Tiếp theo <ChevronRight className="w-4 h-4" />
@@ -744,7 +786,7 @@ function BookingFlow() {
                         </Card>
                       ) : (
                         <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
-                          {availableSlots.map((slot: any) => {
+                          {availableSlots.map((slot: AvailableSlot) => {
                             const isSelected = slot.scheduledAt === selectedSlot;
                             const isFull = slot.remainingCapacity <= 0;
                             // Format time from ISO

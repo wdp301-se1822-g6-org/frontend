@@ -4,14 +4,37 @@ import { AdminTopbar } from '@/components/admin/AdminTopbar';
 import { adminGetOrders, adminGetWorkOrders } from '@/lib/admin-api';
 import { useQuery } from '@tanstack/react-query';
 import {
-  CalendarCheck, Wrench, Users, CreditCard,
+  CalendarCheck, Wrench, CreditCard,
   TrendingUp, ArrowRight, ShieldCheck, CheckCircle2, Clock
 } from 'lucide-react';
 import Link from 'next/link';
 
+interface DashboardOrder {
+  scheduledAt?: string;
+  bookingDate?: string;
+  status?: string;
+  isPaid?: boolean;
+  amount?: number | string;
+  totalPrice?: number | string;
+}
+
+interface DashboardWorkOrder {
+  _id?: string;
+  id?: string;
+  status?: string;
+  qcStatus?: string | null;
+  orderId?: {
+    userId?: { fullName?: string };
+    customerName?: string;
+    vehicleId?: { licensePlate?: string };
+    licensePlate?: string;
+  };
+  washerId?: { fullName?: string; name?: string };
+}
+
 export default function ManagerDashboard() {
   // Lấy dữ liệu orders
-  const { data: ordersData, isLoading: isLoadingOrders } = useQuery({
+  const { data: ordersData } = useQuery({
     queryKey: ['manager-dashboard-orders'],
     queryFn: () => adminGetOrders({ limit: 100 }),
   });
@@ -28,23 +51,23 @@ export default function ManagerDashboard() {
   // Tính toán số liệu thống kê
   const today = new Date().toDateString();
   
-  const todayOrders = orders.filter((o: any) => {
+  const todayOrders = (orders as DashboardOrder[]).filter((o) => {
     const orderDate = o.scheduledAt ?? o.bookingDate;
     return orderDate ? new Date(orderDate).toDateString() === today : false;
   });
 
-  const completedToday = todayOrders.filter((o: any) => o.status === 'completed');
-  
-  const todayRevenue = todayOrders
-    .filter((o: any) => o.status === 'completed' || o.isPaid === true)
-    .reduce((sum: number, o: any) => sum + Number(o.amount ?? o.totalPrice ?? 0), 0);
+  const completedToday = todayOrders.filter((o) => o.status === 'completed');
 
-  const activeWorkOrders = workOrders.filter((w: any) => 
+  const todayRevenue = todayOrders
+    .filter((o) => o.status === 'completed' || o.isPaid === true)
+    .reduce((sum, o) => sum + Number(o.amount ?? o.totalPrice ?? 0), 0);
+
+  const activeWorkOrders = (workOrders as DashboardWorkOrder[]).filter((w) =>
     w.status === 'pending' || w.status === 'in_progress'
   );
 
-  const qcPassedCount = workOrders.filter((w: any) => w.qcStatus === 'passed').length;
-  const qcTotalCount = workOrders.filter((w: any) => w.qcStatus != null).length;
+  const qcPassedCount = (workOrders as DashboardWorkOrder[]).filter((w) => w.qcStatus === 'passed').length;
+  const qcTotalCount = (workOrders as DashboardWorkOrder[]).filter((w) => w.qcStatus != null).length;
   const qcRate = qcTotalCount > 0 ? Math.round((qcPassedCount / qcTotalCount) * 100) : 100;
 
   return (
@@ -195,7 +218,7 @@ export default function ManagerDashboard() {
                       </td>
                     </tr>
                   ) : (
-                    activeWorkOrders.slice(0, 5).map((w: any) => {
+                    activeWorkOrders.slice(0, 5).map((w) => {
                       let statusBadge = 'bg-slate-100 text-slate-500';
                       let statusLabel = w.status;
                       if (w.status === 'pending') {

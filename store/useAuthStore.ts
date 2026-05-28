@@ -37,9 +37,13 @@ export const useAuthStore = create<AuthState>()(
 
         try {
           const res = await axiosInstance.post('/auth/refresh', { refreshToken });
-          const newAccessToken = res.data.accessToken;
-          set({ accessToken: newAccessToken });
-          return newAccessToken;
+          const { accessToken, refreshToken: newRefreshToken, user } = res.data;
+          set({
+            accessToken,
+            ...(newRefreshToken ? { refreshToken: newRefreshToken } : {}),
+            ...(user ? { authUser: user } : {}),
+          });
+          return accessToken;
         } catch (error) {
           set({ authUser: null, accessToken: null, refreshToken: null });
           throw error;
