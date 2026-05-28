@@ -217,7 +217,7 @@ export default function AdminUsersPage() {
                 <KeyRound className='w-5 h-5 text-primary' />
               </div>
               <div>
-                <h3 className='font-black text-foreground'>Đặt lại mật khẩu</h3>
+                <h3 className='font-heading font-black text-foreground'>Đặt lại mật khẩu</h3>
                 <p className='text-xs text-foreground/40'>Nhập mật khẩu mới cho người dùng</p>
               </div>
             </div>

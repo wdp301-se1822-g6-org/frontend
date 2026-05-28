@@ -225,7 +225,7 @@ export default function VehicleManagement() {
       {/* Header section */}
       <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-border pb-4'>
         <div>
-          <h1 className='text-xl font-bold text-foreground'>Xe Của Tôi</h1>
+          <h1 className='font-heading text-xl font-bold text-foreground'>Xe Của Tôi</h1>
           <p className='text-sm text-muted-foreground'>Quản lý danh sách phương tiện cá nhân của bạn để đặt lịch nhanh chóng hơn</p>
         </div>
         <Button 
@@ -250,7 +250,7 @@ export default function VehicleManagement() {
               <Car className="w-12 h-12" />
             </div>
             <div className="space-y-1">
-              <h3 className="text-lg font-bold text-foreground">Chưa có phương tiện nào</h3>
+              <h3 className="font-heading text-lg font-bold text-foreground">Chưa có phương tiện nào</h3>
               <p className="text-sm text-muted-foreground max-w-sm">
                 Thêm thông tin xe giúp chúng tôi gợi ý dịch vụ phù hợp và rút ngắn thời gian đặt lịch rửa xe của bạn.
               </p>
@@ -289,7 +289,7 @@ export default function VehicleManagement() {
                           {isMotorbike ? <Bike className="w-5 h-5" /> : <Car className="w-5 h-5" />}
                         </div>
                         <div>
-                          <h4 className="font-bold text-foreground text-md flex items-center gap-2">
+                          <h4 className="font-heading font-bold text-foreground text-md flex items-center gap-2">
                             {vehicle.nickname || vehicle.brand || 'Xe của tôi'}
                             {vehicle.isDefault && (
                               <span className="inline-flex items-center gap-0.5 text-[10px] bg-primary text-white font-bold px-2 py-0.5 rounded-full shadow-sm shadow-primary/10">
@@ -375,7 +375,7 @@ export default function VehicleManagement() {
           <Card className="w-full max-w-lg border-none shadow-2xl rounded-2xl overflow-hidden bg-white/95 backdrop-blur-md animate-in zoom-in-95 duration-200">
             <CardContent className="p-6">
               <div className="flex items-center justify-between border-b border-slate-100 pb-4 mb-6">
-                <h3 className="text-lg font-bold text-foreground">
+                <h3 className="font-heading text-lg font-bold text-foreground">
                   {selectedVehicle ? 'Cập nhật phương tiện' : 'Thêm phương tiện mới'}
                 </h3>
                 <button 
@@ -509,7 +509,7 @@ export default function VehicleManagement() {
                   <AlertTriangle className="w-6 h-6" />
                 </div>
                 <div className="space-y-1 flex-1">
-                  <h3 className="text-lg font-bold text-foreground">Xóa phương tiện</h3>
+                  <h3 className="font-heading text-lg font-bold text-foreground">Xóa phương tiện</h3>
                   <p className="text-sm text-muted-foreground">
                     Bạn có chắc chắn muốn xóa phương tiện có biển số{' '}
                     <span className="font-mono font-bold text-slate-800">{selectedVehicle.licensePlate}</span> không?

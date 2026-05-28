@@ -252,7 +252,7 @@ export default function ManagerWorkOrdersPage() {
               <div className='w-16 h-16 rounded-2xl bg-indigo-50 flex items-center justify-center mx-auto mb-6 text-indigo-600'>
                 <Wrench className='w-8 h-8' />
               </div>
-              <h3 className='text-lg font-black text-slate-800 mb-2'>Không tìm thấy phiếu rửa xe nào</h3>
+              <h3 className='font-heading text-lg font-black text-slate-800 mb-2'>Không tìm thấy phiếu rửa xe nào</h3>
               <p className='text-slate-400 text-sm leading-relaxed'>
                 Hiện tại không có xe nào ở trạng thái này. Vui lòng kiểm tra mục "Đơn đặt lịch" để tiến hành Check-in nhận xe mới.
               </p>
@@ -448,7 +448,7 @@ export default function ManagerWorkOrdersPage() {
                 <Users className='w-5 h-5' />
               </div>
               <div>
-                <h3 className='font-black text-slate-800 text-base'>Phân công thợ rửa xe</h3>
+                <h3 className='font-heading font-black text-slate-800 text-base'>Phân công thợ rửa xe</h3>
                 <p className='text-xs text-slate-400'>Chọn thợ rửa xe phụ trách cho xe {assignTarget.vehicleSnapshot?.plate ?? ''}</p>
               </div>
             </div>
@@ -500,7 +500,7 @@ export default function ManagerWorkOrdersPage() {
                 <ShieldCheck className='w-5 h-5' />
               </div>
               <div>
-                <h3 className='font-black text-slate-800 text-base'>Đánh giá chất lượng rửa (QC)</h3>
+                <h3 className='font-heading font-black text-slate-800 text-base'>Đánh giá chất lượng rửa (QC)</h3>
                 <p className='text-xs text-slate-400'>Đánh giá kiểm định xe {qcTarget.vehicleSnapshot?.plate ?? ''}</p>
               </div>
             </div>

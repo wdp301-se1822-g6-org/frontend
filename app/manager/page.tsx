@@ -120,7 +120,7 @@ export default function ManagerDashboard() {
 
           {/* Quick Shortcuts */}
           <div className='bg-white rounded-2xl border border-slate-100 p-6 shadow-sm'>
-            <h2 className='text-sm font-black uppercase tracking-widest text-slate-400 mb-4'>Thao tác vận hành nhanh</h2>
+            <h2 className='font-heading text-sm font-black uppercase tracking-widest text-slate-400 mb-4'>Thao tác vận hành nhanh</h2>
             <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
               <Link
                 href='/manager/orders'
@@ -131,7 +131,7 @@ export default function ManagerDashboard() {
                     <CalendarCheck className='w-5 h-5' />
                   </div>
                   <div>
-                    <h3 className='font-bold text-slate-800 text-sm'>Check-in Khách hàng mới</h3>
+                    <h3 className='font-heading font-bold text-slate-800 text-sm'>Check-in Khách hàng mới</h3>
                     <p className='text-xs text-slate-400 mt-0.5'>Xem danh sách đặt lịch và check-in tạo Work Order</p>
                   </div>
                 </div>
@@ -147,7 +147,7 @@ export default function ManagerDashboard() {
                     <Wrench className='w-5 h-5' />
                   </div>
                   <div>
-                    <h3 className='font-bold text-slate-800 text-sm'>Phân công & Kiểm định QC</h3>
+                    <h3 className='font-heading font-bold text-slate-800 text-sm'>Phân công & Kiểm định QC</h3>
                     <p className='text-xs text-slate-400 mt-0.5'>Giao xe cho thợ rửa, giám sát tiến độ và kiểm tra chất lượng</p>
                   </div>
                 </div>
@@ -159,7 +159,7 @@ export default function ManagerDashboard() {
           {/* Real-time active Wash Orders */}
           <div className='bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden'>
             <div className='flex items-center justify-between px-6 py-5 border-b border-slate-100'>
-              <h2 className='font-black text-slate-900 text-base'>Đơn xe đang rửa thực tế</h2>
+              <h2 className='font-heading font-black text-slate-900 text-base'>Đơn xe đang rửa thực tế</h2>
               <Link href='/manager/work-orders' className='text-xs font-black text-indigo-600 hover:underline flex items-center gap-1'>
                 Xem tất cả vận hành <ArrowRight className='w-3 h-3' />
               </Link>

@@ -94,7 +94,10 @@ export function LoyaltyTiersSection() {
   const router = useRouter();
 
   return (
-    <section id='loyalty' className='py-16 bg-background px-4 relative overflow-hidden'>
+    <section
+      id='loyalty'
+      className='py-12 sm:py-16 bg-background px-4 relative overflow-hidden'
+    >
       <div className='absolute top-0 left-0 w-full h-px bg-linear-to-r from-transparent via-primary/20 to-transparent' />
       <div className='max-w-7xl mx-auto relative z-10'>
         <div className='text-center mb-16'>
@@ -102,16 +105,16 @@ export function LoyaltyTiersSection() {
             <Crown className='w-4 h-4' />
             Chương trình thành viên
           </div>
-          <h2 className='text-4xl sm:text-5xl font-black text-foreground mb-6 tracking-tight'>
+          <h1 className='text-[1.75rem] sm:text-4xl lg:text-5xl font-heading text-foreground leading-[1.15] mb-4 tracking-tight animate-fade-in-up [animation-delay:200ms] opacity-0 fill-mode-forwards'>
             Hạng thành viên & <span className='text-primary'>Đặc quyền</span>
-          </h2>
-          <p className='text-foreground/50 max-w-2xl mx-auto text-lg font-medium'>
+          </h1>
+          <p className='text-foreground/50 max-w-2xl mx-auto text-base sm:text-lg font-medium'>
             Càng dùng nhiều, càng nhận nhiều ưu đãi. Hạng thành viên tự động
             nâng cấp theo chi tiêu tích lũy của bạn.
           </p>
         </div>
 
-        <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6'>
+        <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6'>
           {tiers.map((tier) => {
             const Icon = tier.icon;
             return (
@@ -136,10 +139,14 @@ export function LoyaltyTiersSection() {
                 )}
 
                 {/* Header */}
-                <div className={cn('p-6 bg-gradient-to-br text-white', tier.color)}>
+                <div
+                  className={cn('p-6 bg-gradient-to-br text-white', tier.color)}
+                >
                   <div className='flex items-center gap-2 mb-3'>
                     <Icon className='w-5 h-5' />
-                    <h3 className='text-xl font-bold'>{tier.name}</h3>
+                    <h3 className='font-heading text-xl font-bold'>
+                      {tier.name}
+                    </h3>
                   </div>
                   <div className='flex items-center gap-1.5 bg-white/20 rounded-lg px-3 py-2'>
                     <CalendarDays className='w-4 h-4 shrink-0' />
@@ -194,7 +201,8 @@ export function LoyaltyTiersSection() {
 
         {/* Upgrade note */}
         <p className='text-center text-sm text-foreground/40 mt-12 font-medium'>
-          Hạng thành viên được tự động nâng cấp dựa trên tổng chi tiêu tích lũy trong 12 tháng.
+          Hạng thành viên được tự động nâng cấp dựa trên tổng chi tiêu tích lũy
+          trong 12 tháng.
         </p>
       </div>
     </section>

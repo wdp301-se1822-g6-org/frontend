@@ -81,7 +81,7 @@ export default function AdminDashboardPage() {
 
           {/* Quick Actions */}
           <div>
-            <h2 className='text-sm font-black uppercase tracking-widest text-foreground/40 mb-4'>Thao tác nhanh</h2>
+            <h2 className='font-heading text-sm font-black uppercase tracking-widest text-foreground/40 mb-4'>Thao tác nhanh</h2>
             <div className='grid grid-cols-2 lg:grid-cols-4 gap-4'>
               {quickActions.map(({ label, sub, href, icon: Icon, bg }) => (
                 <Link
@@ -107,7 +107,7 @@ export default function AdminDashboardPage() {
             {/* Recent Bookings Table */}
             <div className='xl:col-span-2 bg-white rounded-2xl border border-border/50 shadow-sm overflow-hidden'>
               <div className='flex items-center justify-between px-6 py-5 border-b border-border/50'>
-                <h2 className='font-black text-foreground text-base'>Đặt lịch gần đây</h2>
+                <h2 className='font-heading font-black text-foreground text-base'>Đặt lịch gần đây</h2>
                 <Link href='/admin/bookings' className='text-xs font-black text-primary hover:underline flex items-center gap-1'>
                   Xem tất cả <ArrowRight className='w-3 h-3' />
                 </Link>
@@ -158,7 +158,7 @@ export default function AdminDashboardPage() {
             <div className='flex flex-col gap-5'>
               {/* Loyalty summary */}
               <div className='bg-white rounded-2xl border border-border/50 shadow-sm p-6'>
-                <h2 className='font-black text-foreground text-base mb-5'>Thống kê thành viên</h2>
+                <h2 className='font-heading font-black text-foreground text-base mb-5'>Thống kê thành viên</h2>
                 <div className='flex flex-col gap-4'>
                   {[
                     { label: 'Tổng khách hàng', value: '1.245', icon: Users, color: 'text-primary bg-primary/10' },
@@ -180,7 +180,7 @@ export default function AdminDashboardPage() {
 
               {/* Service breakdown */}
               <div className='bg-white rounded-2xl border border-border/50 shadow-sm p-6'>
-                <h2 className='font-black text-foreground text-base mb-5'>Dịch vụ phổ biến</h2>
+                <h2 className='font-heading font-black text-foreground text-base mb-5'>Dịch vụ phổ biến</h2>
                 {[
                   { name: 'Rửa cao cấp', pct: 42, color: 'bg-primary' },
                   { name: 'Rửa tiêu chuẩn', pct: 28, color: 'bg-secondary' },

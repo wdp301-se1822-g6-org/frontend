@@ -26,9 +26,6 @@ const QUICK_QUESTIONS = [
 export default function ChatbotWidget() {
   const pathname = usePathname();
 
-  // Chatbot chỉ hiển thị duy nhất trên trang chủ (URL là '/')
-  if (pathname !== '/') return null;
-
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -139,8 +136,11 @@ export default function ChatbotWidget() {
     }
   };
 
+  // Chatbot chỉ hiển thị duy nhất trên trang chủ (URL là '/')
+  if (pathname !== '/') return null;
+
   return (
-    <div className="fixed bottom-6 right-6 z-50 font-sans">
+    <div className="fixed bottom-6 right-6 z-50">
       
       {/* ── BONG BÓNG CHAT NỔI (Floating Button) ── */}
       {!isOpen && (
@@ -170,7 +170,7 @@ export default function ChatbotWidget() {
                 <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 border border-slate-900 rounded-full" />
               </div>
               <div>
-                <h3 className="font-black text-sm tracking-wide flex items-center gap-1">
+                <h3 className="font-heading font-black text-sm tracking-wide flex items-center gap-1">
                   Trợ lý WAVE AI <Sparkles className="w-3.5 h-3.5 text-indigo-400 fill-indigo-400/20" />
                 </h3>
                 <p className="text-[10px] text-slate-400 font-semibold">Tự động trả lời • Hoạt động 24/7</p>

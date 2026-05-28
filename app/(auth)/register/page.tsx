@@ -6,7 +6,6 @@ import { RegisterFormData } from '@/schemas/auth';
 import { useAuthStore } from '@/store/useAuthStore';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import Image from 'next/image';
 import { RegisterForm } from '@/components/auth/RegisterForm';
 
 export default function RegisterPage() {
@@ -24,7 +23,6 @@ export default function RegisterPage() {
 
     register.mutate(payload, {
       onSuccess: (res) => {
-        // Extract data even if nested under .data property
         const authData = res?.data || res;
         const token = authData?.accessToken;
         const user = authData?.user;
@@ -47,39 +45,13 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className='flex-1 bg-primary relative overflow-hidden flex items-center py-8 lg:py-12'>
-      <div className='absolute inset-0 opacity-10 rotate-180'>
-        <svg className='w-full h-full' viewBox='0 0 100 100' preserveAspectRatio='none'>
-          <path d='M0 100 C 20 0 50 0 100 100 Z' fill='white' />
-        </svg>
-      </div>
+    <div className='relative flex-1 overflow-hidden bg-[#f6f8fb]'>
+      <div className='pointer-events-none absolute -top-32 left-1/2 h-130 w-130 -translate-x-1/2 rounded-full bg-sky-200/50 blur-[120px]' />
+      <div className='pointer-events-none absolute -bottom-45 left-1/2 h-105 w-105 -translate-x-1/2 rounded-full bg-indigo-200/40 blur-[120px]' />
 
-      <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full relative z-10'>
-        <div className='grid lg:grid-cols-2 gap-10 lg:gap-12 items-center'>
-          <div className='flex justify-center lg:justify-start order-2 lg:order-1'>
-            <div className='w-full max-w-xl'>
-              <RegisterForm
-                onSubmit={handleSubmit}
-                loading={register.isPending}
-              />
-            </div>
-          </div>
-
-          <div className='hidden lg:flex flex-col items-center text-center text-white order-1 lg:order-2'>
-            <Image
-              src='/logo-wave.jpg'
-              alt='WAVE'
-              width={144}
-              height={144}
-              className='rounded-full object-cover shadow-sm'
-            />
-            <h1 className='text-6xl font-black tracking-tighter m-6'>
-              WAVE
-            </h1>
-            <p className='text-xl font-medium text-white/80 max-w-md leading-relaxed uppercase tracking-widest'>
-              Đăng ký ngay để nhận <br /> vô vàn ưu đãi đặc biệt
-            </p>
-          </div>
+      <div className='relative z-10 flex min-h-[calc(100vh-8rem)] items-center justify-center px-4 py-12'>
+        <div className='w-full max-w-md'>
+          <RegisterForm onSubmit={handleSubmit} loading={register.isPending} />
         </div>
       </div>
     </div>

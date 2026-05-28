@@ -24,6 +24,7 @@ export function LoginForm({
 }) {
   const form = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
+    mode: 'onTouched',
     defaultValues: {
       email: '',
       password: '',
@@ -32,8 +33,11 @@ export function LoginForm({
   const router = useRouter();
 
   return (
-    <div className={cn('flex flex-col gap-6', className)} {...props}>
-      <Card className='border-primary/10 bg-white/80 shadow-2xl shadow-primary/5 backdrop-blur-xl'>
+    <div
+      className={cn('flex flex-col gap-6', className)}
+      {...props}
+    >
+      <Card className='border-primary/10 bg-white/80 shadow-2xl shadow-primary/5 backdrop-blur-xl px-4 py-10'>
         <CardHeader className='space-y-1 pb-6 text-center'>
           <CardTitle className='font-heading text-3xl font-bold tracking-tight text-primary'>
             Chào mừng trở lại

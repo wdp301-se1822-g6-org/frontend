@@ -86,7 +86,7 @@ export function Footer() {
     <footer className='bg-background text-foreground px-4 border-t border-border'>
       <div className='max-w-7xl mx-auto'>
         {/* Main footer */}
-        <div className='py-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10'>
+        <div className='py-10 sm:py-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 sm:gap-10'>
           {/* Brand */}
           <div className='lg:col-span-1'>
             <div className='flex items-center gap-3 mb-6'>
@@ -97,7 +97,7 @@ export function Footer() {
                 height={40}
                 className='rounded-full object-cover border border-border shadow-sm'
               />
-              <span className='font-black text-2xl tracking-tight text-foreground'>
+              <span className='font-heading font-black text-2xl tracking-tight text-foreground'>
                 WAVE
               </span>
             </div>
@@ -121,7 +121,7 @@ export function Footer() {
 
           {/* Services */}
           <div>
-            <h4 className='font-semibold text-black mb-4'>Dịch vụ</h4>
+            <h4 className='font-heading font-semibold text-black mb-4'>Dịch vụ</h4>
             <ul className='space-y-2.5'>
               {footerLinks.services.map((link) => (
                 <li key={link.label}>
@@ -138,7 +138,7 @@ export function Footer() {
 
           {/* Support */}
           <div>
-            <h4 className='font-semibold text-black mb-4'>Hỗ trợ</h4>
+            <h4 className='font-heading font-semibold text-black mb-4'>Hỗ trợ</h4>
             <ul className='space-y-2.5'>
               {footerLinks.support.map((link) => (
                 <li key={link.label}>
@@ -155,7 +155,7 @@ export function Footer() {
 
           {/* Contact */}
           <div>
-            <h4 className='font-semibold text-black mb-4'>Liên hệ</h4>
+            <h4 className='font-heading font-semibold text-black mb-4'>Liên hệ</h4>
             <ul className='space-y-3'>
               <li className='flex items-start gap-3 text-sm text-foreground/60 font-semibold'>
                 <MapPin className='w-5 h-5 text-primary shrink-0 mt-0.5' />

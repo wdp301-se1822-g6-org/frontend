@@ -22,7 +22,7 @@ function ServiceModal({ item, onClose, onSave }: { item?: ServiceType | null; on
     <div className='fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4' onClick={onClose}>
       <div className='bg-white rounded-2xl p-8 w-full max-w-md shadow-2xl' onClick={(e) => e.stopPropagation()}>
         <div className='flex items-center justify-between mb-6'>
-          <h3 className='font-black text-foreground text-lg'>{item ? 'Sửa dịch vụ' : 'Thêm dịch vụ mới'}</h3>
+          <h3 className='font-heading font-black text-foreground text-lg'>{item ? 'Sửa dịch vụ' : 'Thêm dịch vụ mới'}</h3>
           <button onClick={onClose}><X className='w-5 h-5 text-foreground/40' /></button>
         </div>
         <div className='flex flex-col gap-4'>
@@ -80,7 +80,7 @@ export default function AdminServicesPage() {
           {/* Service Types */}
           <div>
             <div className='flex items-center justify-between mb-4'>
-              <h2 className='font-black text-foreground text-base'>Loại dịch vụ</h2>
+              <h2 className='font-heading font-black text-foreground text-base'>Loại dịch vụ</h2>
               <button onClick={() => setEditService(null)}
                 className='flex items-center gap-2 bg-primary text-white text-xs font-black px-4 py-2 rounded-xl hover:bg-primary/90 transition-all shadow-lg shadow-primary/20'>
                 <Plus className='w-4 h-4' />Thêm mới
@@ -121,7 +121,7 @@ export default function AdminServicesPage() {
           {/* Vehicle Types */}
           <div>
             <div className='flex items-center justify-between mb-4'>
-              <h2 className='font-black text-foreground text-base'>Loại phương tiện</h2>
+              <h2 className='font-heading font-black text-foreground text-base'>Loại phương tiện</h2>
             </div>
             <div className='flex flex-col gap-3'>
               {vehLoading ? Array.from({ length: 4 }).map((_, i) => <div key={i} className='h-20 bg-white rounded-2xl border border-border animate-pulse' />) :

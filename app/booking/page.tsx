@@ -353,7 +353,7 @@ function BookingFlow() {
             <ChevronLeft className="w-4 h-4" />
             <span className="hidden sm:inline">Về trang chủ</span>
           </Button>
-          <h1 className="text-3xl sm:text-4xl font-extrabold text-foreground tracking-tight mb-2">
+          <h1 className="font-heading text-3xl sm:text-4xl font-extrabold text-foreground tracking-tight mb-2">
             Đặt Lịch Rửa Xe Của Bạn
           </h1>
           <p className="text-muted-foreground max-w-lg mx-auto text-sm sm:text-base">
@@ -376,7 +376,7 @@ function BookingFlow() {
                 {step === 1 && (
                   <div className="space-y-6">
                     <div className="flex justify-between items-center mb-4">
-                      <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
+                      <h2 className="font-heading text-xl font-bold text-foreground flex items-center gap-2">
                         <Car className="w-5 h-5 text-primary" /> Bước 1: Chọn Xe Của Bạn
                       </h2>
                       {!isAddingVehicle && (
@@ -578,7 +578,7 @@ function BookingFlow() {
                 {/* ──────── STEP 2: CHỌN GÓI DỊCH VỤ ──────── */}
                 {step === 2 && (
                   <div className="space-y-6">
-                    <h2 className="text-xl font-bold text-foreground flex items-center gap-2 mb-4">
+                    <h2 className="font-heading text-xl font-bold text-foreground flex items-center gap-2 mb-4">
                       <FileText className="w-5 h-5 text-primary" /> Bước 2: Chọn Gói Dịch Vụ
                     </h2>
 
@@ -678,7 +678,7 @@ function BookingFlow() {
                 {/* ──────── STEP 3: CHỌN NGÀY & GIỜ TRỐNG ──────── */}
                 {step === 3 && (
                   <div className="space-y-6">
-                    <h2 className="text-xl font-bold text-foreground flex items-center gap-2 mb-4">
+                    <h2 className="font-heading text-xl font-bold text-foreground flex items-center gap-2 mb-4">
                       <Calendar className="w-5 h-5 text-primary" /> Bước 3: Chọn Ngày & Giờ Rửa Xe
                     </h2>
 
@@ -811,7 +811,7 @@ function BookingFlow() {
                 {/* ──────── STEP 4: XÁC NHẬN ĐƠN HÀNG ──────── */}
                 {step === 4 && (
                   <div className="space-y-6">
-                    <h2 className="text-xl font-bold text-foreground flex items-center gap-2 mb-4">
+                    <h2 className="font-heading text-xl font-bold text-foreground flex items-center gap-2 mb-4">
                       <ShieldCheck className="w-5 h-5 text-primary" /> Bước 4: Thanh Toán & Xác Nhận Đặt Lịch
                     </h2>
 
@@ -920,7 +920,7 @@ function BookingFlow() {
           <div className="space-y-6">
             <Card className="border-none shadow-xl rounded-2xl overflow-hidden bg-white/80 dark:bg-slate-900/80 backdrop-blur-md sticky top-24">
               <CardContent className="p-6 space-y-5">
-                <h3 className="font-black text-lg text-foreground tracking-tight border-b border-slate-100 pb-3">
+                <h3 className="font-heading font-black text-lg text-foreground tracking-tight border-b border-slate-100 pb-3">
                   Tóm Tắt Đơn Đặt Lịch
                 </h3>
 

@@ -19,7 +19,7 @@ export default function AdminSettingsPage() {
               <div className='w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center'>
                 <User className='w-5 h-5 text-primary' />
               </div>
-              <h2 className='font-black text-foreground text-lg'>Thông tin tài khoản</h2>
+              <h2 className='font-heading font-black text-foreground text-lg'>Thông tin tài khoản</h2>
             </div>
             <div className='grid grid-cols-1 md:grid-cols-2 gap-5'>
               {[
@@ -42,7 +42,7 @@ export default function AdminSettingsPage() {
               <div className='w-10 h-10 rounded-xl bg-secondary/10 flex items-center justify-center'>
                 <Globe className='w-5 h-5 text-secondary' />
               </div>
-              <h2 className='font-black text-foreground text-lg'>Thông tin hệ thống</h2>
+              <h2 className='font-heading font-black text-foreground text-lg'>Thông tin hệ thống</h2>
             </div>
             <div className='flex flex-col gap-4'>
               {[
@@ -65,7 +65,7 @@ export default function AdminSettingsPage() {
               <div className='w-10 h-10 rounded-xl bg-rose-50 flex items-center justify-center'>
                 <Shield className='w-5 h-5 text-rose-500' />
               </div>
-              <h2 className='font-black text-foreground text-lg'>Bảo mật</h2>
+              <h2 className='font-heading font-black text-foreground text-lg'>Bảo mật</h2>
             </div>
             <div className='flex flex-col gap-3'>
               <div className='flex items-center justify-between p-4 rounded-xl bg-muted/50 border border-border/50'>

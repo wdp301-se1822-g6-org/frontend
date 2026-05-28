@@ -142,7 +142,7 @@ function ShiftModal({
         onClick={(e) => e.stopPropagation()}
       >
         <div className='flex items-center justify-between pb-3 border-b border-slate-100'>
-          <h3 className='font-black text-slate-800 text-lg'>{item ? 'Sửa ca trực nhân viên' : 'Thêm ca trực mới'}</h3>
+          <h3 className='font-heading font-black text-slate-800 text-lg'>{item ? 'Sửa ca trực nhân viên' : 'Thêm ca trực mới'}</h3>
           <button type='button' onClick={onClose}>
             <X className='w-5 h-5 text-slate-400 hover:text-slate-600' />
           </button>
@@ -404,7 +404,7 @@ export default function AdminShiftsPage() {
           
           {/* Header Action */}
           <div className='flex items-center justify-between mb-8 border-b border-slate-200/60 pb-3'>
-            <h2 className='font-black text-slate-800 text-base'>Danh sách ca trực hoạt động</h2>
+            <h2 className='font-heading font-black text-slate-800 text-base'>Danh sách ca trực hoạt động</h2>
             <div className='flex gap-2.5'>
               <button
                 onClick={() => refetch()}
