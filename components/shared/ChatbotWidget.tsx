@@ -41,7 +41,7 @@ export default function ChatbotWidget() {
   ]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [sessionId, setSessionId] = useState<string | null>(() => localStorage.getItem('wave_chat_session_id'));
+  const [sessionId, setSessionId] = useState<string | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const msgIdCounter = useRef(0);
@@ -60,6 +60,7 @@ export default function ChatbotWidget() {
   useEffect(() => {
     const storedSession = localStorage.getItem('wave_chat_session_id');
     if (storedSession) {
+      setSessionId(storedSession);
       let active = true;
       Promise.resolve().then(() => {
         if (active) setIsLoading(true);
