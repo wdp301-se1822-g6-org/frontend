@@ -60,10 +60,12 @@ export default function ChatbotWidget() {
   useEffect(() => {
     const storedSession = localStorage.getItem('wave_chat_session_id');
     if (storedSession) {
-      setSessionId(storedSession);
       let active = true;
       Promise.resolve().then(() => {
-        if (active) setIsLoading(true);
+        if (active) {
+          setSessionId(storedSession);
+          setIsLoading(true);
+        }
       });
       getChatSessionHistory(storedSession)
         .then((res) => {
