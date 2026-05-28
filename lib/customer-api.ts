@@ -1,4 +1,5 @@
 import { axiosInstance } from '@/lib/axios';
+import { ENDPOINTS } from '@/services/endpoints';
 
 // ─── Vehicle Types (Public) ────────────────────────────
 export const getActiveVehicleTypes = () =>
@@ -38,7 +39,17 @@ export const setDefaultVehicle = (id: string) =>
 
 // ─── Loyalty & Tiers (Customer) ─────────────────────────
 export const getMyLoyalty = () =>
-  axiosInstance.get('/me/loyalty');
+  axiosInstance.get(ENDPOINTS.loyalty.mine);
+
+export const getMyLoyaltyTransactions = () =>
+  axiosInstance.get(ENDPOINTS.loyalty.transactions);
+
+// ─── Vouchers (Customer) ───────────────────────────────
+export const getMyVouchers = () =>
+  axiosInstance.get(ENDPOINTS.vouchers.mine);
+
+export const getMyVoucher = (id: string) =>
+  axiosInstance.get(ENDPOINTS.vouchers.byId(id));
 
 export const getTierConfigs = () =>
   axiosInstance.get('/tier-configs');

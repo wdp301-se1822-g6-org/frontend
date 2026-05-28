@@ -11,6 +11,28 @@ export interface LoyaltyAccount {
   pointsExpireAt?: string;
 }
 
+export type LoyaltyTransactionType =
+  | 'earn_completed'
+  | 'earn_pending'
+  | 'redeem_voucher'
+  | 'tier_change'
+  | 'expire'
+  | 'adjust';
+
+export interface LoyaltyTransaction {
+  id: string;
+  customerId: string;
+  type: LoyaltyTransactionType | string;
+  pointsDelta: number;
+  balanceAfter: number;
+  orderId?: string;
+  voucherId?: string;
+  previousTierConfigId?: string;
+  newTierConfigId?: string;
+  reason?: string;
+  createdAt: string;
+}
+
 export interface TierConfig {
   id: string;
   tierName: 'Member' | 'Silver' | 'Gold' | 'Platinum';

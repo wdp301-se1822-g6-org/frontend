@@ -10,6 +10,7 @@ import {
   Pencil,
   Star,
   Car,
+  History,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -45,10 +46,16 @@ const menuItems = [
     href: '/profile/loyalty',
   },
   {
+    title: 'Lịch sử điểm thưởng',
+    icon: History,
+    color: 'text-green-500',
+    href: '/profile/loyalty/transactions',
+  },
+  {
     title: 'Voucher của tôi',
     icon: Ticket,
     color: 'text-blue-500',
-    href: '/',
+    href: '/profile/my-voucher',
   },
 ];
 
