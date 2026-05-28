@@ -7,7 +7,7 @@ import {
 } from '@/lib/admin-api';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
-import { Search, RefreshCw, Shield, Ban, KeyRound, ChevronDown } from 'lucide-react';
+import { Search, RefreshCw, Ban, KeyRound, ChevronDown } from 'lucide-react';
 
 interface UserData {
   _id?: string;

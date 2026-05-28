@@ -1,4 +1,4 @@
-// @ts-nocheck
+// @ts-expect-error - vitest is not installed/declared in package.json; types resolve at test runtime
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { sendOtp, verifyOtp } from '../lib/customer-api';
 import { axiosInstance } from '../lib/axios';

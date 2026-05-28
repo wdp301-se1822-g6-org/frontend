@@ -59,8 +59,8 @@ export default function CashierPOSPage() {
       setPayTarget(null);
       qc.invalidateQueries({ queryKey: ['cashier-pending-orders'] });
     },
-    onError: (err: any) => {
-      const errMsg = err?.response?.data?.message ?? 'Gặp sự cố khi thanh toán.';
+    onError: (err: unknown) => {
+      const errMsg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message ?? 'Gặp sự cố khi thanh toán.';
       toast.error(`Thanh toán thất bại: ${errMsg}`);
     }
   });

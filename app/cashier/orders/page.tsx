@@ -61,8 +61,8 @@ export default function CashierOrdersPage() {
       toast.success('Check-in khách hàng thành công! Đã chuyển đơn hàng vào bãi rửa xe.');
       qc.invalidateQueries({ queryKey: ['cashier-orders'] });
     },
-    onError: (err: any) => {
-      const errMsg = err?.response?.data?.message ?? 'Đã xảy ra lỗi khi check-in.';
+    onError: (err: unknown) => {
+      const errMsg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message ?? 'Đã xảy ra lỗi khi check-in.';
       toast.error(`Check-in thất bại: ${errMsg}`);
     }
   });

@@ -5,46 +5,13 @@ import {
   CheckCircle2,
   Leaf,
   Zap,
-  Users,
   Headphones,
   Award,
 } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
-
-function useCountUp(target: number, duration = 2000, start = false) {
-  const [count, setCount] = useState(0);
-  useEffect(() => {
-    if (!start) return;
-    let startTime: number | null = null;
-    const step = (timestamp: number) => {
-      if (!startTime) startTime = timestamp;
-      const progress = Math.min((timestamp - startTime) / duration, 1);
-      setCount(Math.floor(progress * target));
-      if (progress < 1) requestAnimationFrame(step);
-    };
-    requestAnimationFrame(step);
-  }, [target, duration, start]);
-  return count;
-}
+import { useRef } from 'react';
 
 export function AboutSection() {
   const sectionRef = useRef<HTMLElement>(null);
-  const [inView, setInView] = useState(false);
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) setInView(true);
-      },
-      { threshold: 0.2 },
-    );
-    if (sectionRef.current) observer.observe(sectionRef.current);
-    return () => observer.disconnect();
-  }, []);
-
-  const customers = useCountUp(10000, 2000, inView);
-  const experience = useCountUp(8, 1500, inView);
-  const satisfaction = useCountUp(99, 2000, inView);
 
   return (
     <section

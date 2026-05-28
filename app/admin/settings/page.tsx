@@ -2,7 +2,7 @@
 
 import { AdminTopbar } from '@/components/admin/AdminTopbar';
 import { useAuthStore } from '@/store/useAuthStore';
-import { Settings, User, Bell, Shield, Globe } from 'lucide-react';
+import { User, Shield, Globe } from 'lucide-react';
 
 export default function AdminSettingsPage() {
   const { authUser } = useAuthStore();

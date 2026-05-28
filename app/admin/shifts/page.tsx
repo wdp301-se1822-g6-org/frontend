@@ -9,14 +9,22 @@ import {
   adminGetUsers
 } from '@/lib/admin-api';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useState, useEffect } from 'react';
-import { Plus, Pencil, Power, X, Calendar, Clock, User, Briefcase, MapPin, RefreshCw } from 'lucide-react';
+import { useState } from 'react';
+import { Plus, Pencil, Power, X, Clock, User, MapPin, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
+
+type PopulatedStaff = {
+  _id?: string;
+  id?: string;
+  fullName?: string;
+  name?: string;
+  role?: string;
+};
 
 type Shift = {
   _id?: string;
   id?: string;
-  staffId?: any;
+  staffId?: string | PopulatedStaff;
   shiftType?: 'cashier' | 'washer';
   stationName?: string;
   startAt?: string;
@@ -63,7 +71,7 @@ function ShiftModal({
 }: {
   item?: Shift | null;
   onClose: () => void;
-  onSave: (d: Record<string, any>) => void;
+  onSave: (d: Record<string, unknown>) => void;
   staffList: UserData[];
 }) {
   // Format ISO string to datetime-local string (YYYY-MM-DDThh:mm)
@@ -87,14 +95,15 @@ function ShiftModal({
   const minDateTime = !item ? formatForInput(new Date().toISOString()) : undefined;
 
   // Tự động cập nhật shiftType tương ứng khi chọn staffId
-  useEffect(() => {
-    if (form.staffId) {
-      const selectedStaff = staffList.find((s) => (s._id ?? s.id) === form.staffId);
-      if (selectedStaff && (selectedStaff.role === 'washer' || selectedStaff.role === 'cashier')) {
-        setForm((prev) => ({ ...prev, shiftType: selectedStaff.role as 'washer' | 'cashier' }));
+  const handleStaffChange = (staffId: string) => {
+    setForm((prev) => {
+      const selectedStaff = staffList.find((s) => (s._id ?? s.id) === staffId);
+      if (staffId && selectedStaff && (selectedStaff.role === 'washer' || selectedStaff.role === 'cashier')) {
+        return { ...prev, staffId, shiftType: selectedStaff.role as 'washer' | 'cashier' };
       }
-    }
-  }, [form.staffId, staffList]);
+      return { ...prev, staffId };
+    });
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -154,7 +163,7 @@ function ShiftModal({
             <label className='block text-xs font-black uppercase tracking-widest text-slate-400 mb-1.5'>Nhân viên ca trực</label>
             <select
               value={form.staffId}
-              onChange={(e) => setForm({ ...form, staffId: e.target.value })}
+              onChange={(e) => handleStaffChange(e.target.value)}
               className='w-full border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo-500/50 bg-white font-semibold text-slate-700 shadow-sm cursor-pointer'
             >
               <option value=''>-- Chọn nhân viên --</option>
@@ -302,30 +311,30 @@ export default function AdminShiftsPage() {
       try {
         const washers = await adminGetUsers({ role: 'washer', limit: 100 });
         wList = washers?.data?.data ?? washers?.data ?? [];
-      } catch (err: any) {
+      } catch (err) {
         console.warn("Bypassing washer fetch 403 using active shifts and fallbacks:", err);
       }
 
       try {
         const cashiers = await adminGetUsers({ role: 'cashier', limit: 100 });
         cList = cashiers?.data?.data ?? cashiers?.data ?? [];
-      } catch (err: any) {
+      } catch (err) {
         console.warn("Bypassing cashier fetch 403 using active shifts and fallbacks:", err);
       }
 
       // Nếu cả hai đều rỗng (lỗi 403), chúng ta tự động phục hồi từ shifts đang chạy + fallback
       if (wList.length === 0 && cList.length === 0) {
-        let shiftsList: any[] = [];
+        let shiftsList: Shift[] = [];
         try {
           const shiftsData = await adminGetShifts({ limit: 100 });
           shiftsList = shiftsData?.data?.data ?? shiftsData?.data ?? [];
-        } catch (e) {
+        } catch {
           // ignore
         }
         
         const extractedStaffMap = new Map<string, UserData>();
         
-        shiftsList.forEach((s: any) => {
+        shiftsList.forEach((s) => {
           if (s.staffId && typeof s.staffId === 'object') {
             const staff = s.staffId as UserData;
             const staffId = staff._id ?? staff.id;
@@ -357,38 +366,38 @@ export default function AdminShiftsPage() {
       qc.invalidateQueries({ queryKey: ['admin-shifts'] });
       setEditShift(false);
     },
-    onError: (err: any) => {
-      const errMsg = err?.response?.data?.message ?? 'Đã xảy ra lỗi khi tạo ca trực.';
+    onError: (err: unknown) => {
+      const errMsg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message ?? 'Đã xảy ra lỗi khi tạo ca trực.';
       toast.error(`Thêm thất bại: ${errMsg}`);
     }
   });
 
   const updateShift = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: Record<string, any> }) => adminUpdateShift(id, data),
+    mutationFn: ({ id, data }: { id: string; data: Record<string, unknown> }) => adminUpdateShift(id, data),
     onSuccess: () => {
       toast.success('Cập nhật ca trực nhân viên thành công!');
       qc.invalidateQueries({ queryKey: ['admin-shifts'] });
       setEditShift(false);
     },
-    onError: (err: any) => {
-      const errMsg = err?.response?.data?.message ?? 'Đã xảy ra lỗi khi cập nhật ca trực.';
+    onError: (err: unknown) => {
+      const errMsg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message ?? 'Đã xảy ra lỗi khi cập nhật ca trực.';
       toast.error(`Cập nhật thất bại: ${errMsg}`);
     }
   });
 
   const toggleShift = useMutation({
-    mutationFn: ({ id, status }: { id: string; status: string }) => adminToggleShift(id, status as any),
+    mutationFn: ({ id, status }: { id: string; status: string }) => adminToggleShift(id, status as unknown as boolean),
     onSuccess: () => {
       toast.success('Cập nhật trạng thái ca trực thành công!');
       qc.invalidateQueries({ queryKey: ['admin-shifts'] });
     },
-    onError: (err: any) => {
-      const errMsg = err?.response?.data?.message ?? 'Không thể cập nhật trạng thái ca trực.';
+    onError: (err: unknown) => {
+      const errMsg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message ?? 'Không thể cập nhật trạng thái ca trực.';
       toast.error(`Lỗi: ${errMsg}`);
     }
   });
 
-  const handleSave = (d: Record<string, any>) => {
+  const handleSave = (d: Record<string, unknown>) => {
     if (editShift && (editShift as Shift)._id) {
       updateShift.mutate({ id: (editShift as Shift)._id!, data: d });
     } else {
@@ -494,7 +503,7 @@ export default function AdminShiftsPage() {
                       {/* Note */}
                       {s.note && (
                         <div className='text-[11px] text-slate-400 bg-slate-50 px-2 py-1.5 rounded-xl border border-slate-100/50 mt-1 italic'>
-                          "{s.note}"
+                          &quot;{s.note}&quot;
                         </div>
                       )}
                     </div>

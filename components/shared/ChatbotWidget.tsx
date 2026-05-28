@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { 
-  MessageSquare, X, Send, Sparkles, RefreshCw, 
+  MessageSquare, Send, Sparkles, RefreshCw,
   Bot, User, Minimize2, ArrowRight 
 } from 'lucide-react';
 import { sendChatMessage, getChatSessionHistory } from '@/lib/chat-api';
@@ -14,6 +14,11 @@ interface Message {
   role: 'user' | 'assistant';
   content: string;
   createdAt?: string;
+}
+
+interface ApiChatMessage {
+  role: string;
+  content: string;
 }
 
 const QUICK_QUESTIONS = [
@@ -36,9 +41,11 @@ export default function ChatbotWidget() {
   ]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [sessionId, setSessionId] = useState<string | null>(null);
+  const [sessionId, setSessionId] = useState<string | null>(() => localStorage.getItem('wave_chat_session_id'));
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const msgIdCounter = useRef(0);
+  const nextMsgId = (prefix: string) => `${prefix}-${msgIdCounter.current++}`;
 
   // Cuộn xuống dưới cùng khi có tin nhắn mới
   const scrollToBottom = () => {
@@ -53,15 +60,17 @@ export default function ChatbotWidget() {
   useEffect(() => {
     const storedSession = localStorage.getItem('wave_chat_session_id');
     if (storedSession) {
-      setSessionId(storedSession);
-      setIsLoading(true);
+      let active = true;
+      Promise.resolve().then(() => {
+        if (active) setIsLoading(true);
+      });
       getChatSessionHistory(storedSession)
         .then((res) => {
           // Lấy trực tiếp từ res.data.messages theo cấu trúc backend thực tế
           const history = res.data?.messages ?? [];
           if (history.length > 0) {
             // Định dạng lại tin nhắn từ API khớp với state
-            const formatted: Message[] = history.map((msg: any, idx: number) => ({
+            const formatted: Message[] = history.map((msg: ApiChatMessage, idx: number) => ({
               id: `msg-${idx}`,
               role: msg.role === 'model' ? 'assistant' : 'user', // Map role 'model' của BE thành 'assistant' của FE
               content: msg.content
@@ -77,6 +86,9 @@ export default function ChatbotWidget() {
         .finally(() => {
           setIsLoading(false);
         });
+      return () => {
+        active = false;
+      };
     }
   }, []);
 
@@ -87,7 +99,7 @@ export default function ChatbotWidget() {
     setInput('');
 
     // Thêm tin nhắn của User vào UI ngay lập tức
-    const userMsgId = `user-${Date.now()}`;
+    const userMsgId = nextMsgId('user');
     setMessages(prev => [...prev, { id: userMsgId, role: 'user', content: userMessageText }]);
     setIsLoading(true);
 
@@ -103,16 +115,16 @@ export default function ChatbotWidget() {
 
         // Thêm câu trả lời của AI vào UI
         setMessages(prev => [...prev, {
-          id: `ai-${Date.now()}`,
+          id: nextMsgId('ai'),
           role: 'assistant',
           content: data.reply // Dùng reply thay vì answer
         }]);
       }
-    } catch (err: any) {
-      const errMsg = err?.response?.data?.message ?? 'Đã xảy ra lỗi khi kết nối máy chủ AI.';
+    } catch (err) {
+      const errMsg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message ?? 'Đã xảy ra lỗi khi kết nối máy chủ AI.';
       toast.error(`Trợ lý AI lỗi: ${errMsg}`);
       setMessages(prev => [...prev, {
-        id: `err-${Date.now()}`,
+        id: nextMsgId('err'),
         role: 'assistant',
         content: '⚠️ Xin lỗi ông chủ, đường truyền kết nối với bộ não AI của tôi đang gặp chút sự cố. Ông chủ vui lòng thử lại sau giây lát!'
       }]);

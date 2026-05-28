@@ -64,8 +64,8 @@ export default function ManagerOrdersPage() {
       qc.invalidateQueries({ queryKey: ['manager-orders'] });
       qc.invalidateQueries({ queryKey: ['manager-dashboard-workorders'] });
     },
-    onError: (err: any) => {
-      const errMsg = err?.response?.data?.message ?? 'Đã xảy ra lỗi khi check-in.';
+    onError: (err) => {
+      const errMsg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message ?? 'Đã xảy ra lỗi khi check-in.';
       toast.error(`Check-in thất bại: ${errMsg}`);
     }
   });
