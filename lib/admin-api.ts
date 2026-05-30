@@ -125,6 +125,8 @@ export interface GrantVoucherPayload {
   reason: string;
   discountCapVnd?: number;
   expiresAt?: string;
+  /** Mã tuỳ chỉnh (để trống = BE tự sinh). */
+  code?: string;
 }
 
 export const adminGetVouchers = (params?: Record<string, unknown>) =>
