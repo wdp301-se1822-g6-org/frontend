@@ -1,159 +1,208 @@
 'use client';
 
-import { useQuery } from '@tanstack/react-query';
-import { Clock3, Loader2, Ticket, Coins } from 'lucide-react';
-import { getTierConfigs } from '@/lib/customer-api';
+import { Button } from '@/components/ui/button';
+import { useRouter } from 'next/navigation';
+import { Check, Crown, CalendarDays, Star, Zap } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { formatNumber } from '@/lib/format';
 
-/** Shape thật từ BE `GET /tier-configs` (camelCase). Tier names: None/Bronze/Silver/Gold. */
-type TierConfigDto = {
-  id: string;
-  tierName: 'None' | 'Bronze' | 'Silver' | 'Gold';
-  minLoyaltyPoints: number;
-  bookingWindowDays: number;
-  priorityLevel: number;
-  pointsPer1000Vnd: number;
-  discountPercent: number;
-  isActive: boolean;
-};
-
-const TIER_LABELS: Record<TierConfigDto['tierName'], string> = {
-  None: 'Cơ bản',
-  Bronze: 'Bronze',
-  Silver: 'Silver',
-  Gold: 'Gold',
-};
+const tiers = [
+  {
+    id: 'member',
+    name: 'Member',
+    icon: Star,
+    color: 'from-slate-500 to-slate-600',
+    borderColor: 'border-slate-300',
+    accentColor: 'text-slate-600',
+    bgAccent: 'bg-slate-50',
+    bookingWindow: '7 ngày',
+    pointsRate: '1 điểm / 1,000đ',
+    highlight: false,
+    badge: null,
+    perks: [
+      'Đặt lịch trước 7 ngày',
+      'Tích 1 điểm / 1,000đ chi tiêu',
+      'Xem lịch sử rửa xe',
+      'Quản lý xe cá nhân',
+    ],
+  },
+  {
+    id: 'silver',
+    name: 'Silver',
+    icon: Star,
+    color: 'from-slate-400 to-slate-500',
+    borderColor: 'border-slate-400',
+    accentColor: 'text-slate-500',
+    bgAccent: 'bg-slate-50',
+    bookingWindow: '10 ngày',
+    pointsRate: '1.5 điểm / 1,000đ',
+    highlight: false,
+    badge: null,
+    perks: [
+      'Đặt lịch trước 10 ngày',
+      'Tích 1.5 điểm / 1,000đ',
+      'Giảm 5% mỗi lần rửa',
+      'Ưu tiên hàng đợi',
+      'Đổi điểm lấy dịch vụ',
+    ],
+  },
+  {
+    id: 'gold',
+    name: 'Gold',
+    icon: Crown,
+    color: 'from-yellow-500 to-amber-500',
+    borderColor: 'border-yellow-400',
+    accentColor: 'text-yellow-600',
+    bgAccent: 'bg-yellow-50',
+    bookingWindow: '12 ngày',
+    pointsRate: '2 điểm / 1,000đ',
+    highlight: true,
+    badge: 'Phổ biến',
+    perks: [
+      'Đặt lịch trước 12 ngày',
+      'Tích 2 điểm / 1,000đ',
+      'Giảm 10% mỗi lần rửa',
+      'Ưu tiên hàng đợi cao',
+      'Đổi điểm lấy rửa miễn phí',
+      'Thông báo khuyến mãi sớm',
+    ],
+  },
+  {
+    id: 'platinum',
+    name: 'Platinum',
+    icon: Zap,
+    color: 'from-primary to-secondary',
+    borderColor: 'border-primary/20',
+    accentColor: 'text-primary',
+    bgAccent: 'bg-primary/5',
+    bookingWindow: '14 ngày',
+    pointsRate: '3 điểm / 1,000đ',
+    highlight: true,
+    badge: 'Đặc quyền VIP',
+    perks: [
+      'Đặt lịch trước 14 ngày',
+      'Tích 3 điểm / 1,000đ',
+      'Giảm 15% mỗi lần rửa',
+      'Ưu tiên tuyệt đối',
+      'Rửa miễn phí hàng tháng',
+      'Hỗ trợ khách hàng VIP',
+      'Tặng quà sinh nhật đặc biệt',
+    ],
+  },
+];
 
 export function LoyaltyTiersSection() {
-  const { data, isLoading, isError } = useQuery({
-    queryKey: ['tier-configs', 'public'],
-    queryFn: getTierConfigs,
-  });
-
-  const tiers: TierConfigDto[] = (data?.data?.data ?? data?.data ?? [])
-    .slice()
-    .sort(
-      (a: TierConfigDto, b: TierConfigDto) => a.priorityLevel - b.priorityLevel,
-    );
-
-  const topPriority = tiers.length
-    ? Math.max(...tiers.map((t) => t.priorityLevel))
-    : -1;
+  const router = useRouter();
 
   return (
     <section
       id='loyalty'
-      className='scroll-mt-20 border-y border-border bg-muted/30 py-20 sm:py-24'
+      className='py-12 sm:py-16 bg-background px-4 relative overflow-hidden'
     >
-      <div className='mx-auto max-w-6xl px-4 sm:px-6 lg:px-8'>
-        <div className='max-w-2xl'>
-          <p className='text-sm font-semibold tracking-wide text-primary'>
-            Thành viên & tích điểm
-          </p>
-          <h2 className='mt-3 font-heading text-[26px] font-bold tracking-tight text-foreground sm:text-[32px]'>
-            Hạng thành viên theo điểm tích lũy
-          </h2>
-          <p className='mt-4 text-[15px] leading-relaxed text-muted-foreground sm:text-base'>
-            Mỗi lần hoàn tất dịch vụ, khách hàng được cộng điểm để nâng hạng, mở
-            khóa ưu đãi tốt hơn và nhận voucher theo từng cấp thành viên. Số liệu
-            dưới đây lấy trực tiếp từ cấu hình hệ thống.
+      <div className='absolute top-0 left-0 w-full h-px bg-linear-to-r from-transparent via-primary/20 to-transparent' />
+      <div className='max-w-7xl mx-auto relative z-10'>
+        <div className='text-center mb-16'>
+          <div className='inline-flex items-center gap-2 bg-primary/10 text-primary text-xs font-black px-4 py-2 rounded-full mb-6 uppercase tracking-widest'>
+            <Crown className='w-4 h-4' />
+            Chương trình thành viên
+          </div>
+          <h1 className='text-[1.75rem] sm:text-4xl lg:text-5xl font-heading text-foreground leading-[1.15] mb-4 tracking-tight animate-fade-in-up [animation-delay:200ms] opacity-0 fill-mode-forwards'>
+            Hạng thành viên & <span className='text-primary'>Đặc quyền</span>
+          </h1>
+          <p className='text-foreground/50 max-w-2xl mx-auto text-base sm:text-lg font-medium'>
+            Càng dùng nhiều, càng nhận nhiều ưu đãi. Hạng thành viên tự động
+            nâng cấp theo chi tiêu tích lũy của bạn.
           </p>
         </div>
 
-        {isLoading && (
-          <div className='mt-12 flex items-center justify-center gap-2 rounded-xl border border-border bg-card py-16 text-[15px] text-muted-foreground'>
-            <Loader2 className='size-4 animate-spin' />
-            Đang tải hạng thành viên…
-          </div>
-        )}
-
-        {isError && (
-          <div className='mt-12 rounded-xl border border-border bg-card py-16 text-center text-[15px] text-muted-foreground'>
-            Không tải được cấu hình hạng thành viên lúc này.
-          </div>
-        )}
-
-        {!isLoading && !isError && tiers.length > 0 && (
-          <div className='mt-12 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4'>
-            {tiers.map((tier) => {
-              const isTop = tier.priorityLevel === topPriority;
-              return (
-                <div
-                  key={tier.id}
-                  className={cn(
-                    'flex flex-col rounded-2xl border bg-card p-7 shadow-sm',
-                    isTop
-                      ? 'border-primary ring-1 ring-primary/20'
-                      : 'border-border',
-                  )}
-                >
-                  <div className='flex items-center justify-between'>
-                    <h3 className='font-heading text-xl font-bold text-foreground'>
-                      {TIER_LABELS[tier.tierName]}
-                    </h3>
-                    {isTop && (
-                      <span className='rounded-full bg-primary px-2.5 py-1 text-[12px] font-semibold text-primary-foreground'>
-                        Cao nhất
-                      </span>
+        <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6'>
+          {tiers.map((tier) => {
+            const Icon = tier.icon;
+            return (
+              <div
+                key={tier.id}
+                className={cn(
+                  'relative rounded-2xl border-2 flex flex-col overflow-hidden transition-all hover:shadow-xl hover:-translate-y-1',
+                  tier.highlight
+                    ? `${tier.borderColor} shadow-lg ring-2 ring-yellow-400/20`
+                    : `${tier.borderColor} shadow-sm`,
+                )}
+              >
+                {tier.badge && (
+                  <div
+                    className={cn(
+                      'absolute top-3 right-3 text-[11px] font-semibold px-2.5 py-0.5 rounded-full text-white bg-gradient-to-r',
+                      tier.color,
                     )}
+                  >
+                    {tier.badge}
                   </div>
+                )}
 
-                  <p className='mt-1.5 text-[14px] font-medium text-muted-foreground'>
-                    {tier.minLoyaltyPoints === 0
-                      ? 'Mặc định khi đăng ký'
-                      : `Từ ${formatNumber(tier.minLoyaltyPoints)} điểm tích lũy`}
-                  </p>
-
-                  <ul className='mt-6 space-y-3.5 border-t border-border pt-6 text-[15px]'>
-                    <li className='flex items-start gap-2.5'>
-                      <Clock3 className='mt-0.5 size-4.5 shrink-0 text-primary' />
-                      <span className='text-foreground/80'>
-                        Đặt lịch trước{' '}
-                        <span className='font-semibold text-foreground'>
-                          {tier.bookingWindowDays} ngày
-                        </span>
+                {/* Header */}
+                <div
+                  className={cn('p-6 bg-gradient-to-br text-white', tier.color)}
+                >
+                  <div className='flex items-center gap-2 mb-3'>
+                    <Icon className='w-5 h-5' />
+                    <h3 className='font-heading text-xl font-bold'>
+                      {tier.name}
+                    </h3>
+                  </div>
+                  <div className='flex items-center gap-1.5 bg-white/20 rounded-lg px-3 py-2'>
+                    <CalendarDays className='w-4 h-4 shrink-0' />
+                    <span className='text-sm font-medium'>
+                      Đặt trước{' '}
+                      <span className='font-bold text-base'>
+                        {tier.bookingWindow}
                       </span>
-                    </li>
-                    <li className='flex items-start gap-2.5'>
-                      <Coins className='mt-0.5 size-4.5 shrink-0 text-primary' />
-                      <span className='text-foreground/80'>
-                        Tích{' '}
-                        <span className='font-semibold text-foreground'>
-                          {tier.pointsPer1000Vnd} điểm
-                        </span>{' '}
-                        / 1.000đ chi tiêu
-                      </span>
-                    </li>
-                    <li className='flex items-start gap-2.5'>
-                      <Ticket className='mt-0.5 size-4.5 shrink-0 text-primary' />
-                      <span className='text-foreground/80'>
-                        {tier.discountPercent > 0 ? (
-                          <>
-                            Giảm{' '}
-                            <span className='font-semibold text-foreground'>
-                              {tier.discountPercent}%
-                            </span>{' '}
-                            trong khung giờ vàng
-                          </>
-                        ) : (
-                          'Có thể sử dụng mã giảm giá'
-                        )}
-                      </span>
-                    </li>
-                  </ul>
+                    </span>
+                  </div>
+                  <div className='mt-2 text-white/80 text-sm'>
+                    {tier.pointsRate}
+                  </div>
                 </div>
-              );
-            })}
-          </div>
-        )}
 
-        <p className='mt-8 max-w-3xl text-[14px] leading-relaxed text-muted-foreground'>
-          <span className='font-semibold text-foreground'>Lưu ý:</span> mức giảm
-          theo hạng chỉ áp dụng trong khung giờ vàng do hệ thống cấu hình. Điểm
-          thưởng có thể bị trừ khi khách đặt lịch nhưng không đến, và được reset
-          theo chính sách hằng năm. Sau mỗi 10 đơn hoàn tất, tài khoản được tự
-          động cấp một voucher rửa miễn phí (có giới hạn giá trị và thời hạn).
+                {/* Perks */}
+                <div className='flex-1 p-5 flex flex-col gap-4'>
+                  <ul className='space-y-2.5 flex-1'>
+                    {tier.perks.map((perk) => (
+                      <li
+                        key={perk}
+                        className='flex items-start gap-2 text-sm text-gray-700'
+                      >
+                        <Check
+                          className={cn(
+                            'w-4 h-4 shrink-0 mt-0.5',
+                            tier.accentColor,
+                          )}
+                        />
+                        {perk}
+                      </li>
+                    ))}
+                  </ul>
+
+                  <Button
+                    onClick={() => router.push('/register')}
+                    className={cn(
+                      'w-full h-10 rounded-full text-sm font-semibold mt-1 border-0 bg-gradient-to-r text-white',
+                      tier.color,
+                      tier.highlight
+                        ? 'shadow-md shadow-yellow-200'
+                        : 'opacity-90 hover:opacity-100',
+                    )}
+                  >
+                    Bắt đầu ngay
+                  </Button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Upgrade note */}
+        <p className='text-center text-sm text-foreground/40 mt-12 font-medium'>
+          Hạng thành viên được tự động nâng cấp dựa trên tổng chi tiêu tích lũy
+          trong 12 tháng.
         </p>
       </div>
     </section>
