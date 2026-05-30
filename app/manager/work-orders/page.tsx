@@ -213,7 +213,7 @@ export default function ManagerWorkOrdersPage() {
                   key={tab}
                   onClick={() => setStatusFilter(tab)}
                   className={`pb-3 text-sm font-bold transition-all relative ${
-                    statusFilter === tab ? 'text-indigo-600' : 'text-slate-400 hover:text-slate-600'
+                    statusFilter === tab ? 'text-indigo-600' : 'text-slate-500 hover:text-slate-600'
                   }`}
                 >
                   {tab === 'all' && 'Tất cả phiếu'}
@@ -249,7 +249,7 @@ export default function ManagerWorkOrdersPage() {
                 <Wrench className='w-8 h-8' />
               </div>
               <h3 className='font-heading text-lg font-black text-slate-800 mb-2'>Không tìm thấy phiếu rửa xe nào</h3>
-              <p className='text-slate-400 text-sm leading-relaxed'>
+              <p className='text-slate-500 text-sm leading-relaxed'>
                 Hiện tại không có xe nào ở trạng thái này. Vui lòng kiểm tra mục &quot;Đơn đặt lịch&quot; để tiến hành Check-in nhận xe mới.
               </p>
             </div>
@@ -297,20 +297,20 @@ export default function ManagerWorkOrdersPage() {
                     {/* Customer & Service info */}
                     <div className='flex-1 flex flex-col gap-2.5 mb-6'>
                       <div>
-                        <p className='text-slate-400 text-[10px] uppercase font-bold tracking-wider'>Định danh phiếu</p>
+                        <p className='text-slate-500 text-[10px] uppercase font-bold tracking-wider'>Định danh phiếu</p>
                         <p className='font-bold text-slate-800 text-sm'>{customer}</p>
                       </div>
                       <div>
-                        <p className='text-slate-400 text-[10px] uppercase font-bold tracking-wider'>Gói dịch vụ</p>
+                        <p className='text-slate-500 text-[10px] uppercase font-bold tracking-wider'>Gói dịch vụ</p>
                         <p className='font-bold text-slate-700 text-sm'>{service}</p>
                       </div>
                       
                       {/* Thợ phụ trách */}
                       <div className='mt-2 border-t border-slate-100 pt-3'>
-                        <p className='text-slate-400 text-[10px] uppercase font-bold tracking-wider mb-1'>Thợ phụ trách</p>
+                        <p className='text-slate-500 text-[10px] uppercase font-bold tracking-wider mb-1'>Thợ phụ trách</p>
                         {washer ? (
                           <div className='flex items-center gap-1.5 text-slate-700 text-sm font-semibold'>
-                            <Users className='w-4 h-4 text-slate-400' />
+                            <Users className='w-4 h-4 text-slate-500' />
                             {washer}
                           </div>
                         ) : (
@@ -331,7 +331,7 @@ export default function ManagerWorkOrdersPage() {
                             )}
                             QC lần trước: {wo.qcPassed ? 'ĐẠT' : 'KHÔNG ĐẠT'}
                           </p>
-                          {wo.qcNote && <p className='text-slate-400 mt-0.5 italic'>&quot;{wo.qcNote}&quot;</p>}
+                          {wo.qcNote && <p className='text-slate-500 mt-0.5 italic'>&quot;{wo.qcNote}&quot;</p>}
                         </div>
                       )}
 
@@ -339,7 +339,7 @@ export default function ManagerWorkOrdersPage() {
                       <div className='mt-3 border-t border-slate-100 pt-3 flex flex-col gap-3'>
                         {/* Trước khi rửa */}
                         <div>
-                          <p className='text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1.5 flex items-center gap-1'>
+                          <p className='text-[10px] font-black text-slate-500 uppercase tracking-wider mb-1.5 flex items-center gap-1'>
                             <Camera className='w-3.5 h-3.5 text-amber-500' />
                             Ảnh trước khi rửa (Trầy xước/Móp méo)
                           </p>
@@ -360,13 +360,13 @@ export default function ManagerWorkOrdersPage() {
                               ))}
                             </div>
                           ) : (
-                            <p className='text-xs italic text-slate-400 font-medium pl-1'>Chưa có ảnh trước khi rửa.</p>
+                            <p className='text-xs italic text-slate-500 font-medium pl-1'>Chưa có ảnh trước khi rửa.</p>
                           )}
                         </div>
 
                         {/* Sau khi rửa */}
                         <div>
-                          <p className='text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1.5 flex items-center gap-1'>
+                          <p className='text-[10px] font-black text-slate-500 uppercase tracking-wider mb-1.5 flex items-center gap-1'>
                             <Camera className='w-3.5 h-3.5 text-emerald-500' />
                             Ảnh sau khi rửa (Nghiệm thu sạch đẹp)
                           </p>
@@ -387,7 +387,7 @@ export default function ManagerWorkOrdersPage() {
                               ))}
                             </div>
                           ) : (
-                            <p className='text-xs italic text-slate-400 font-medium pl-1'>Chưa có ảnh sau khi rửa.</p>
+                            <p className='text-xs italic text-slate-500 font-medium pl-1'>Chưa có ảnh sau khi rửa.</p>
                           )}
                         </div>
                       </div>
@@ -447,12 +447,12 @@ export default function ManagerWorkOrdersPage() {
               </div>
               <div>
                 <h3 className='font-heading font-black text-slate-800 text-base'>Phân công thợ rửa xe</h3>
-                <p className='text-xs text-slate-400'>Chọn thợ rửa xe phụ trách cho xe {assignTarget.vehicleSnapshot?.plate ?? ''}</p>
+                <p className='text-xs text-slate-500'>Chọn thợ rửa xe phụ trách cho xe {assignTarget.vehicleSnapshot?.plate ?? ''}</p>
               </div>
             </div>
 
             <div className='mb-6'>
-              <label className='block text-xs font-bold text-slate-400 uppercase mb-2 tracking-wider'>Chọn nhân viên rửa xe</label>
+              <label className='block text-xs font-bold text-slate-500 uppercase mb-2 tracking-wider'>Chọn nhân viên rửa xe</label>
               <div className='relative'>
                 <select
                   value={selectedWasherId}
@@ -466,7 +466,7 @@ export default function ManagerWorkOrdersPage() {
                     </option>
                   ))}
                 </select>
-                <ChevronDown className='absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none' />
+                <ChevronDown className='absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none' />
               </div>
             </div>
 
@@ -499,13 +499,13 @@ export default function ManagerWorkOrdersPage() {
               </div>
               <div>
                 <h3 className='font-heading font-black text-slate-800 text-base'>Đánh giá chất lượng rửa (QC)</h3>
-                <p className='text-xs text-slate-400'>Đánh giá kiểm định xe {qcTarget.vehicleSnapshot?.plate ?? ''}</p>
+                <p className='text-xs text-slate-500'>Đánh giá kiểm định xe {qcTarget.vehicleSnapshot?.plate ?? ''}</p>
               </div>
             </div>
 
             {/* QC Result Selection */}
             <div className='mb-5'>
-              <label className='block text-xs font-bold text-slate-400 uppercase mb-3 tracking-wider'>Kết quả kiểm tra</label>
+              <label className='block text-xs font-bold text-slate-500 uppercase mb-3 tracking-wider'>Kết quả kiểm tra</label>
               <div className='grid grid-cols-2 gap-3'>
                 <button
                   type='button'
@@ -536,7 +536,7 @@ export default function ManagerWorkOrdersPage() {
 
             {/* QC Note */}
             <div className='mb-6'>
-              <label className='block text-xs font-bold text-slate-400 uppercase mb-2 tracking-wider flex items-center gap-1'>
+              <label className='block text-xs font-bold text-slate-500 uppercase mb-2 tracking-wider flex items-center gap-1'>
                 <MessageSquare className='w-3.5 h-3.5' /> Ghi chú chất lượng
               </label>
               <textarea

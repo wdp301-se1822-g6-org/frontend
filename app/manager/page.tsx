@@ -94,8 +94,8 @@ export default function ManagerDashboard() {
               <p className='text-2xl font-black text-slate-900 tracking-tight mb-1'>
                 {todayRevenue.toLocaleString('vi-VN')}đ
               </p>
-              <p className='text-xs font-black text-slate-400 uppercase tracking-widest mb-1'>Doanh thu hôm nay</p>
-              <p className='text-slate-400 text-xs font-medium'>Từ {todayOrders.length} đơn đặt lịch</p>
+              <p className='text-xs font-black text-slate-500 uppercase tracking-widest mb-1'>Doanh thu hôm nay</p>
+              <p className='text-slate-500 text-xs font-medium'>Từ {todayOrders.length} đơn đặt lịch</p>
             </div>
 
             {/* Completed Orders Card */}
@@ -108,8 +108,8 @@ export default function ManagerDashboard() {
               <p className='text-2xl font-black text-slate-900 tracking-tight mb-1'>
                 {completedToday.length} / {todayOrders.length}
               </p>
-              <p className='text-xs font-black text-slate-400 uppercase tracking-widest mb-1'>Rửa hoàn thành</p>
-              <p className='text-slate-400 text-xs font-medium'>Đã rửa xong trong ngày</p>
+              <p className='text-xs font-black text-slate-500 uppercase tracking-widest mb-1'>Rửa hoàn thành</p>
+              <p className='text-slate-500 text-xs font-medium'>Đã rửa xong trong ngày</p>
             </div>
 
             {/* Active Washers/WorkOrders */}
@@ -122,8 +122,8 @@ export default function ManagerDashboard() {
               <p className='text-2xl font-black text-slate-900 tracking-tight mb-1'>
                 {activeWorkOrders.length} đơn
               </p>
-              <p className='text-xs font-black text-slate-400 uppercase tracking-widest mb-1'>Đang xử lý tại quầy</p>
-              <p className='text-slate-400 text-xs font-medium'>Cần gán thợ hoặc đang rửa</p>
+              <p className='text-xs font-black text-slate-500 uppercase tracking-widest mb-1'>Đang xử lý tại quầy</p>
+              <p className='text-slate-500 text-xs font-medium'>Cần gán thợ hoặc đang rửa</p>
             </div>
 
             {/* QC Success Rate Card */}
@@ -136,14 +136,14 @@ export default function ManagerDashboard() {
               <p className='text-2xl font-black text-slate-900 tracking-tight mb-1'>
                 {qcRate}%
               </p>
-              <p className='text-xs font-black text-slate-400 uppercase tracking-widest mb-1'>Tỉ lệ QC Đạt chuẩn</p>
-              <p className='text-slate-400 text-xs font-medium'>Tổng số lần QC: {qcTotalCount}</p>
+              <p className='text-xs font-black text-slate-500 uppercase tracking-widest mb-1'>Tỉ lệ QC Đạt chuẩn</p>
+              <p className='text-slate-500 text-xs font-medium'>Tổng số lần QC: {qcTotalCount}</p>
             </div>
           </div>
 
           {/* Quick Shortcuts */}
           <div className='bg-white rounded-2xl border border-slate-100 p-6 shadow-sm'>
-            <h2 className='font-heading text-sm font-black uppercase tracking-widest text-slate-400 mb-4'>Thao tác vận hành nhanh</h2>
+            <h2 className='font-heading text-sm font-black uppercase tracking-widest text-slate-500 mb-4'>Thao tác vận hành nhanh</h2>
             <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
               <Link
                 href='/manager/orders'
@@ -155,7 +155,7 @@ export default function ManagerDashboard() {
                   </div>
                   <div>
                     <h3 className='font-heading font-bold text-slate-800 text-sm'>Check-in Khách hàng mới</h3>
-                    <p className='text-xs text-slate-400 mt-0.5'>Xem danh sách đặt lịch và check-in tạo Work Order</p>
+                    <p className='text-xs text-slate-500 mt-0.5'>Xem danh sách đặt lịch và check-in tạo Work Order</p>
                   </div>
                 </div>
                 <ArrowRight className='w-5 h-5 text-slate-300 group-hover:text-indigo-600 transition-colors' />
@@ -171,7 +171,7 @@ export default function ManagerDashboard() {
                   </div>
                   <div>
                     <h3 className='font-heading font-bold text-slate-800 text-sm'>Phân công & Kiểm định QC</h3>
-                    <p className='text-xs text-slate-400 mt-0.5'>Giao xe cho thợ rửa, giám sát tiến độ và kiểm tra chất lượng</p>
+                    <p className='text-xs text-slate-500 mt-0.5'>Giao xe cho thợ rửa, giám sát tiến độ và kiểm tra chất lượng</p>
                   </div>
                 </div>
                 <ArrowRight className='w-5 h-5 text-slate-300 group-hover:text-indigo-600 transition-colors' />
@@ -192,12 +192,12 @@ export default function ManagerDashboard() {
               <table className='w-full text-sm text-slate-600'>
                 <thead>
                   <tr className='bg-slate-50/50 border-b border-slate-100'>
-                    <th className='text-left px-6 py-3.5 text-[11px] font-black uppercase tracking-widest text-slate-400'>Mã số</th>
-                    <th className='text-left px-4 py-3.5 text-[11px] font-black uppercase tracking-widest text-slate-400'>Khách hàng</th>
-                    <th className='text-left px-4 py-3.5 text-[11px] font-black uppercase tracking-widest text-slate-400'>Biển số xe</th>
-                    <th className='text-left px-4 py-3.5 text-[11px] font-black uppercase tracking-widest text-slate-400'>Thợ phụ trách</th>
-                    <th className='text-center px-4 py-3.5 text-[11px] font-black uppercase tracking-widest text-slate-400'>Trạng thái QC</th>
-                    <th className='text-right px-6 py-3.5 text-[11px] font-black uppercase tracking-widest text-slate-400'>Trạng thái rửa</th>
+                    <th className='text-left px-6 py-3.5 text-[11px] font-black uppercase tracking-widest text-slate-500'>Mã số</th>
+                    <th className='text-left px-4 py-3.5 text-[11px] font-black uppercase tracking-widest text-slate-500'>Khách hàng</th>
+                    <th className='text-left px-4 py-3.5 text-[11px] font-black uppercase tracking-widest text-slate-500'>Biển số xe</th>
+                    <th className='text-left px-4 py-3.5 text-[11px] font-black uppercase tracking-widest text-slate-500'>Thợ phụ trách</th>
+                    <th className='text-center px-4 py-3.5 text-[11px] font-black uppercase tracking-widest text-slate-500'>Trạng thái QC</th>
+                    <th className='text-right px-6 py-3.5 text-[11px] font-black uppercase tracking-widest text-slate-500'>Trạng thái rửa</th>
                   </tr>
                 </thead>
                 <tbody className='divide-y divide-slate-100'>
@@ -213,7 +213,7 @@ export default function ManagerDashboard() {
                     ))
                   ) : activeWorkOrders.length === 0 ? (
                     <tr>
-                      <td colSpan={6} className='px-6 py-12 text-center text-slate-400 font-semibold'>
+                      <td colSpan={6} className='px-6 py-12 text-center text-slate-500 font-semibold'>
                         Không có chiếc xe nào đang được rửa tại quầy.
                       </td>
                     </tr>
@@ -234,7 +234,7 @@ export default function ManagerDashboard() {
 
                       return (
                         <tr key={w._id ?? w.id} className='hover:bg-slate-50/40 transition-colors'>
-                          <td className='px-6 py-4 font-mono text-xs text-slate-400'>
+                          <td className='px-6 py-4 font-mono text-xs text-slate-500'>
                             {w._id ? w._id.slice(-6).toUpperCase() : '—'}
                           </td>
                           <td className='px-4 py-4'>
@@ -254,7 +254,7 @@ export default function ManagerDashboard() {
                             <span className={`inline-flex px-2 py-0.5 rounded-lg text-xs font-bold ${
                               w.qcStatus === 'passed' ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' :
                               w.qcStatus === 'failed' ? 'bg-rose-50 text-rose-700 border border-rose-100' :
-                              'bg-slate-100 text-slate-400'
+                              'bg-slate-100 text-slate-500'
                             }`}>
                               {w.qcStatus === 'passed' ? 'QC Đạt' : w.qcStatus === 'failed' ? 'QC Không Đạt' : 'Chưa QC'}
                             </span>

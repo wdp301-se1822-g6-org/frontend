@@ -46,11 +46,16 @@ export interface CreateOrderDto {
   scheduledAt: string; // UTC ISO string
   paymentMethod: PaymentMethod;
   note?: string;
+  voucherId?: string; // FREE_WASH voucher to redeem (amount → 0, cash-only)
 }
 
 export interface AvailableSlot {
   scheduledAt: string; // ISO string
   remainingCapacity: number;
+  /** Slot nằm trong khung Giờ Vàng (giảm giá theo hạng mới được áp). */
+  isGoldenHour: boolean;
+  /** % giảm hạng khách được hưởng nếu đặt slot này (0 nếu ngoài giờ vàng). */
+  discountPercent: number;
 }
 
 export interface RescheduleOrderDto {
@@ -83,5 +88,36 @@ export interface ServiceType {
   estimatedMinutes: number;
   pointsMultiplier: number;
   checklistTemplate: string[];
+  isVoucherEligible?: boolean;
   isActive: boolean;
+}
+
+/** Khớp `GET /me/vouchers` → VoucherResponseDto (BE). */
+export interface Voucher {
+  id: string;
+  customerId: string;
+  code: string;
+  type: 'FREE_WASH' | string;
+  status: 'unused' | 'used' | 'expired' | string;
+  /** Số VND tối đa voucher trừ được trên một đơn. */
+  discountCapVnd: number;
+  expiresAt: string;
+  grantedReason?: string;
+  usedAt?: string;
+  usedOrderId?: string;
+  createdAt: string;
+}
+
+/** Khớp `POST /me/orders/preview` → PreviewOrderResponseDto (BE). */
+export interface PreviewOrderResponse {
+  originalAmount: number;
+  discountAmount: number;
+  discountPercent: number;
+  discountReason?: string;
+  amount: number;
+  isGoldenHour: boolean;
+  tierName: string;
+  tierDiscountPercent: number;
+  voucherDiscountCapVnd?: number;
+  voucherError?: string;
 }

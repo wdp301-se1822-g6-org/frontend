@@ -29,7 +29,7 @@ export default function AdminSettingsPage() {
                 { label: 'Trạng thái', value: authUser?.isActive ? 'Hoạt động' : 'Vô hiệu' },
               ].map(({ label, value }) => (
                 <div key={label}>
-                  <label className='block text-xs font-black uppercase tracking-widest text-foreground/40 mb-1.5'>{label}</label>
+                  <label className='block text-xs font-black uppercase tracking-widest text-foreground/60 mb-1.5'>{label}</label>
                   <div className='px-4 py-3 bg-muted rounded-xl text-sm font-semibold text-foreground'>{value}</div>
                 </div>
               ))}
@@ -71,14 +71,14 @@ export default function AdminSettingsPage() {
               <div className='flex items-center justify-between p-4 rounded-xl bg-muted/50 border border-border/50'>
                 <div>
                   <p className='font-semibold text-foreground text-sm'>Xác thực hai bước</p>
-                  <p className='text-xs text-foreground/40 mt-0.5'>Bảo vệ tài khoản bằng OTP</p>
+                  <p className='text-xs text-foreground/60 mt-0.5'>Bảo vệ tài khoản bằng OTP</p>
                 </div>
                 <span className='px-3 py-1 rounded-full bg-yellow-50 text-yellow-700 text-[11px] font-black uppercase'>Sắp có</span>
               </div>
               <div className='flex items-center justify-between p-4 rounded-xl bg-muted/50 border border-border/50'>
                 <div>
                   <p className='font-semibold text-foreground text-sm'>Nhật ký truy cập</p>
-                  <p className='text-xs text-foreground/40 mt-0.5'>Theo dõi lịch sử đăng nhập</p>
+                  <p className='text-xs text-foreground/60 mt-0.5'>Theo dõi lịch sử đăng nhập</p>
                 </div>
                 <span className='px-3 py-1 rounded-full bg-yellow-50 text-yellow-700 text-[11px] font-black uppercase'>Sắp có</span>
               </div>

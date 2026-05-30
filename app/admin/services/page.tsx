@@ -23,7 +23,7 @@ function ServiceModal({ item, onClose, onSave }: { item?: ServiceType | null; on
       <div className='bg-white rounded-2xl p-8 w-full max-w-md shadow-2xl' onClick={(e) => e.stopPropagation()}>
         <div className='flex items-center justify-between mb-6'>
           <h3 className='font-heading font-black text-foreground text-lg'>{item ? 'Sửa dịch vụ' : 'Thêm dịch vụ mới'}</h3>
-          <button onClick={onClose}><X className='w-5 h-5 text-foreground/40' /></button>
+          <button onClick={onClose}><X className='w-5 h-5 text-foreground/60' /></button>
         </div>
         <div className='flex flex-col gap-4'>
           {[
@@ -33,7 +33,7 @@ function ServiceModal({ item, onClose, onSave }: { item?: ServiceType | null; on
             { label: 'Thời gian (phút)', key: 'estimatedMinutes', type: 'number' },
           ].map(({ label, key, type }) => (
             <div key={key}>
-              <label className='block text-xs font-black uppercase tracking-widest text-foreground/40 mb-1.5'>{label}</label>
+              <label className='block text-xs font-black uppercase tracking-widest text-foreground/60 mb-1.5'>{label}</label>
               <input type={type} value={(form as unknown as Record<string, string | number>)[key]} onChange={(e) => setForm({ ...form, [key]: type === 'number' ? Number(e.target.value) : e.target.value })}
                 className='w-full border border-border rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-primary/50' />
             </div>
@@ -97,7 +97,7 @@ export default function AdminServicesPage() {
                         <p className='text-foreground/50 text-xs mt-0.5'>{s.description}</p>
                         <div className='flex gap-4 mt-2'>
                           <span className='text-xs font-black text-primary'>{s.basePrice?.toLocaleString('vi-VN')}đ</span>
-                          <span className='text-xs text-foreground/40'>{s.estimatedMinutes ?? s.duration} phút</span>
+                          <span className='text-xs text-foreground/60'>{s.estimatedMinutes ?? s.duration} phút</span>
                         </div>
                       </div>
                       <div className='flex items-center gap-2 shrink-0'>

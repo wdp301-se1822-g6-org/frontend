@@ -18,18 +18,18 @@ export function AdminTopbar({ title, subtitle }: AdminTopbarProps) {
       {/* Title */}
       <div>
         <h1 className='font-heading text-xl font-black text-foreground tracking-tight'>{title}</h1>
-        {subtitle && <p className='text-foreground/40 text-xs font-medium mt-0.5'>{subtitle}</p>}
+        {subtitle && <p className='text-foreground/60 text-xs font-medium mt-0.5'>{subtitle}</p>}
       </div>
 
       <div className='flex items-center gap-4 ml-auto'>
         {/* Date */}
-        <span className='hidden sm:block text-xs font-semibold text-foreground/40 uppercase tracking-wider'>
+        <span className='hidden sm:block text-xs font-semibold text-foreground/60 uppercase tracking-wider'>
           {dateStr}
         </span>
 
         {/* Search */}
         <div className='relative hidden md:block'>
-          <Search className='absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/30' />
+          <Search className='absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/55' />
           <input
             type='text'
             placeholder='Tìm kiếm...'

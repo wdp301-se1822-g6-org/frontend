@@ -7,8 +7,16 @@ import {
   cancelOrder,
   getAvailableSlots,
   getActiveServiceTypes,
+  getMyVouchers,
+  previewOrder,
 } from '@/lib/customer-api';
-import { CreateOrderDto, RescheduleOrderDto, CancelOrderDto } from '@/types/order';
+import {
+  CreateOrderDto,
+  RescheduleOrderDto,
+  CancelOrderDto,
+  Voucher,
+  PreviewOrderResponse,
+} from '@/types/order';
 
 export const useMyOrders = () => {
   return useQuery({
@@ -101,5 +109,51 @@ export const useActiveServiceTypes = () => {
       const res = await getActiveServiceTypes();
       return res.data || [];
     },
+  });
+};
+
+/** Voucher của khách (mặc định chỉ lấy voucher còn dùng được). */
+export const useMyVouchers = (
+  status: 'unused' | 'used' | 'expired' = 'unused',
+) => {
+  return useQuery({
+    queryKey: ['my-vouchers', status],
+    queryFn: async (): Promise<Voucher[]> => {
+      const res = await getMyVouchers(status);
+      return res.data?.data ?? res.data ?? [];
+    },
+  });
+};
+
+/**
+ * Xem trước giá đơn (giảm theo hạng + golden hour + voucher) trước khi đặt.
+ * Không tiêu voucher. Tự chạy lại khi đổi service/giờ/voucher.
+ */
+export const usePreviewOrder = (params: {
+  serviceTypeId: string;
+  scheduledAt: string;
+  voucherId?: string;
+  enabled?: boolean;
+}) => {
+  return useQuery({
+    queryKey: [
+      'order-preview',
+      params.serviceTypeId,
+      params.scheduledAt,
+      params.voucherId ?? null,
+    ],
+    queryFn: async (): Promise<PreviewOrderResponse | null> => {
+      if (!params.serviceTypeId || !params.scheduledAt) return null;
+      const res = await previewOrder({
+        serviceTypeId: params.serviceTypeId,
+        scheduledAt: params.scheduledAt,
+        voucherId: params.voucherId,
+      });
+      return res.data?.data ?? res.data ?? null;
+    },
+    enabled:
+      params.enabled !== false &&
+      !!params.serviceTypeId &&
+      !!params.scheduledAt,
   });
 };

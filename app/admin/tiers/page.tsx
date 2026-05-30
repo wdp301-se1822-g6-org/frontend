@@ -22,21 +22,21 @@ function TierModal({ item, onClose, onSave }: { item: Tier; onClose: () => void;
       <div className='bg-white rounded-2xl p-8 w-full max-w-md shadow-2xl' onClick={(e) => e.stopPropagation()}>
         <div className='flex items-center justify-between mb-6'>
           <h3 className='font-heading font-black text-foreground text-lg'>Sửa hạng: {item.name}</h3>
-          <button onClick={onClose}><X className='w-5 h-5 text-foreground/40' /></button>
+          <button onClick={onClose}><X className='w-5 h-5 text-foreground/60' /></button>
         </div>
         <div className='flex flex-col gap-4'>
           <div>
-            <label className='block text-xs font-black uppercase tracking-widest text-foreground/40 mb-1.5'>Điểm tối thiểu</label>
+            <label className='block text-xs font-black uppercase tracking-widest text-foreground/60 mb-1.5'>Điểm tối thiểu</label>
             <input type='number' value={form.minPoints} onChange={(e) => setForm({ ...form, minPoints: Number(e.target.value) })}
               className='w-full border border-border rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-primary/50' />
           </div>
           <div>
-            <label className='block text-xs font-black uppercase tracking-widest text-foreground/40 mb-1.5'>Giảm giá (%)</label>
+            <label className='block text-xs font-black uppercase tracking-widest text-foreground/60 mb-1.5'>Giảm giá (%)</label>
             <input type='number' value={form.discountPercent} onChange={(e) => setForm({ ...form, discountPercent: Number(e.target.value) })}
               className='w-full border border-border rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-primary/50' />
           </div>
           <div>
-            <label className='block text-xs font-black uppercase tracking-widest text-foreground/40 mb-1.5'>Quyền lợi (cách nhau bởi dấu phẩy)</label>
+            <label className='block text-xs font-black uppercase tracking-widest text-foreground/60 mb-1.5'>Quyền lợi (cách nhau bởi dấu phẩy)</label>
             <textarea value={form.benefits} onChange={(e) => setForm({ ...form, benefits: e.target.value })} rows={3}
               className='w-full border border-border rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-primary/50 resize-none' />
           </div>
@@ -69,7 +69,7 @@ export default function AdminTiersPage() {
           <div className='grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6'>
             {isLoading ? Array.from({ length: 4 }).map((_, i) => <div key={i} className='h-64 bg-white rounded-2xl border border-border animate-pulse' />) :
               tiers.length === 0 ? (
-                <div className='col-span-4 py-16 text-center text-foreground/40 font-semibold bg-white rounded-2xl border border-border/50'>
+                <div className='col-span-4 py-16 text-center text-foreground/60 font-semibold bg-white rounded-2xl border border-border/50'>
                   Chưa có cấu hình hạng
                 </div>
               ) : tiers.map((t) => {
@@ -100,7 +100,7 @@ export default function AdminTiersPage() {
                       </div>
                       {t.benefits && t.benefits.length > 0 && (
                         <div>
-                          <p className='text-[10px] font-black uppercase tracking-widest text-foreground/30 mb-2'>Quyền lợi</p>
+                          <p className='text-[10px] font-black uppercase tracking-widest text-foreground/55 mb-2'>Quyền lợi</p>
                           <ul className='flex flex-col gap-1'>
                             {t.benefits.map((b, i) => <li key={i} className='text-xs text-foreground/60 flex gap-1.5'>✓ {b}</li>)}
                           </ul>

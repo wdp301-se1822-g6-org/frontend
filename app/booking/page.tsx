@@ -14,10 +14,13 @@ import {
   CreditCard, 
   DollarSign, 
   FileText, 
-  Loader2, 
-  ShieldCheck, 
+  Loader2,
+  ShieldCheck,
   HelpCircle,
-  AlertCircle
+  AlertCircle,
+  Ticket,
+  Sparkles,
+  X
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { AuthGuard } from '@/components/auth/AuthGuard';
@@ -27,10 +30,20 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { getMyVehicles, getActiveVehicleTypes, createVehicle } from '@/lib/customer-api';
-import { useActiveServiceTypes, useAvailableSlots, useCreateOrder } from '@/hooks/orders/useOrders';
+import {
+  useActiveServiceTypes,
+  useAvailableSlots,
+  useCreateOrder,
+  useMyVouchers,
+  usePreviewOrder,
+} from '@/hooks/orders/useOrders';
 import { cn } from '@/lib/utils';
 import { formatCurrency } from '@/lib/format';
-import type { ServiceType as ServiceTypeBase, AvailableSlot } from '@/types/order';
+import type {
+  ServiceType as ServiceTypeBase,
+  AvailableSlot,
+  Voucher,
+} from '@/types/order';
 
 type ServiceTypeItem = ServiceTypeBase & { _id?: string };
 
@@ -77,6 +90,7 @@ function BookingFlow() {
   const [selectedSlot, setSelectedSlot] = useState<string>('');
   const [paymentMethod, setPaymentMethod] = useState<'online' | 'cash'>('online');
   const [note, setNote] = useState<string>('');
+  const [selectedVoucherId, setSelectedVoucherId] = useState<string>('');
 
   // Add vehicle modal/form in step 1
   const [isAddingVehicle, setIsAddingVehicle] = useState(false);
@@ -230,6 +244,32 @@ function BookingFlow() {
     return serviceTypes.find((s: ServiceTypeItem) => (s._id || s.id) === selectedServiceId);
   }, [serviceTypes, selectedServiceId]);
 
+  // ─── Voucher & xem trước giá ───
+  const { data: myVouchers = [] } = useMyVouchers('unused');
+  // BE đã lọc status=unused và cron tự đẩy voucher hết hạn sang EXPIRED.
+  // Nếu vẫn lọt voucher hết hạn, preview/create sẽ trả voucherError để hiển thị.
+  const validVouchers = useMemo(
+    () => (myVouchers as Voucher[]).filter((v) => v.status === 'unused'),
+    [myVouchers],
+  );
+
+  const serviceVoucherEligible = selectedService
+    ? (selectedService as ServiceTypeItem).isVoucherEligible !== false
+    : true;
+
+  const { data: preview } = usePreviewOrder({
+    serviceTypeId: selectedServiceId,
+    scheduledAt: selectedSlot,
+    voucherId: selectedVoucherId || undefined,
+    enabled: step === 4 && !!selectedServiceId && !!selectedSlot,
+  });
+
+  const isFreeOrder = preview?.amount === 0;
+  // Đơn 0đ buộc thanh toán tiền mặt — BE từ chối online khi total = 0.
+  const effectivePaymentMethod: 'online' | 'cash' = isFreeOrder
+    ? 'cash'
+    : paymentMethod;
+
   // Bộ lọc dịch vụ thông minh dựa trên Loại xe đã chọn ở Bước 1
   const selectedVehicleType = useMemo(() => {
     if (!selectedVehicle) return '';
@@ -308,13 +348,14 @@ function BookingFlow() {
         vehicleId: selectedVehicleId,
         serviceTypeId: selectedServiceId,
         scheduledAt: selectedSlot,
-        paymentMethod: paymentMethod,
-        note: note.trim() || undefined
+        paymentMethod: effectivePaymentMethod,
+        note: note.trim() || undefined,
+        voucherId: selectedVoucherId || undefined
       });
 
       toast.success('Đặt lịch thành công!');
 
-      if (paymentMethod === 'online' && order.payosCheckoutUrl) {
+      if (effectivePaymentMethod === 'online' && order.payosCheckoutUrl) {
         toast.info('Đang chuyển hướng đến cổng thanh toán PayOS...');
         // Chuyển hướng đến cổng thanh toán
         window.location.href = order.payosCheckoutUrl;
@@ -337,7 +378,7 @@ function BookingFlow() {
       { num: 4, title: 'Xác nhận' }
     ];
     return (
-      <div className="flex items-center justify-between max-w-xl mx-auto mb-10 px-4">
+      <div className="flex items-center justify-between max-w-xl mx-auto mb-6 px-4">
         {steps.map((s, idx) => (
           <div key={s.num} className="flex items-center flex-1 last:flex-initial">
             <button
@@ -382,37 +423,41 @@ function BookingFlow() {
   };
 
   return (
-    <div className="min-h-screen bg-linear-to-b from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-950 pt-24 pb-16">
+    <div className="min-h-screen bg-linear-to-b from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-950 pt-8 pb-12">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-        
+
         {/* Banner header */}
-        <div className="relative text-center mb-8">
+        <div className="relative mb-5 flex items-center justify-between">
           <Button
             variant="ghost"
             onClick={() => router.push('/')}
-            className="absolute left-0 top-0 sm:top-1 text-muted-foreground hover:text-foreground flex items-center gap-1 cursor-pointer rounded-xl px-3"
+            className="text-muted-foreground hover:text-foreground flex items-center gap-1 cursor-pointer rounded-xl px-3 shrink-0"
           >
             <ChevronLeft className="w-4 h-4" />
             <span className="hidden sm:inline">Về trang chủ</span>
           </Button>
-          <h1 className="font-heading text-3xl sm:text-4xl font-extrabold text-foreground tracking-tight mb-2">
-            Đặt Lịch Rửa Xe Của Bạn
-          </h1>
-          <p className="text-muted-foreground max-w-lg mx-auto text-sm sm:text-base">
-            Quy trình nhanh gọn chỉ 4 bước, dịch vụ chuyên nghiệp hàng đầu, hỗ trợ thanh toán online tiện lợi
-          </p>
+          <div className="text-center">
+            <h1 className="font-heading text-xl sm:text-2xl font-bold text-foreground tracking-tight">
+              Đặt lịch rửa xe
+            </h1>
+            <p className="hidden text-muted-foreground text-[13px] sm:block">
+              Hoàn tất 4 bước để đặt lịch và thanh toán
+            </p>
+          </div>
+          {/* Spacer cân đối với nút Về trang chủ để tiêu đề căn giữa */}
+          <div className="w-9 shrink-0 sm:w-29" aria-hidden />
         </div>
 
         {/* Steps navigation */}
         {renderStepsIndicator()}
 
         {/* Main Step Wrapper */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-          
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+
           {/* Step content */}
           <div className="lg:col-span-2 space-y-6">
             <Card className="border-none shadow-xl rounded-2xl overflow-hidden bg-white/80 dark:bg-slate-900/80 backdrop-blur-md">
-              <CardContent className="p-6 sm:p-8">
+              <CardContent className="p-5 sm:p-6">
                 
                 {/* ──────── STEP 1: CHỌN XE ──────── */}
                 {step === 1 && (
@@ -638,7 +683,10 @@ function BookingFlow() {
                           return (
                             <button
                               key={service._id || service.id}
-                              onClick={() => setSelectedServiceId(service._id || service.id || '')}
+                              onClick={() => {
+                                setSelectedServiceId(service._id || service.id || '');
+                                setSelectedVoucherId('');
+                              }}
                               className={cn(
                                 "w-full text-left p-5 rounded-2xl border-2 transition-all flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 cursor-pointer hover:shadow-md relative",
                                 isSelected
@@ -785,10 +833,16 @@ function BookingFlow() {
                           </div>
                         </Card>
                       ) : (
+                        <>
+                        <div className="flex items-center gap-1.5 mb-3 text-[11px] text-amber-600 font-semibold">
+                          <Sparkles className="w-3.5 h-3.5 shrink-0" />
+                          Ô màu vàng là Giờ Vàng — đặt vào khung này được giảm giá theo hạng thành viên.
+                        </div>
                         <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
                           {availableSlots.map((slot: AvailableSlot) => {
                             const isSelected = slot.scheduledAt === selectedSlot;
                             const isFull = slot.remainingCapacity <= 0;
+                            const isGolden = slot.isGoldenHour && !isFull;
                             // Format time from ISO
                             const timeStr = new Date(slot.scheduledAt).toLocaleTimeString('vi-VN', {
                               hour: '2-digit',
@@ -808,9 +862,17 @@ function BookingFlow() {
                                     ? "border-primary bg-primary/5 ring-1 ring-primary/20 shadow-xs"
                                     : isFull
                                     ? "border-border bg-slate-100 text-slate-400 cursor-not-allowed"
+                                    : isGolden
+                                    ? "border-amber-300 bg-amber-50 hover:bg-amber-100"
                                     : "border-border bg-card hover:bg-slate-50"
                                 )}
                               >
+                                {isGolden && (
+                                  <span className="absolute -top-1.5 -right-1.5 flex items-center gap-0.5 rounded-full bg-amber-400 text-white text-[8px] font-black px-1.5 py-0.5 shadow-sm">
+                                    <Sparkles className="w-2.5 h-2.5" />
+                                    {slot.discountPercent > 0 ? `-${slot.discountPercent}%` : 'Giờ vàng'}
+                                  </span>
+                                )}
                                 <span className="font-extrabold text-sm text-foreground tracking-tight">
                                   {timeStr}
                                 </span>
@@ -820,6 +882,8 @@ function BookingFlow() {
                                     ? "text-primary"
                                     : isFull
                                     ? "text-slate-400"
+                                    : isGolden
+                                    ? "text-amber-600"
                                     : "text-emerald-500"
                                 )}>
                                   {isFull ? 'Hết chỗ' : `Trống: ${slot.remainingCapacity}`}
@@ -828,6 +892,7 @@ function BookingFlow() {
                             );
                           })}
                         </div>
+                        </>
                       )}
                     </div>
 
@@ -857,6 +922,81 @@ function BookingFlow() {
                       <ShieldCheck className="w-5 h-5 text-primary" /> Bước 4: Thanh Toán & Xác Nhận Đặt Lịch
                     </h2>
 
+                    {/* Voucher rửa miễn phí */}
+                    {validVouchers.length > 0 && (
+                      <div className="space-y-3">
+                        <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider block">
+                          Voucher rửa miễn phí ({validVouchers.length})
+                        </Label>
+
+                        {!serviceVoucherEligible ? (
+                          <div className="flex items-center gap-2 rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-700">
+                            <AlertCircle className="w-4 h-4 shrink-0" />
+                            Gói dịch vụ này không áp dụng voucher.
+                          </div>
+                        ) : (
+                          <div className="space-y-2">
+                            {validVouchers.map((v) => {
+                              const isSelected = v.id === selectedVoucherId;
+                              return (
+                                <button
+                                  key={v.id}
+                                  type="button"
+                                  onClick={() =>
+                                    setSelectedVoucherId(isSelected ? '' : v.id)
+                                  }
+                                  className={cn(
+                                    'w-full text-left p-3.5 rounded-xl border-2 transition-all flex items-center gap-3 cursor-pointer focus:outline-none',
+                                    isSelected
+                                      ? 'border-primary bg-primary/5 ring-1 ring-primary/20'
+                                      : 'border-border bg-card hover:bg-slate-50'
+                                  )}
+                                >
+                                  <div className={cn(
+                                    'p-2 rounded-lg shrink-0',
+                                    isSelected ? 'bg-primary/15 text-primary' : 'bg-slate-100 text-slate-500'
+                                  )}>
+                                    <Ticket className="w-4 h-4" />
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <span className="font-bold text-sm text-foreground block truncate">
+                                      {v.code}
+                                    </span>
+                                    <span className="text-[11px] text-muted-foreground block">
+                                      Giảm tối đa {formatCurrency(v.discountCapVnd)} · HSD{' '}
+                                      {new Date(v.expiresAt).toLocaleDateString('vi-VN')}
+                                    </span>
+                                  </div>
+                                  {isSelected ? (
+                                    <Check className="w-4 h-4 text-primary shrink-0" />
+                                  ) : (
+                                    <span className="text-[11px] font-bold text-primary shrink-0">
+                                      Áp dụng
+                                    </span>
+                                  )}
+                                </button>
+                              );
+                            })}
+                            {selectedVoucherId && (
+                              <button
+                                type="button"
+                                onClick={() => setSelectedVoucherId('')}
+                                className="text-xs text-muted-foreground hover:text-foreground font-semibold flex items-center gap-1 cursor-pointer"
+                              >
+                                <X className="w-3.5 h-3.5" /> Bỏ áp dụng voucher
+                              </button>
+                            )}
+                          </div>
+                        )}
+
+                        {preview?.voucherError && selectedVoucherId && (
+                          <div className="flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 p-3 text-xs text-red-600">
+                            <AlertCircle className="w-4 h-4 shrink-0" /> {preview.voucherError}
+                          </div>
+                        )}
+                      </div>
+                    )}
+
                     {/* Payment Method Picker */}
                     <div className="space-y-3">
                       <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider block">Chọn hình thức thanh toán</Label>
@@ -865,17 +1005,20 @@ function BookingFlow() {
                         {/* PayOS Online */}
                         <button
                           type="button"
-                          onClick={() => setPaymentMethod('online')}
+                          disabled={isFreeOrder}
+                          onClick={() => !isFreeOrder && setPaymentMethod('online')}
                           className={cn(
-                            "text-left p-4 rounded-xl border-2 transition-all flex items-center gap-4 cursor-pointer focus:outline-none",
-                            paymentMethod === 'online'
-                              ? "border-primary bg-primary/5 ring-1 ring-primary/20 shadow-xs"
-                              : "border-border bg-card hover:bg-slate-50"
+                            "text-left p-4 rounded-xl border-2 transition-all flex items-center gap-4 focus:outline-none",
+                            isFreeOrder
+                              ? "border-border bg-slate-100 opacity-60 cursor-not-allowed"
+                              : effectivePaymentMethod === 'online'
+                              ? "border-primary bg-primary/5 ring-1 ring-primary/20 shadow-xs cursor-pointer"
+                              : "border-border bg-card hover:bg-slate-50 cursor-pointer"
                           )}
                         >
                           <div className={cn(
                             "p-2.5 rounded-lg",
-                            paymentMethod === 'online' ? "bg-primary/20 text-primary" : "bg-slate-100 text-slate-500"
+                            effectivePaymentMethod === 'online' ? "bg-primary/20 text-primary" : "bg-slate-100 text-slate-500"
                           )}>
                             <CreditCard className="w-5 h-5" />
                           </div>
@@ -883,7 +1026,7 @@ function BookingFlow() {
                             <span className="font-extrabold text-sm text-foreground block leading-tight">Thanh toán Online (PayOS)</span>
                             <span className="text-[10px] text-muted-foreground">Qua mã QR ngân hàng cực kỳ tiện lợi</span>
                           </div>
-                          {paymentMethod === 'online' && <Check className="w-4 h-4 text-primary ml-auto" />}
+                          {effectivePaymentMethod === 'online' && <Check className="w-4 h-4 text-primary ml-auto" />}
                         </button>
 
                         {/* Cash */}
@@ -892,14 +1035,14 @@ function BookingFlow() {
                           onClick={() => setPaymentMethod('cash')}
                           className={cn(
                             "text-left p-4 rounded-xl border-2 transition-all flex items-center gap-4 cursor-pointer focus:outline-none",
-                            paymentMethod === 'cash'
+                            effectivePaymentMethod === 'cash'
                               ? "border-primary bg-primary/5 ring-1 ring-primary/20 shadow-xs"
                               : "border-border bg-card hover:bg-slate-50"
                           )}
                         >
                           <div className={cn(
                             "p-2.5 rounded-lg",
-                            paymentMethod === 'cash' ? "bg-primary/20 text-primary" : "bg-slate-100 text-slate-500"
+                            effectivePaymentMethod === 'cash' ? "bg-primary/20 text-primary" : "bg-slate-100 text-slate-500"
                           )}>
                             <DollarSign className="w-5 h-5" />
                           </div>
@@ -907,9 +1050,15 @@ function BookingFlow() {
                             <span className="font-extrabold text-sm text-foreground block leading-tight">Thanh toán tại quầy (Tiền mặt)</span>
                             <span className="text-[10px] text-muted-foreground">Thanh toán sau khi xe của bạn rửa sạch</span>
                           </div>
-                          {paymentMethod === 'cash' && <Check className="w-4 h-4 text-primary ml-auto" />}
+                          {effectivePaymentMethod === 'cash' && <Check className="w-4 h-4 text-primary ml-auto" />}
                         </button>
                       </div>
+                      {isFreeOrder && (
+                        <p className="text-[11px] text-muted-foreground flex items-center gap-1.5">
+                          <AlertCircle className="w-3.5 h-3.5 text-primary" />
+                          Đơn được voucher giảm về 0đ — chỉ thanh toán tiền mặt tại quầy.
+                        </p>
+                      )}
                     </div>
 
                     {/* Booking Notes */}
@@ -960,7 +1109,7 @@ function BookingFlow() {
 
           {/* ─── SIDEBAR HÓA ĐƠN TÓM TẮT DỊCH VỤ ─── */}
           <div className="space-y-6">
-            <Card className="border-none shadow-xl rounded-2xl overflow-hidden bg-white/80 dark:bg-slate-900/80 backdrop-blur-md sticky top-24">
+            <Card className="border-none shadow-xl rounded-2xl overflow-hidden bg-white/80 dark:bg-slate-900/80 backdrop-blur-md sticky top-6">
               <CardContent className="p-6 space-y-5">
                 <h3 className="font-heading font-black text-lg text-foreground tracking-tight border-b border-slate-100 pb-3">
                   Tóm Tắt Đơn Đặt Lịch
@@ -1043,17 +1192,46 @@ function BookingFlow() {
 
                 {/* Total Payment Details */}
                 <div className="border-t border-slate-100 pt-4 space-y-3">
-                  <div className="flex justify-between items-center text-sm font-bold text-muted-foreground">
-                    <span>Giá niêm yết</span>
-                    <span>{selectedService ? formatCurrency(Number(selectedService.basePrice)) : '0đ'}</span>
-                  </div>
+                  {(() => {
+                    const base = selectedService ? Number(selectedService.basePrice) : 0;
+                    const original = preview?.originalAmount ?? base;
+                    const discount = preview?.discountAmount ?? 0;
+                    const total = preview?.amount ?? base;
+                    return (
+                      <>
+                        <div className="flex justify-between items-center text-sm font-bold text-muted-foreground">
+                          <span>Giá niêm yết</span>
+                          <span>{formatCurrency(original)}</span>
+                        </div>
 
-                  <div className="flex justify-between items-center text-md font-black text-foreground pt-1 border-t border-dashed border-slate-100">
-                    <span>Tổng thanh toán</span>
-                    <span className="text-xl text-primary font-black">
-                      {selectedService ? formatCurrency(Number(selectedService.basePrice)) : '0đ'}
-                    </span>
-                  </div>
+                        {discount > 0 && (
+                          <div className="flex justify-between items-center text-sm font-bold text-emerald-600">
+                            <span className="flex items-center gap-1">
+                              <Ticket className="w-3.5 h-3.5" />
+                              {selectedVoucherId && !preview?.voucherError
+                                ? 'Giảm giá (voucher)'
+                                : 'Giảm giá'}
+                            </span>
+                            <span>− {formatCurrency(discount)}</span>
+                          </div>
+                        )}
+
+                        {preview?.isGoldenHour && preview.tierDiscountPercent > 0 && (
+                          <p className="text-[10px] text-muted-foreground -mt-1.5">
+                            Khung giờ vàng · hạng {preview.tierName} giảm{' '}
+                            {preview.tierDiscountPercent}%
+                          </p>
+                        )}
+
+                        <div className="flex justify-between items-center text-md font-black text-foreground pt-1 border-t border-dashed border-slate-100">
+                          <span>Tổng thanh toán</span>
+                          <span className="text-xl text-primary font-black">
+                            {formatCurrency(total)}
+                          </span>
+                        </div>
+                      </>
+                    );
+                  })()}
                 </div>
 
                 {/* Security badges */}
