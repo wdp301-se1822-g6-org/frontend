@@ -20,7 +20,6 @@ import {
   Car,
   LogOut,
   ChevronDown,
-  Bell,
   User2,
 } from 'lucide-react';
 import { axiosInstance } from '@/lib/axios';
@@ -30,8 +29,8 @@ import { getInitials } from '@/lib/format';
 
 const navLinks = [
   { label: 'Đặt lịch', href: '/booking' },
+  { label: 'Dịch vụ', href: '/#services-pricing' },
   { label: 'Hạng thành viên', href: '/#loyalty' },
-  { label: 'Khuyến mãi', href: '/#promotions' },
   { label: 'Liên hệ', href: '/#contact' },
 ];
 
@@ -59,7 +58,7 @@ export function Navbar() {
   const initials = getInitials(authUser?.name);
 
   return (
-    <nav className='fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border'>
+    <nav className='fixed top-0 left-0 right-0 z-50 bg-background/70 backdrop-blur-xl border-b border-border/60'>
       <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
         <div className='flex items-center justify-between h-16'>
           {/* Logo */}
@@ -70,38 +69,33 @@ export function Navbar() {
             <Image
               src='/logo-wave.jpg'
               alt='WAVE'
-              width={34}
-              height={34}
+              width={38}
+              height={38}
               className='rounded-full object-cover shadow-sm'
             />
-            <span className='font-heading text-foreground font-black text-2xl tracking-tighter'>
+            <span className='font-heading text-2xl font-bold tracking-tight text-foreground'>
               WAVE
             </span>
           </Link>
 
-          {/* Nav links */}
-          <div className='hidden lg:flex items-center gap-5 xl:gap-7'>
+          {/* Nav links — căn giữa */}
+          <div className='hidden flex-1 items-center justify-center gap-7 lg:flex xl:gap-9'>
             {navLinks.map((link) => (
               <a
                 key={link.href}
                 href={link.href}
-                className='text-foreground/70 hover:text-primary text-sm font-medium transition-colors'
+                className='group relative text-[15px] font-medium text-foreground/70 transition-colors hover:text-primary'
               >
                 {link.label}
+                <span className='absolute -bottom-1.5 left-0 h-0.5 w-0 rounded-full bg-primary transition-all duration-300 group-hover:w-full' />
               </a>
             ))}
           </div>
 
           {/* Right: auth */}
-          <div className='hidden md:flex items-center gap-2 sm:gap-4'>
+          <div className='hidden lg:flex items-center gap-2 sm:gap-4'>
             {authUser ? (
               <div className='flex items-center gap-4'>
-                {/* Notification Bell */}
-                <button className='relative p-2 text-foreground/50 hover:text-primary hover:bg-primary/5 rounded-full transition-all cursor-pointer group'>
-                  <Bell className='w-5 h-5 transition-transform group-hover:rotate-12' />
-                  <span className='absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border-2 border-background' />
-                </button>
-
                 <DropdownMenu modal={false}>
                   <DropdownMenuTrigger asChild>
                     <button className='flex items-center gap-3 group cursor-pointer focus:outline-none hover:bg-accent/30 pl-1.5 pr-4 py-1.5 rounded-full transition-all'>
@@ -226,13 +220,13 @@ export function Navbar() {
                 <Button
                   variant='ghost'
                   onClick={() => router.push('/login')}
-                  className='text-foreground/70 hover:text-primary hover:bg-primary/5 h-9 px-4 text-sm font-medium'
+                  className='h-10 px-4 text-[15px] font-medium text-foreground/70 hover:bg-primary/5 hover:text-primary'
                 >
                   Đăng nhập
                 </Button>
                 <Button
                   onClick={() => router.push('/register')}
-                  className='bg-primary hover:bg-primary/90 text-primary-foreground border-0 h-9 px-5 text-sm rounded-full shadow-lg shadow-primary/20 transition-all hover:scale-105'
+                  className='h-10 px-6 text-[15px]'
                 >
                   Đăng ký
                 </Button>
@@ -242,7 +236,7 @@ export function Navbar() {
 
           {/* Mobile hamburger */}
           <button
-            className='md:hidden text-foreground p-2 rounded-md hover:bg-accent/60 transition-colors'
+            className='lg:hidden text-foreground p-2 rounded-md hover:bg-accent/60 transition-colors'
             onClick={() => setMenuOpen((v) => !v)}
             aria-label={menuOpen ? 'Đóng menu' : 'Mở menu'}
           >
@@ -257,7 +251,7 @@ export function Navbar() {
 
       {/* Mobile menu */}
       {menuOpen && (
-        <div className='md:hidden bg-background border-t border-border px-4 py-4 flex flex-col gap-4 shadow-xl'>
+        <div className='lg:hidden bg-background border-t border-border px-4 py-4 flex flex-col gap-4 shadow-xl'>
           {authUser && (
             <div className='flex items-center gap-3 pb-3 border-b border-border'>
               <span className='w-9 h-9 rounded-full bg-primary flex items-center justify-center text-white text-sm font-bold'>

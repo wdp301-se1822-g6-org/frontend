@@ -67,17 +67,15 @@ const socialIcons = [
 
 const footerLinks = {
   services: [
-    { label: 'Gói Kim Cương', href: '#booking' },
-    { label: 'Gói Vàng', href: '#booking' },
-    { label: 'Gói Bạc', href: '#booking' },
-    { label: 'Gói Nhanh', href: '#booking' },
-    { label: 'Thẻ quà tặng', href: '#' },
+    { label: 'Đặt lịch rửa xe', href: '/booking' },
+    { label: 'Bảng giá dịch vụ', href: '/#services-pricing' },
+    { label: 'Hạng thành viên', href: '/#loyalty' },
+    { label: 'Tính năng', href: '/#features' },
   ],
   support: [
-    { label: 'Câu hỏi thường gặp', href: '#' },
-    { label: 'Chính sách bảo mật', href: '#' },
-    { label: 'Điều khoản dịch vụ', href: '#' },
-    { label: 'Liên hệ hỗ trợ', href: '#contact' },
+    { label: 'Đăng nhập', href: '/login' },
+    { label: 'Tạo tài khoản', href: '/register' },
+    { label: 'Liên hệ', href: '/#contact' },
   ],
 };
 
@@ -101,9 +99,9 @@ export function Footer() {
                 WAVE
               </span>
             </div>
-            <p className='text-foreground/60 text-sm leading-relaxed mb-6 font-medium'>
-              Hệ thống rửa xe thông minh hàng đầu Việt Nam. Công nghệ hiện đại,
-              dịch vụ chuyên nghiệp, trải nghiệm hoàn hảo cho xế yêu của bạn.
+            <p className='mb-6 text-[14px] leading-relaxed text-foreground/65'>
+              Nền tảng đặt lịch và theo dõi quy trình rửa xe, giúp khách hàng chủ
+              động thời gian và cửa hàng quản lý dịch vụ hiệu quả hơn.
             </p>
             <div className='flex gap-4'>
               {socialIcons.map((s) => (
@@ -121,13 +119,13 @@ export function Footer() {
 
           {/* Services */}
           <div>
-            <h4 className='font-heading font-semibold text-black mb-4'>Dịch vụ</h4>
+            <h4 className='mb-4 font-heading text-[15px] font-semibold text-foreground'>Dịch vụ</h4>
             <ul className='space-y-2.5'>
               {footerLinks.services.map((link) => (
                 <li key={link.label}>
                   <a
                     href={link.href}
-                    className='text-foreground/50 hover:text-primary text-sm font-semibold transition-colors'
+                    className='text-[14px] text-foreground/65 transition-colors hover:text-primary'
                   >
                     {link.label}
                   </a>
@@ -138,13 +136,13 @@ export function Footer() {
 
           {/* Support */}
           <div>
-            <h4 className='font-heading font-semibold text-black mb-4'>Hỗ trợ</h4>
+            <h4 className='mb-4 font-heading text-[15px] font-semibold text-foreground'>Hỗ trợ</h4>
             <ul className='space-y-2.5'>
               {footerLinks.support.map((link) => (
                 <li key={link.label}>
                   <a
                     href={link.href}
-                    className='text-foreground/50 hover:text-primary text-sm font-semibold transition-colors'
+                    className='text-[14px] text-foreground/65 transition-colors hover:text-primary'
                   >
                     {link.label}
                   </a>
@@ -155,30 +153,30 @@ export function Footer() {
 
           {/* Contact */}
           <div>
-            <h4 className='font-heading font-semibold text-black mb-4'>Liên hệ</h4>
+            <h4 className='mb-4 font-heading text-[15px] font-semibold text-foreground'>Liên hệ</h4>
             <ul className='space-y-3'>
-              <li className='flex items-start gap-3 text-sm text-foreground/60 font-semibold'>
+              <li className='flex items-start gap-3 text-[14px] text-foreground/70'>
                 <MapPin className='w-5 h-5 text-primary shrink-0 mt-0.5' />
                 123 Đường Lê Văn Việt, Quận 9, TP.HCM
               </li>
-              <li className='flex items-center gap-3 text-sm text-foreground/60 font-semibold'>
+              <li className='flex items-center gap-3 text-[14px] text-foreground/70'>
                 <Clock className='w-5 h-5 text-primary shrink-0' />
                 07:00 – 21:00 (Thứ 2 – Chủ nhật)
               </li>
-              <li className='flex items-center gap-3 text-sm text-foreground/60 font-semibold'>
+              <li className='flex items-center gap-3 text-[14px] text-foreground/70'>
                 <Phone className='w-5 h-5 text-primary shrink-0' />
                 1800 6868
               </li>
-              <li className='flex items-center gap-3 text-sm text-foreground/60 font-semibold'>
+              <li className='flex items-center gap-3 text-[14px] text-foreground/70'>
                 <Mail className='w-5 h-5 text-primary shrink-0' />
-                support@autowash.vn
+                support@wave.vn
               </li>
             </ul>
           </div>
         </div>
 
         {/* Bottom bar */}
-        <div className='border-t border-border py-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-foreground/40 text-xs font-bold uppercase tracking-wider'>
+        <div className='flex flex-col items-center justify-between gap-4 border-t border-border py-8 text-[13px] font-medium text-foreground/55 sm:flex-row'>
           <span>© 2025 WAVE. Bảo lưu mọi quyền.</span>
           <div className='flex gap-6'>
             <a
