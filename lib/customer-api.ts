@@ -82,7 +82,21 @@ export const createOrder = (data: {
   scheduledAt: string;
   paymentMethod: 'online' | 'cash';
   note?: string;
+  voucherId?: string;
 }) => axiosInstance.post('/me/orders', data);
+
+// ─── Order Price Preview (Customer) ────────────────────
+export const previewOrder = (data: {
+  serviceTypeId: string;
+  scheduledAt: string;
+  voucherId?: string;
+}) => axiosInstance.post('/me/orders/preview', data);
+
+// ─── Vouchers (Customer) ───────────────────────────────
+export const getMyVouchers = (status?: 'unused' | 'used' | 'expired') =>
+  axiosInstance.get('/me/vouchers', {
+    params: status ? { status } : undefined,
+  });
 
 export const rescheduleOrder = (
   id: string,

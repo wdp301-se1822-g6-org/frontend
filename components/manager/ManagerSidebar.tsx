@@ -12,6 +12,7 @@ import {
   ChevronRight,
   Car,
   Clock,
+  Ticket,
 } from 'lucide-react';
 import { useState } from 'react';
 import { useAuthStore } from '@/store/useAuthStore';
@@ -23,6 +24,7 @@ const navItems = [
   { href: '/manager/work-orders', icon: Wrench,          label: 'Vận hành rửa xe' },
   { href: '/manager/vehicles',    icon: Car,             label: 'Quản lý xe' },
   { href: '/manager/shifts',      icon: Clock,           label: 'Ca làm việc' },
+  { href: '/manager/vouchers',    icon: Ticket,          label: 'Voucher' },
 ];
 
 export function ManagerSidebar() {

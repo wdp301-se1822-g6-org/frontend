@@ -31,7 +31,7 @@ function StatCard({
       </div>
       <p className='text-2xl font-black text-foreground tracking-tight mb-1'>{value}</p>
       <p className='text-xs font-black text-foreground uppercase tracking-widest mb-1'>{label}</p>
-      <p className='text-foreground/40 text-xs font-medium'>{sub}</p>
+      <p className='text-foreground/60 text-xs font-medium'>{sub}</p>
     </div>
   );
 }
@@ -81,7 +81,7 @@ export default function AdminDashboardPage() {
 
           {/* Quick Actions */}
           <div>
-            <h2 className='font-heading text-sm font-black uppercase tracking-widest text-foreground/40 mb-4'>Thao tác nhanh</h2>
+            <h2 className='font-heading text-sm font-black uppercase tracking-widest text-foreground/60 mb-4'>Thao tác nhanh</h2>
             <div className='grid grid-cols-2 lg:grid-cols-4 gap-4'>
               {quickActions.map(({ label, sub, href, icon: Icon, bg }) => (
                 <Link
@@ -116,12 +116,12 @@ export default function AdminDashboardPage() {
                 <table className='w-full text-sm'>
                   <thead>
                     <tr className='bg-muted/50'>
-                      <th className='text-left px-6 py-3 text-[11px] font-black uppercase tracking-widest text-foreground/40'>Khách hàng</th>
-                      <th className='text-left px-4 py-3 text-[11px] font-black uppercase tracking-widest text-foreground/40'>Biển số</th>
-                      <th className='text-left px-4 py-3 text-[11px] font-black uppercase tracking-widest text-foreground/40'>Dịch vụ</th>
-                      <th className='text-left px-4 py-3 text-[11px] font-black uppercase tracking-widest text-foreground/40'>Giờ</th>
-                      <th className='text-right px-4 py-3 text-[11px] font-black uppercase tracking-widest text-foreground/40'>Số tiền</th>
-                      <th className='text-center px-4 py-3 text-[11px] font-black uppercase tracking-widest text-foreground/40'>Trạng thái</th>
+                      <th className='text-left px-6 py-3 text-[11px] font-black uppercase tracking-widest text-foreground/60'>Khách hàng</th>
+                      <th className='text-left px-4 py-3 text-[11px] font-black uppercase tracking-widest text-foreground/60'>Biển số</th>
+                      <th className='text-left px-4 py-3 text-[11px] font-black uppercase tracking-widest text-foreground/60'>Dịch vụ</th>
+                      <th className='text-left px-4 py-3 text-[11px] font-black uppercase tracking-widest text-foreground/60'>Giờ</th>
+                      <th className='text-right px-4 py-3 text-[11px] font-black uppercase tracking-widest text-foreground/60'>Số tiền</th>
+                      <th className='text-center px-4 py-3 text-[11px] font-black uppercase tracking-widest text-foreground/60'>Trạng thái</th>
                     </tr>
                   </thead>
                   <tbody className='divide-y divide-border/30'>

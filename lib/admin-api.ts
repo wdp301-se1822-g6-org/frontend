@@ -118,3 +118,23 @@ export const adminAssignWasher = (id: string, washerId: string) =>
 
 export const adminQcWorkOrder = (id: string, passed: boolean, note?: string) =>
   axiosInstance.patch(`/admin/work-orders/${id}/qc`, { passed, note });
+
+// ─── Vouchers (Admin / Manager) ────────────────────────
+export interface GrantVoucherPayload {
+  customerId: string;
+  reason: string;
+  discountCapVnd?: number;
+  expiresAt?: string;
+}
+
+export const adminGetVouchers = (params?: Record<string, unknown>) =>
+  axiosInstance.get('/admin/vouchers', { params });
+
+export const adminGetVoucher = (id: string) =>
+  axiosInstance.get(`/admin/vouchers/${id}`);
+
+export const adminGrantVoucher = (data: GrantVoucherPayload) =>
+  axiosInstance.post('/admin/vouchers', data);
+
+export const adminRevokeVoucher = (id: string, reason: string) =>
+  axiosInstance.patch(`/admin/vouchers/${id}/revoke`, { reason });

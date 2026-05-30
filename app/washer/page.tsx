@@ -202,7 +202,7 @@ export default function WasherDashboard() {
               <button
                 onClick={() => setActiveTab('todo')}
                 className={`pb-3 text-sm font-bold transition-all relative ${
-                  activeTab === 'todo' ? 'text-indigo-600' : 'text-slate-400 hover:text-slate-600'
+                  activeTab === 'todo' ? 'text-indigo-600' : 'text-slate-500 hover:text-slate-600'
                 }`}
               >
                 Cần xử lý
@@ -213,7 +213,7 @@ export default function WasherDashboard() {
               <button
                 onClick={() => setActiveTab('completed')}
                 className={`pb-3 text-sm font-bold transition-all relative ${
-                  activeTab === 'completed' ? 'text-indigo-600' : 'text-slate-400 hover:text-slate-600'
+                  activeTab === 'completed' ? 'text-indigo-600' : 'text-slate-500 hover:text-slate-600'
                 }`}
               >
                 Đã hoàn thành
@@ -245,7 +245,7 @@ export default function WasherDashboard() {
                 <Car className='w-8 h-8' />
               </div>
               <h3 className='font-heading text-lg font-black text-slate-800 mb-2'>Trống lịch trình</h3>
-              <p className='text-slate-400 text-sm leading-relaxed'>
+              <p className='text-slate-500 text-sm leading-relaxed'>
                 {activeTab === 'todo'
                   ? 'Hiện tại ông chủ chưa có xe nào được phân công. Hãy nghỉ ngơi chút hoặc nhắc Cashier/Manager giao xe nhé!'
                   : 'Chưa có lịch sử xe hoàn thành nào trong hôm nay.'}
@@ -284,7 +284,7 @@ export default function WasherDashboard() {
                         </div>
                         <div>
                           <h4 className='font-heading font-bold text-slate-800 text-sm'>{service}</h4>
-                          <p className='text-xs text-slate-400 font-medium'>Định danh: <span className='text-slate-600 font-bold'>{customer}</span></p>
+                          <p className='text-xs text-slate-500 font-medium'>Định danh: <span className='text-slate-600 font-bold'>{customer}</span></p>
                         </div>
                       </div>
 
@@ -340,7 +340,7 @@ export default function WasherDashboard() {
                           </div>
 
                           {/* Checklist Items */}
-                          <p className='text-xs font-black text-slate-400 uppercase tracking-wider mb-3.5'>Quy trình rửa xe chuẩn WAVE</p>
+                          <p className='text-xs font-black text-slate-500 uppercase tracking-wider mb-3.5'>Quy trình rửa xe chuẩn WAVE</p>
                           <div className='grid grid-cols-1 md:grid-cols-2 gap-3 mb-6'>
                             {WASH_STEPS.map((step, idx) => {
                               const isChecked = currentChecklist[idx];
@@ -360,7 +360,7 @@ export default function WasherDashboard() {
                                   ) : (
                                     <Square className='w-5 h-5 text-slate-300 shrink-0' />
                                   )}
-                                  <span className={`text-xs font-semibold ${isChecked ? 'line-through text-slate-400 font-medium' : ''}`}>
+                                  <span className={`text-xs font-semibold ${isChecked ? 'line-through text-slate-500 font-medium' : ''}`}>
                                     {step}
                                   </span>
                                 </button>
@@ -372,7 +372,7 @@ export default function WasherDashboard() {
                           <div className='mt-6 mb-6 border-t border-slate-100 pt-5 space-y-6'>
                             {/* 1. Trước khi rửa */}
                             <div>
-                              <p className='text-xs font-black text-slate-400 uppercase tracking-wider mb-3 flex items-center gap-1.5'>
+                              <p className='text-xs font-black text-slate-500 uppercase tracking-wider mb-3 flex items-center gap-1.5'>
                                 <Camera className='w-4 h-4 text-amber-500' />
                                 1. Ảnh trước khi rửa (Trầy xước/Móp méo có sẵn)
                               </p>
@@ -403,8 +403,8 @@ export default function WasherDashboard() {
                                       </div>
                                     ))}
                                     <label className='aspect-square rounded-xl border border-dashed border-slate-300 hover:border-indigo-500 bg-slate-50/50 hover:bg-indigo-50/10 cursor-pointer flex flex-col items-center justify-center gap-1 transition-all duration-200'>
-                                      <Plus className='w-5 h-5 text-slate-400' />
-                                      <span className='text-[10px] font-bold text-slate-400 uppercase tracking-wider'>Thêm ảnh</span>
+                                      <Plus className='w-5 h-5 text-slate-500' />
+                                      <span className='text-[10px] font-bold text-slate-500 uppercase tracking-wider'>Thêm ảnh</span>
                                       <input 
                                         type='file' 
                                         multiple 
@@ -416,7 +416,7 @@ export default function WasherDashboard() {
                                   </>
                                 ) : (
                                   <div className='col-span-4 p-4 rounded-xl border border-dashed border-slate-200 bg-slate-50/40 flex flex-col items-center justify-center gap-2 text-center py-6'>
-                                    <p className='text-xs font-semibold text-slate-400 italic'>Chưa chụp ảnh tình trạng trước khi rửa xe.</p>
+                                    <p className='text-xs font-semibold text-slate-500 italic'>Chưa chụp ảnh tình trạng trước khi rửa xe.</p>
                                     <label className='px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs cursor-pointer shadow-md transition-all flex items-center gap-1.5'>
                                       <Plus className='w-3.5 h-3.5' /> Chụp / Tải ảnh lên
                                       <input 
@@ -434,7 +434,7 @@ export default function WasherDashboard() {
 
                             {/* 2. Sau khi rửa */}
                             <div>
-                              <p className='text-xs font-black text-slate-400 uppercase tracking-wider mb-3 flex items-center gap-1.5'>
+                              <p className='text-xs font-black text-slate-500 uppercase tracking-wider mb-3 flex items-center gap-1.5'>
                                 <CheckCircle2 className='w-4 h-4 text-emerald-500' />
                                 2. Ảnh sau khi rửa (Nghiệm thu xe sạch đẹp)
                               </p>
@@ -465,8 +465,8 @@ export default function WasherDashboard() {
                                       </div>
                                     ))}
                                     <label className='aspect-square rounded-xl border border-dashed border-slate-300 hover:border-indigo-500 bg-slate-50/50 hover:bg-indigo-50/10 cursor-pointer flex flex-col items-center justify-center gap-1 transition-all duration-200'>
-                                      <Plus className='w-5 h-5 text-slate-400' />
-                                      <span className='text-[10px] font-bold text-slate-400 uppercase tracking-wider'>Thêm ảnh</span>
+                                      <Plus className='w-5 h-5 text-slate-500' />
+                                      <span className='text-[10px] font-bold text-slate-500 uppercase tracking-wider'>Thêm ảnh</span>
                                       <input 
                                         type='file' 
                                         multiple 
@@ -478,7 +478,7 @@ export default function WasherDashboard() {
                                   </>
                                 ) : (
                                   <div className='col-span-4 p-4 rounded-xl border border-dashed border-slate-200 bg-slate-50/40 flex flex-col items-center justify-center gap-2 text-center py-6'>
-                                    <p className='text-xs font-semibold text-slate-400 italic'>Chưa chụp ảnh nghiệm thu sau khi rửa xe.</p>
+                                    <p className='text-xs font-semibold text-slate-500 italic'>Chưa chụp ảnh nghiệm thu sau khi rửa xe.</p>
                                     <label className='px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs cursor-pointer shadow-md transition-all flex items-center gap-1.5'>
                                       <Plus className='w-3.5 h-3.5' /> Chụp / Tải ảnh lên
                                       <input 
@@ -527,7 +527,7 @@ export default function WasherDashboard() {
                             <CheckCircle2 className='w-4.5 h-4.5 text-emerald-500' />
                             Trạng thái công việc: {wo.status === 'quality_check' ? 'Đã rửa xong (Đang chờ kiểm định QC)' : 'Đã kiểm duyệt QC thành công'}
                           </p>
-                          <p className='text-xs text-slate-400 leading-relaxed font-medium'>
+                          <p className='text-xs text-slate-500 leading-relaxed font-medium'>
                             {wo.status === 'quality_check' 
                               ? 'Đã gửi báo cáo hoàn tất cho Cashier/Manager. Hiện tại xe đang ở khu vực bàn giao hoặc chờ đánh giá chất lượng (QC).'
                               : 'Xe đã được kiểm duyệt chất lượng đạt tiêu chuẩn và sẵn sàng bàn giao cho khách hàng.'}
@@ -547,7 +547,7 @@ export default function WasherDashboard() {
                               {wo.qcNote ? (
                                 <p className='text-slate-500 mt-1.5 italic bg-slate-50 p-2 rounded-lg border border-slate-100/50'>&quot;{wo.qcNote}&quot;</p>
                               ) : (
-                                <p className='text-slate-400 mt-1 italic'>Không có ghi chú thêm.</p>
+                                <p className='text-slate-500 mt-1 italic'>Không có ghi chú thêm.</p>
                               )}
                             </div>
                           )}

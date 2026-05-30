@@ -12,6 +12,7 @@ import {
   CreditCard,
   Clock,
   Crown,
+  Ticket,
   Settings,
   LogOut,
   ChevronLeft,
@@ -30,6 +31,7 @@ const navItems = [
   { href: '/admin/orders',   icon: CreditCard,      label: 'Hóa đơn' },
   { href: '/admin/shifts',   icon: Clock,           label: 'Ca làm việc' },
   { href: '/admin/tiers',    icon: Crown,           label: 'Hạng thành viên' },
+  { href: '/admin/vouchers', icon: Ticket,          label: 'Voucher' },
   { href: '/admin/settings', icon: Settings,        label: 'Cài đặt' },
 ];
 

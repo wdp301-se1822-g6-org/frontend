@@ -42,14 +42,14 @@ export default function AdminVehiclesPage() {
         <div className='max-w-7xl mx-auto'>
           <div className='flex flex-wrap items-center gap-3 mb-6'>
             <div className='relative flex-1 min-w-[200px] max-w-xs'>
-              <Search className='absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/30' />
+              <Search className='absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/55' />
               <input type='text' placeholder='Tìm kiếm phương tiện...' value={search} onChange={(e) => setSearch(e.target.value)}
                 className='w-full pl-9 pr-4 py-2.5 rounded-xl bg-white border border-border text-sm focus:outline-none focus:border-primary/50 transition-all' />
             </div>
             <button onClick={() => refetch()} className='flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-border text-sm font-semibold hover:border-primary/30'>
               <RefreshCw className='w-4 h-4 text-foreground/50' />Làm mới
             </button>
-            <span className='ml-auto text-xs font-semibold text-foreground/40'>Tổng: {total} xe</span>
+            <span className='ml-auto text-xs font-semibold text-foreground/60'>Tổng: {total} xe</span>
           </div>
 
           <div className='bg-white rounded-2xl border border-border/50 shadow-sm overflow-hidden'>
@@ -58,7 +58,7 @@ export default function AdminVehiclesPage() {
                 <thead>
                   <tr className='bg-muted/50 border-b border-border/50'>
                     {['Biển số', 'Chủ xe', 'Hãng xe', 'Mẫu xe', 'Loại xe', 'Màu sắc', 'Năm SX'].map((h) => (
-                      <th key={h} className='text-left px-5 py-3.5 text-[11px] font-black uppercase tracking-widest text-foreground/40'>{h}</th>
+                      <th key={h} className='text-left px-5 py-3.5 text-[11px] font-black uppercase tracking-widest text-foreground/60'>{h}</th>
                     ))}
                   </tr>
                 </thead>
@@ -68,7 +68,7 @@ export default function AdminVehiclesPage() {
                       <td key={j} className='px-5 py-4'><div className='h-4 bg-muted animate-pulse rounded-lg' /></td>
                     ))}</tr>
                   )) : filtered.length === 0 ? (
-                    <tr><td colSpan={7} className='px-5 py-16 text-center text-foreground/40 font-semibold'>Không có dữ liệu</td></tr>
+                    <tr><td colSpan={7} className='px-5 py-16 text-center text-foreground/60 font-semibold'>Không có dữ liệu</td></tr>
                   ) : filtered.map((v: VehicleData) => {
                     const id = v._id ?? v.id;
                     return (
@@ -95,7 +95,7 @@ export default function AdminVehiclesPage() {
             </div>
             {total > 10 && (
               <div className='flex items-center justify-between px-5 py-4 border-t border-border/50 bg-muted/20'>
-                <span className='text-xs font-semibold text-foreground/40'>Trang {page} / {Math.ceil(total / 10)}</span>
+                <span className='text-xs font-semibold text-foreground/60'>Trang {page} / {Math.ceil(total / 10)}</span>
                 <div className='flex gap-2'>
                   <button onClick={() => setPage(Math.max(1, page - 1))} disabled={page === 1} className='px-3 py-1.5 rounded-lg border border-border text-xs font-semibold disabled:opacity-40 hover:border-primary/30'>Trước</button>
                   <button onClick={() => setPage(page + 1)} disabled={page >= Math.ceil(total / 10)} className='px-3 py-1.5 rounded-lg border border-border text-xs font-semibold disabled:opacity-40 hover:border-primary/30'>Sau</button>

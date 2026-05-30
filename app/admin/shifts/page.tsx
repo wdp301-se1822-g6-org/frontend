@@ -153,14 +153,14 @@ function ShiftModal({
         <div className='flex items-center justify-between pb-3 border-b border-slate-100'>
           <h3 className='font-heading font-black text-slate-800 text-lg'>{item ? 'Sửa ca trực nhân viên' : 'Thêm ca trực mới'}</h3>
           <button type='button' onClick={onClose}>
-            <X className='w-5 h-5 text-slate-400 hover:text-slate-600' />
+            <X className='w-5 h-5 text-slate-500 hover:text-slate-600' />
           </button>
         </div>
 
         <div className='flex flex-col gap-4'>
           {/* Chọn nhân viên */}
           <div>
-            <label className='block text-xs font-black uppercase tracking-widest text-slate-400 mb-1.5'>Nhân viên ca trực</label>
+            <label className='block text-xs font-black uppercase tracking-widest text-slate-500 mb-1.5'>Nhân viên ca trực</label>
             <select
               value={form.staffId}
               onChange={(e) => handleStaffChange(e.target.value)}
@@ -180,7 +180,7 @@ function ShiftModal({
 
           {/* Loại ca (Shift Type) */}
           <div>
-            <label className='block text-xs font-black uppercase tracking-widest text-slate-400 mb-1.5'>Loại ca làm việc</label>
+            <label className='block text-xs font-black uppercase tracking-widest text-slate-500 mb-1.5'>Loại ca làm việc</label>
             <select
               value={form.shiftType}
               onChange={(e) => setForm({ ...form, shiftType: e.target.value as 'washer' | 'cashier' })}
@@ -193,7 +193,7 @@ function ShiftModal({
 
           {/* Tên trạm làm việc (Station Name) */}
           <div>
-            <label className='block text-xs font-black uppercase tracking-widest text-slate-400 mb-1.5'>Tên trạm / Bãi làm việc</label>
+            <label className='block text-xs font-black uppercase tracking-widest text-slate-500 mb-1.5'>Tên trạm / Bãi làm việc</label>
             <input
               type='text'
               value={form.stationName}
@@ -205,7 +205,7 @@ function ShiftModal({
 
           {/* Giờ bắt đầu (startAt) */}
           <div>
-            <label className='block text-xs font-black uppercase tracking-widest text-slate-400 mb-1.5'>Thời gian bắt đầu</label>
+            <label className='block text-xs font-black uppercase tracking-widest text-slate-500 mb-1.5'>Thời gian bắt đầu</label>
             <input
               type='datetime-local'
               min={minDateTime}
@@ -226,7 +226,7 @@ function ShiftModal({
 
           {/* Giờ kết thúc (endAt) */}
           <div>
-            <label className='block text-xs font-black uppercase tracking-widest text-slate-400 mb-1.5'>Thời gian kết thúc</label>
+            <label className='block text-xs font-black uppercase tracking-widest text-slate-500 mb-1.5'>Thời gian kết thúc</label>
             <input
               type='datetime-local'
               min={form.startAt || minDateTime}
@@ -248,7 +248,7 @@ function ShiftModal({
 
           {/* Tối đa booking */}
           <div>
-            <label className='block text-xs font-black uppercase tracking-widest text-slate-400 mb-1.5'>Giới hạn đặt lịch tối đa</label>
+            <label className='block text-xs font-black uppercase tracking-widest text-slate-500 mb-1.5'>Giới hạn đặt lịch tối đa</label>
             <input
               type='number'
               min={1}
@@ -260,7 +260,7 @@ function ShiftModal({
 
           {/* Ghi chú */}
           <div>
-            <label className='block text-xs font-black uppercase tracking-widest text-slate-400 mb-1.5'>Ghi chú / Mô tả</label>
+            <label className='block text-xs font-black uppercase tracking-widest text-slate-500 mb-1.5'>Ghi chú / Mô tả</label>
             <input
               type='text'
               value={form.note}
@@ -437,7 +437,7 @@ export default function AdminShiftsPage() {
                 <div key={i} className='h-36 bg-white rounded-3xl border border-slate-100 animate-pulse shadow-sm' />
               ))
             ) : shifts.length === 0 ? (
-              <div className='col-span-full py-20 text-center text-slate-400 font-semibold bg-white rounded-3xl border border-slate-100 shadow-sm max-w-md mx-auto w-full'>
+              <div className='col-span-full py-20 text-center text-slate-500 font-semibold bg-white rounded-3xl border border-slate-100 shadow-sm max-w-md mx-auto w-full'>
                 Chưa có ca làm việc nào của nhân viên được phân công.
               </div>
             ) : (
@@ -484,25 +484,25 @@ export default function AdminShiftsPage() {
 
                       {/* Staff user name */}
                       <div className='flex items-center gap-1.5 text-slate-800 font-bold mt-1.5'>
-                        <User className='w-4 h-4 text-slate-400 shrink-0' />
+                        <User className='w-4 h-4 text-slate-500 shrink-0' />
                         {staffName}
                       </div>
 
                       {/* Station details */}
                       <div className='flex items-center gap-1.5 text-slate-500 text-xs font-medium'>
-                        <MapPin className='w-3.5 h-3.5 text-slate-400 shrink-0' />
+                        <MapPin className='w-3.5 h-3.5 text-slate-500 shrink-0' />
                         Trạm trực: <span className='font-bold text-slate-700'>{s.stationName ?? 'Chưa xác định'}</span>
                       </div>
 
                       {/* Work time */}
                       <div className='flex items-center gap-1.5 text-slate-500 text-xs font-medium'>
-                        <Clock className='w-3.5 h-3.5 text-slate-400 shrink-0' />
+                        <Clock className='w-3.5 h-3.5 text-slate-500 shrink-0' />
                         {startTime} – {endTime}
                       </div>
                       
                       {/* Note */}
                       {s.note && (
-                        <div className='text-[11px] text-slate-400 bg-slate-50 px-2 py-1.5 rounded-xl border border-slate-100/50 mt-1 italic'>
+                        <div className='text-[11px] text-slate-500 bg-slate-50 px-2 py-1.5 rounded-xl border border-slate-100/50 mt-1 italic'>
                           &quot;{s.note}&quot;
                         </div>
                       )}
@@ -510,7 +510,7 @@ export default function AdminShiftsPage() {
 
                     {/* Operational Actions */}
                     <div className='border-t border-slate-100 pt-3 flex items-center justify-between mt-1'>
-                      <span className='text-[10px] font-bold text-slate-400 uppercase tracking-wide'>
+                      <span className='text-[10px] font-bold text-slate-500 uppercase tracking-wide'>
                         Khả dụng: <span className='font-black text-slate-800'>{s.currentBookings ?? 0} / {s.maxBookings} xe</span>
                       </span>
                       
@@ -531,7 +531,7 @@ export default function AdminShiftsPage() {
                           <button
                             onClick={() => toggleShift.mutate({ id, status: 'cancelled' })}
                             title='Hủy bỏ ca trực'
-                            className='w-7 h-7 rounded-lg border border-slate-200 flex items-center justify-center hover:border-rose-300 hover:text-rose-600 bg-white transition-all text-slate-400'
+                            className='w-7 h-7 rounded-lg border border-slate-200 flex items-center justify-center hover:border-rose-300 hover:text-rose-600 bg-white transition-all text-slate-500'
                           >
                             <Power className='w-3 h-3' />
                           </button>
