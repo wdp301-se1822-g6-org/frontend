@@ -91,6 +91,8 @@ function BookingFlow() {
   const [paymentMethod, setPaymentMethod] = useState<'online' | 'cash'>('online');
   const [note, setNote] = useState<string>('');
   const [selectedVoucherId, setSelectedVoucherId] = useState<string>('');
+  const [voucherCodeInput, setVoucherCodeInput] = useState<string>('');
+  const [voucherCodeError, setVoucherCodeError] = useState<string>('');
 
   // Add vehicle modal/form in step 1
   const [isAddingVehicle, setIsAddingVehicle] = useState(false);
@@ -936,6 +938,49 @@ function BookingFlow() {
                           </div>
                         ) : (
                           <div className="space-y-2">
+                            {/* Nhập mã voucher */}
+                            <div className="flex gap-2">
+                              <input
+                                value={voucherCodeInput}
+                                onChange={(e) => {
+                                  setVoucherCodeInput(e.target.value.toUpperCase());
+                                  setVoucherCodeError('');
+                                }}
+                                placeholder="Nhập mã voucher…"
+                                className="flex-1 min-w-0 border border-border rounded-xl px-3.5 py-2.5 text-sm font-mono uppercase focus:outline-none focus:border-primary/50"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const q = voucherCodeInput.trim().toUpperCase();
+                                  if (!q) return;
+                                  const found = validVouchers.find(
+                                    (v) => v.code.toUpperCase() === q
+                                  );
+                                  if (found) {
+                                    setSelectedVoucherId(found.id);
+                                    setVoucherCodeError('');
+                                    setVoucherCodeInput('');
+                                  } else {
+                                    setVoucherCodeError(
+                                      'Mã không hợp lệ hoặc không thuộc tài khoản của bạn.'
+                                    );
+                                  }
+                                }}
+                                className="px-4 py-2.5 rounded-xl bg-primary text-white text-sm font-bold hover:bg-primary/90 shrink-0 cursor-pointer"
+                              >
+                                Áp dụng
+                              </button>
+                            </div>
+                            {voucherCodeError && (
+                              <p className="text-[11px] text-red-600 flex items-center gap-1">
+                                <AlertCircle className="w-3.5 h-3.5 shrink-0" />{' '}
+                                {voucherCodeError}
+                              </p>
+                            )}
+                            <div className="text-[11px] text-muted-foreground pt-1">
+                              Hoặc chọn từ voucher bạn đang có:
+                            </div>
                             {validVouchers.map((v) => {
                               const isSelected = v.id === selectedVoucherId;
                               return (

@@ -68,9 +68,12 @@ function GrantModal({
 }) {
   const [customerId, setCustomerId] = useState('');
   const [search, setSearch] = useState('');
+  const [code, setCode] = useState('');
   const [discountCapVnd, setDiscountCapVnd] = useState(100000);
   const [expiresAt, setExpiresAt] = useState('');
   const [reason, setReason] = useState('');
+
+  const codeValid = code.trim() === '' || /^[A-Za-z0-9-]{3,30}$/.test(code.trim());
 
   const filteredCustomers = useMemo(() => {
     if (!search.trim()) return customers.slice(0, 8);
@@ -84,7 +87,10 @@ function GrantModal({
 
   const capValid = discountCapVnd >= 1 && discountCapVnd <= 200000;
   const canSubmit =
-    customerId.trim().length > 0 && reason.trim().length >= 5 && capValid;
+    customerId.trim().length > 0 &&
+    reason.trim().length >= 5 &&
+    capValid &&
+    codeValid;
 
   const submit = () => {
     if (!canSubmit) return;
@@ -93,6 +99,7 @@ function GrantModal({
       reason: reason.trim(),
       discountCapVnd,
       ...(expiresAt ? { expiresAt: new Date(expiresAt).toISOString() } : {}),
+      ...(code.trim() ? { code: code.trim().toUpperCase() } : {}),
     });
   };
 
@@ -194,9 +201,33 @@ function GrantModal({
             )}
           </div>
 
+          {/* Custom code */}
+          <div>
+            <label className='block text-xs font-black uppercase tracking-widest text-foreground/60 mb-1.5'>
+              Mã voucher{' '}
+              <span className='font-semibold normal-case text-foreground/40'>
+                (bỏ trống = tự sinh)
+              </span>
+            </label>
+            <input
+              value={code}
+              onChange={(e) => setCode(e.target.value.toUpperCase())}
+              placeholder='VD: FREEWASH-KHOI'
+              className='w-full border border-border rounded-xl px-4 py-2.5 text-sm font-mono uppercase focus:outline-none focus:border-primary/50'
+            />
+            {!codeValid && (
+              <p className='mt-1.5 text-[11px] text-rose-600'>
+                Mã chỉ gồm 3-30 ký tự A-Z, 0-9 hoặc dấu gạch ngang.
+              </p>
+            )}
+            <p className='mt-1.5 text-[11px] text-muted-foreground'>
+              Mã để đọc cho khách nhập khi đặt lịch. Phải là duy nhất.
+            </p>
+          </div>
+
           {/* Discount cap */}
           <div>
-            <label className='block text-xs font-black uppercase tracking-widest text-foreground/40 mb-1.5'>
+            <label className='block text-xs font-black uppercase tracking-widest text-foreground/60 mb-1.5'>
               Giảm tối đa (VND)
             </label>
             <input
