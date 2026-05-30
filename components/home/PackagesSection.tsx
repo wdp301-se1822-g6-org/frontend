@@ -1,152 +1,181 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { useRouter } from 'next/navigation';
-import { useQuery } from '@tanstack/react-query';
-import { Check, Clock, Ticket, Loader2, Star } from 'lucide-react';
-import { getActiveServiceTypes } from '@/lib/customer-api';
-import { formatCurrency } from '@/lib/format';
+import { Check, Star } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-type ServiceType = {
+type WashPackage = {
   id: string;
   name: string;
-  description?: string;
-  basePrice: string;
-  estimatedMinutes: number;
-  checklistTemplate: string[];
-  isVoucherEligible: boolean;
+  badge: string | null;
+  pricePerWash: string;
+  priceMonthly: string | null;
+  highlight: boolean;
+  /** Gradient nhận diện gói (kim cương / vàng / bạc / nhanh) — màu sản phẩm có chủ đích. */
+  gradient: string;
+  features: string[];
 };
+
+const packages: WashPackage[] = [
+  {
+    id: 'diamond',
+    name: 'Gói Kim Cương',
+    badge: 'Phổ biến nhất',
+    pricePerWash: '150,000đ',
+    priceMonthly: '499,000đ',
+    highlight: true,
+    gradient: 'from-cyan-500 to-blue-600',
+    features: [
+      'Rửa áp lực cao toàn xe',
+      'Phủ nano bảo vệ sơn',
+      'Vệ sinh gầm xe',
+      'Đánh bóng vành bánh',
+      'Xịt khô & lau bóng',
+      'Thơm xe cao cấp',
+      'Ưu tiên đặt lịch',
+    ],
+  },
+  {
+    id: 'gold',
+    name: 'Gói Vàng',
+    badge: null,
+    pricePerWash: '100,000đ',
+    priceMonthly: '349,000đ',
+    highlight: false,
+    gradient: 'from-yellow-500 to-amber-600',
+    features: [
+      'Rửa áp lực cao toàn xe',
+      'Phủ wax bảo vệ sơn',
+      'Vệ sinh gầm xe',
+      'Đánh bóng vành bánh',
+      'Xịt khô & lau bóng',
+    ],
+  },
+  {
+    id: 'silver',
+    name: 'Gói Bạc',
+    badge: null,
+    pricePerWash: '70,000đ',
+    priceMonthly: '249,000đ',
+    highlight: false,
+    gradient: 'from-slate-400 to-slate-600',
+    features: [
+      'Rửa áp lực cao toàn xe',
+      'Vệ sinh gầm xe',
+      'Đánh bóng vành bánh',
+      'Lau khô cơ bản',
+    ],
+  },
+  {
+    id: 'bronze',
+    name: 'Gói Nhanh',
+    badge: 'Nhanh nhất',
+    pricePerWash: '50,000đ',
+    priceMonthly: null,
+    highlight: false,
+    gradient: 'from-orange-400 to-orange-600',
+    features: [
+      'Rửa nước áp lực',
+      'Xịt khô nhanh',
+      'Hoàn thành trong 10 phút',
+    ],
+  },
+];
 
 export function PackagesSection() {
   const router = useRouter();
 
-  const { data, isLoading, isError } = useQuery({
-    queryKey: ['service-types', 'public'],
-    queryFn: getActiveServiceTypes,
-  });
-
-  const raw: ServiceType[] = data?.data?.data ?? data?.data ?? [];
-  // Ẩn các dịch vụ thử nghiệm (vd "Test PayOS Wash") khỏi landing public.
-  const services = raw.filter((s) => !/\btest\b/i.test(s.name));
-
   return (
-    <section
-      id='services-pricing'
-      className='scroll-mt-20 bg-background py-20 sm:py-24'
-    >
-      <div className='mx-auto max-w-6xl px-4 sm:px-6 lg:px-8'>
-        <div className='max-w-2xl'>
-          <p className='text-sm font-semibold tracking-wide text-primary'>
+    <section id='booking' className='bg-card px-4 py-16'>
+      <div className='mx-auto max-w-7xl'>
+        <div className='mb-14 text-center'>
+          <Badge className='mb-4 gap-1.5 px-4 py-1.5 text-sm'>
+            <Star className='size-4 fill-current' />
             Bảng giá dịch vụ
-          </p>
-          <h2 className='mt-3 font-heading text-[26px] font-bold tracking-tight text-foreground sm:text-[32px]'>
-            Bảng giá theo từng lần rửa
+          </Badge>
+          <h2 className='mb-4 font-heading text-4xl font-bold text-foreground'>
+            Chọn gói rửa xe phù hợp
           </h2>
-          <p className='mt-4 text-[15px] leading-relaxed text-muted-foreground sm:text-base'>
-            Giá hiển thị minh bạch theo từng dịch vụ. Khách hàng có thể xem chi
-            phí trước khi xác nhận đặt lịch. Hạng thành viên và voucher có thể
-            giảm thêm khi đặt.
+          <p className='mx-auto max-w-xl text-lg text-muted-foreground'>
+            Đa dạng gói dịch vụ từ cơ bản đến cao cấp, đáp ứng mọi nhu cầu của
+            bạn với chi phí tối ưu nhất.
           </p>
         </div>
 
-        {isLoading && (
-          <div className='mt-12 flex items-center justify-center gap-2 rounded-xl border border-border bg-card py-16 text-[15px] text-muted-foreground'>
-            <Loader2 className='size-4 animate-spin' />
-            Đang tải danh mục dịch vụ…
-          </div>
-        )}
-
-        {isError && (
-          <div className='mt-12 rounded-xl border border-border bg-card py-16 text-center text-[15px] text-muted-foreground'>
-            Không tải được danh mục dịch vụ lúc này. Vui lòng thử lại sau.
-          </div>
-        )}
-
-        {!isLoading && !isError && services.length === 0 && (
-          <div className='mt-12 rounded-xl border border-border bg-card py-16 text-center text-[15px] text-muted-foreground'>
-            Chưa có gói dịch vụ nào đang mở. Vui lòng quay lại sau.
-          </div>
-        )}
-
-        {!isLoading && !isError && services.length > 0 && (
-          <div className='mt-12 grid grid-cols-1 items-stretch gap-6 sm:grid-cols-2 lg:grid-cols-3'>
-            {services.map((svc) => {
-              const featured = /premium/i.test(svc.name);
-              return (
-                <article
-                  key={svc.id}
+        <div className='grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4'>
+          {packages.map((pkg) => (
+            <article
+              key={pkg.id}
+              className={cn(
+                'relative flex flex-col overflow-hidden rounded-xl border bg-card transition-all hover:-translate-y-1 hover:shadow-md',
+                pkg.highlight
+                  ? 'border-primary shadow-md ring-1 ring-primary/20'
+                  : 'border-border shadow-xs',
+              )}
+            >
+              {pkg.badge && (
+                <div
                   className={cn(
-                    'relative flex flex-col rounded-2xl border bg-card p-7 shadow-sm transition-all hover:shadow-md',
-                    featured
-                      ? 'border-primary ring-1 ring-primary/20'
-                      : 'border-border hover:border-primary/40',
+                    'absolute top-4 right-4 rounded-full bg-linear-to-r px-3 py-1 text-xs font-semibold text-white',
+                    pkg.gradient,
                   )}
                 >
-                  {featured && (
-                    <span className='absolute top-5 right-5 inline-flex items-center gap-1 rounded-full bg-primary px-2.5 py-1 text-[12px] font-semibold text-primary-foreground'>
-                      <Star className='size-3 fill-current' />
-                      Phổ biến
-                    </span>
-                  )}
+                  {pkg.badge}
+                </div>
+              )}
 
-                  <h3 className='font-heading text-xl font-bold text-foreground'>
-                    {svc.name}
-                  </h3>
-                  {svc.description && (
-                    <p className='mt-1.5 text-[15px] leading-relaxed text-muted-foreground'>
-                      {svc.description}
-                    </p>
-                  )}
-
-                  <div className='mt-5 flex items-baseline gap-1.5'>
-                    <span className='font-heading text-[34px] leading-none font-bold text-foreground'>
-                      {formatCurrency(Number(svc.basePrice))}
+              <div
+                className={cn(
+                  'bg-linear-to-br p-6 text-white',
+                  pkg.gradient,
+                )}
+              >
+                <h3 className='mb-3 font-heading text-lg font-bold'>
+                  {pkg.name}
+                </h3>
+                <div>
+                  <span className='text-3xl font-extrabold'>
+                    {pkg.pricePerWash}
+                  </span>
+                  <span className='text-sm text-white/70'>/lần</span>
+                </div>
+                {pkg.priceMonthly && (
+                  <div className='mt-1 text-sm text-white/80'>
+                    hoặc{' '}
+                    <span className='font-semibold text-white'>
+                      {pkg.priceMonthly}
                     </span>
-                    <span className='text-[15px] text-muted-foreground'>
-                      / lần
-                    </span>
+                    /tháng
                   </div>
+                )}
+              </div>
 
-                  <div className='mt-4 flex flex-wrap gap-2'>
-                    <span className='inline-flex items-center gap-1.5 rounded-md bg-muted px-2.5 py-1 text-[13px] font-medium text-foreground/70'>
-                      <Clock className='size-3.5' />
-                      {svc.estimatedMinutes} phút
-                    </span>
-                    {svc.isVoucherEligible && (
-                      <span className='inline-flex items-center gap-1.5 rounded-md bg-primary/10 px-2.5 py-1 text-[13px] font-medium text-primary'>
-                        <Ticket className='size-3.5' />
-                        Dùng được voucher
-                      </span>
-                    )}
-                  </div>
+              <div className='flex flex-1 flex-col gap-4 p-6'>
+                <ul className='flex-1 space-y-2.5'>
+                  {pkg.features.map((feature) => (
+                    <li
+                      key={feature}
+                      className='flex items-start gap-2.5 text-sm text-foreground/80'
+                    >
+                      <Check className='mt-0.5 size-4 shrink-0 text-primary' />
+                      {feature}
+                    </li>
+                  ))}
+                </ul>
 
-                  {svc.checklistTemplate.length > 0 && (
-                    <ul className='mt-6 flex-1 space-y-2.5'>
-                      {svc.checklistTemplate.map((item) => (
-                        <li
-                          key={item}
-                          className='flex items-start gap-2.5 text-[15px] text-foreground/80'
-                        >
-                          <Check className='mt-0.5 size-4.5 shrink-0 text-primary' />
-                          {item}
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-
-                  <Button
-                    onClick={() => router.push('/booking')}
-                    variant={featured ? 'default' : 'outline'}
-                    className='mt-7 h-11 w-full text-[15px]'
-                  >
-                    Đặt lịch ngay
-                  </Button>
-                </article>
-              );
-            })}
-          </div>
-        )}
+                <Button
+                  variant={pkg.highlight ? 'default' : 'outline'}
+                  onClick={() => router.push('/register')}
+                  className='mt-2 h-10 w-full rounded-full'
+                >
+                  Đăng ký ngay
+                </Button>
+              </div>
+            </article>
+          ))}
+        </div>
       </div>
     </section>
   );

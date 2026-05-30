@@ -2,8 +2,7 @@
 
 import { getMyLoyalty, getTierConfigs } from '@/lib/customer-api';
 import { useAuthStore } from '@/store/useAuthStore';
-import { LoyaltyAccount, TierConfig, TierName } from '@/types/loyalty';
-import { formatNumber } from '@/lib/format';
+import { LoyaltyAccount, TierConfig } from '@/types/loyalty';
 import { useQuery } from '@tanstack/react-query';
 import {
   Crown,
@@ -11,56 +10,63 @@ import {
   Award,
   Calendar,
   Coins,
-  Ticket,
+  TrendingUp,
   Info,
   Loader2,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
-// Style thẻ thành viên theo hạng thật của BE: None / Bronze / Silver / Gold.
+// Mapping color styles for each tier card
 const tierStyles: Record<
   string,
-  { gradient: string; badgeBg: string; chipBg: string }
+  {
+    gradient: string;
+    text: string;
+    border: string;
+    glow: string;
+    badgeBg: string;
+    chipBg: string;
+  }
 > = {
-  none: {
-    gradient: 'from-slate-600 via-slate-700 to-slate-900',
-    badgeBg: 'bg-slate-800/80 text-slate-200 border-slate-600',
-    chipBg: 'bg-slate-500/20',
-  },
-  bronze: {
-    gradient: 'from-amber-700 via-orange-800 to-amber-950',
-    badgeBg: 'bg-amber-950/70 text-amber-200 border-amber-700',
-    chipBg: 'bg-amber-600/20',
+  member: {
+    gradient: 'from-zinc-700 via-zinc-800 to-zinc-950',
+    text: 'text-zinc-300',
+    border: 'border-zinc-600/30',
+    glow: 'shadow-zinc-950/20',
+    badgeBg: 'bg-zinc-800/80 text-zinc-300 border-zinc-600',
+    chipBg: 'bg-zinc-600/20',
   },
   silver: {
-    gradient: 'from-slate-400 via-slate-500 to-slate-700',
-    badgeBg: 'bg-slate-700/80 text-slate-100 border-slate-400',
-    chipBg: 'bg-slate-300/20',
+    gradient: 'from-slate-400 via-slate-600 to-slate-800',
+    text: 'text-slate-100',
+    border: 'border-slate-500/30',
+    glow: 'shadow-slate-600/20',
+    badgeBg: 'bg-slate-700/80 text-slate-200 border-slate-500',
+    chipBg: 'bg-slate-500/20',
   },
   gold: {
-    gradient: 'from-amber-400 via-yellow-600 to-amber-800',
-    badgeBg: 'bg-amber-900/60 text-amber-100 border-amber-400',
-    chipBg: 'bg-amber-400/20',
+    gradient: 'from-amber-400 via-yellow-600 to-amber-900',
+    text: 'text-amber-100',
+    border: 'border-amber-500/30',
+    glow: 'shadow-amber-600/30',
+    badgeBg: 'bg-amber-900/60 text-amber-200 border-amber-500',
+    chipBg: 'bg-amber-500/20',
+  },
+  platinum: {
+    gradient: 'from-cyan-500 via-blue-700 to-slate-900',
+    text: 'text-cyan-100',
+    border: 'border-cyan-500/30',
+    glow: 'shadow-cyan-600/30',
+    badgeBg: 'bg-cyan-950/80 text-cyan-200 border-cyan-500',
+    chipBg: 'bg-cyan-500/20',
   },
 };
-
-const TIER_LABELS: Record<TierName, string> = {
-  None: 'Cơ bản',
-  Bronze: 'Bronze',
-  Silver: 'Silver',
-  Gold: 'Gold',
-};
-
-const VOUCHER_THRESHOLD = 10; // BE cấp voucher rửa miễn phí sau mỗi 10 đơn hoàn tất.
 
 export default function LoyaltyPage() {
   const authUser = useAuthStore((s) => s.authUser);
 
-  const {
-    data: loyaltyData,
-    isLoading: isLoyaltyLoading,
-    error: loyaltyError,
-  } = useQuery({
+  // ─── React Query ─────────────────────────────────────────
+  const { data: loyaltyData, isLoading: isLoyaltyLoading, error: loyaltyError } = useQuery({
     queryKey: ['my-loyalty'],
     queryFn: getMyLoyalty,
   });
@@ -77,342 +83,332 @@ export default function LoyaltyPage() {
 
   const isLoading = isLoyaltyLoading || isTiersLoading;
 
-  const currentTierName = loyalty?.tierName ?? 'None';
-  const currentStyle =
-    tierStyles[currentTierName.toLowerCase()] ?? tierStyles.none;
+  // ─── Logic helper ────────────────────────────────────────
+  const currentTierName = (loyalty?.tierName ?? 'Member').toLowerCase();
+  const currentStyle = tierStyles[currentTierName] || tierStyles.member;
 
-  const sortedTiers = [...tiers].sort(
-    (a, b) => a.priorityLevel - b.priorityLevel,
+  // Find user's current tier config and the next tier config
+  const currentTierConfig = tiers.find(
+    (t) => t.tierName.toLowerCase() === currentTierName
   );
-  const currentTierConfig = sortedTiers.find(
-    (t) => t.tierName === currentTierName,
-  );
+
+  // Sort tiers by priority level ascending
+  const sortedTiers = [...tiers].sort((a, b) => a.priorityLevel - b.priorityLevel);
+
   const currentTierIndex = sortedTiers.findIndex(
-    (t) => t.tierName === currentTierName,
+    (t) => t.tierName.toLowerCase() === currentTierName
   );
+
   const nextTierConfig =
     currentTierIndex !== -1 && currentTierIndex < sortedTiers.length - 1
       ? sortedTiers[currentTierIndex + 1]
       : null;
 
-  const points = loyalty?.pointsBalance ?? 0;
-  const pointsToNext = nextTierConfig
-    ? Math.max(nextTierConfig.minLoyaltyPoints - points, 0)
-    : 0;
-  const tierProgress = nextTierConfig
-    ? Math.min((points / nextTierConfig.minLoyaltyPoints) * 100, 100)
-    : 100;
-
-  const washesToward = loyalty?.successfulWashesTowardVoucher ?? 0;
-  const voucherProgress = Math.min(
-    (washesToward / VOUCHER_THRESHOLD) * 100,
-    100,
-  );
+  // Format date safely
+  const formatDate = (dateStr?: string) => {
+    if (!dateStr) return 'N/A';
+    try {
+      const d = new Date(dateStr);
+      return d.toLocaleDateString('vi-VN', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+      });
+    } catch {
+      return dateStr;
+    }
+  };
 
   if (isLoading) {
     return (
-      <div className='flex min-h-100 flex-col items-center justify-center gap-3'>
-        <Loader2 className='h-8 w-8 animate-spin text-primary' />
-        <p className='text-sm font-semibold text-muted-foreground'>
-          Đang tải dữ liệu thành viên...
-        </p>
+      <div className='flex flex-col items-center justify-center min-h-[400px] gap-3'>
+        <Loader2 className='w-8 h-8 text-primary animate-spin' />
+        <p className='text-sm text-muted-foreground font-semibold'>Đang tải dữ liệu thành viên...</p>
       </div>
     );
   }
 
   if (loyaltyError) {
     return (
-      <div className='mx-auto mt-8 max-w-lg space-y-3 rounded-2xl border border-destructive/30 bg-destructive/5 p-6 text-center text-destructive'>
-        <Info className='mx-auto h-8 w-8' />
-        <h3 className='font-heading text-lg font-bold'>Đã xảy ra lỗi</h3>
-        <p className='text-sm'>
-          Không thể kết nối đến máy chủ để lấy thông tin thành viên. Vui lòng thử
-          lại sau.
-        </p>
+      <div className='bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900 rounded-2xl p-6 text-center text-red-600 dark:text-red-400 space-y-3 max-w-lg mx-auto mt-8'>
+        <Info className='w-8 h-8 mx-auto' />
+        <h3 className='font-heading font-bold text-lg'>Đã xảy ra lỗi</h3>
+        <p className='text-sm'>Không thể kết nối đến máy chủ để lấy thông tin Loyalty. Vui lòng thử lại sau.</p>
       </div>
     );
   }
 
   return (
-    <div className='space-y-8'>
+    <div className='space-y-8 animate-fade-in'>
       {/* Page Header */}
       <div>
-        <h1 className='flex items-center gap-2 font-heading text-2xl font-bold text-foreground'>
-          <Award className='h-7 w-7 text-primary' /> Khách hàng thân thiết
+        <h1 className='font-heading text-2xl font-black text-foreground flex items-center gap-2'>
+          <Award className='w-7 h-7 text-primary' /> Khách Hàng Thân Thiết
         </h1>
         <p className='text-sm text-muted-foreground'>
-          Tích điểm qua mỗi đơn hoàn tất để lên hạng và mở thêm ưu đãi.
+          Tích lũy lượt rửa xe hàng tháng để nâng hạng hội viên và hưởng ưu đãi đặc quyền.
         </p>
       </div>
 
-      <div className='grid grid-cols-1 gap-8 lg:grid-cols-12'>
-        {/* Left: E-Card & progress */}
-        <div className='space-y-6 lg:col-span-7'>
+      <div className='grid grid-cols-1 lg:grid-cols-12 gap-8'>
+        {/* Left Column: E-Card & Progress */}
+        <div className='lg:col-span-7 space-y-6'>
           {/* E-Membership Card */}
           <div
-            className={`relative flex aspect-[1.586/1] flex-col justify-between overflow-hidden rounded-3xl bg-linear-to-br p-8 text-white shadow-lg ${currentStyle.gradient}`}
+            className={`relative rounded-3xl p-8 bg-gradient-to-br ${currentStyle.gradient} text-white shadow-xl ${currentStyle.glow} overflow-hidden border ${currentStyle.border} aspect-[1.586/1] flex flex-col justify-between group transition-all duration-300 hover:scale-[1.01]`}
           >
-            <div className='z-10 flex items-start justify-between'>
+            {/* Background elements */}
+            <div className='absolute -right-10 -top-10 w-40 h-40 bg-white/10 rounded-full blur-2xl group-hover:scale-125 transition-all duration-500' />
+            <div className='absolute left-1/3 bottom-0 w-48 h-24 bg-white/5 rounded-full blur-xl' />
+
+            {/* Card Header */}
+            <div className='flex justify-between items-start z-10'>
               <div className='space-y-1'>
-                <p className='text-[10px] font-bold tracking-widest text-white/60 uppercase'>
-                  Thẻ thành viên WAVE
-                </p>
-                <h3 className='font-heading text-lg font-bold tracking-wide'>
-                  WAVE
-                </h3>
+                <p className='text-[10px] font-black uppercase tracking-widest text-white/60'>E-Membership Card</p>
+                <h3 className='font-heading font-black tracking-wider text-lg'>WASH AUTO</h3>
               </div>
-              <div
-                className={`flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-bold tracking-wide uppercase backdrop-blur-md ${currentStyle.badgeBg}`}
-              >
-                <Crown className='h-3.5 w-3.5' /> {TIER_LABELS[currentTierName]}
+              <div className={`px-3 py-1 rounded-full text-xs font-black uppercase tracking-wide border flex items-center gap-1.5 backdrop-blur-md ${currentStyle.badgeBg}`}>
+                <Crown className='w-3.5 h-3.5' /> {loyalty?.tierName || 'Member'}
               </div>
             </div>
 
-            <div className='z-10 my-4 flex items-center gap-4'>
-              <div
-                className={`relative flex h-9 w-11 flex-col justify-around overflow-hidden rounded-md border border-white/20 p-1 ${currentStyle.chipBg}`}
-              >
-                <div className='h-px w-full bg-white/20' />
-                <div className='h-px w-full bg-white/20' />
-                <div className='h-px w-full bg-white/20' />
+            {/* Card Body with EMV Chip Design */}
+            <div className='flex items-center gap-4 z-10 my-4'>
+              <div className={`w-11 h-9 rounded-md ${currentStyle.chipBg} border border-white/20 relative overflow-hidden flex flex-col justify-around p-1`}>
+                <div className='h-[1px] bg-white/20 w-full' />
+                <div className='h-[1px] bg-white/20 w-full' />
+                <div className='h-[1px] bg-white/20 w-full' />
               </div>
               <div>
-                <p className='text-xs font-medium text-white/70'>Chủ thẻ</p>
-                <p className='text-sm font-bold tracking-wide uppercase sm:text-base'>
+                <p className='text-xs font-medium text-white/70'>Tên chủ thẻ</p>
+                <p className='font-bold uppercase tracking-wider text-sm sm:text-base'>
                   {authUser?.name || 'KHÁCH HÀNG'}
                 </p>
               </div>
             </div>
 
-            <div className='z-10 grid grid-cols-2 gap-4 border-t border-white/15 pt-4'>
+            {/* Card Footer */}
+            <div className='grid grid-cols-2 gap-4 border-t border-white/15 pt-4 z-10'>
               <div>
-                <p className='flex items-center gap-1 text-[9px] font-bold tracking-widest text-white/50 uppercase'>
-                  <Coins className='h-3 w-3' /> Điểm tích lũy
+                <p className='text-[9px] font-black uppercase tracking-widest text-white/50 flex items-center gap-1'>
+                  <Coins className='w-3 h-3' /> Điểm Tích Lũy
                 </p>
-                <p className='text-lg font-bold tracking-wide'>
-                  {formatNumber(points)}{' '}
-                  <span className='text-xs font-semibold text-white/70'>
-                    điểm
-                  </span>
+                <p className='text-lg font-black tracking-wide'>
+                  {(loyalty?.pointsBalance ?? 0).toLocaleString()} <span className='text-xs font-semibold text-white/70'>PTS</span>
                 </p>
               </div>
               <div className='text-right'>
-                <p className='flex items-center justify-end gap-1 text-[9px] font-bold tracking-widest text-white/50 uppercase'>
-                  <Calendar className='h-3 w-3' /> Tổng lượt rửa
+                <p className='text-[9px] font-black uppercase tracking-widest text-white/50 flex items-center gap-1 justify-end'>
+                  <Calendar className='w-3 h-3' /> Hạn Dùng Điểm
                 </p>
                 <p className='text-sm font-bold'>
-                  {formatNumber(loyalty?.totalSuccessfulWashes ?? 0)} lượt
+                  {formatDate(loyalty?.pointsExpireAt)}
                 </p>
               </div>
             </div>
           </div>
 
-          {/* Tier progress */}
-          <Card className='rounded-2xl border-border'>
-            <CardContent className='space-y-5 p-6'>
-              <div className='flex items-center justify-between border-b border-border pb-4'>
-                <h3 className='flex items-center gap-2 font-heading font-semibold text-foreground'>
-                  <Sparkles className='h-5 w-5 text-primary' /> Lộ trình lên hạng
-                </h3>
-                <span className='text-sm font-semibold text-foreground'>
-                  {formatNumber(points)} điểm
-                </span>
+          {/* Visits & Level Progress Card */}
+          <Card className='border-none shadow-xl shadow-black/5 rounded-3xl overflow-hidden bg-white/80 backdrop-blur-md'>
+            <CardContent className='p-6 space-y-6'>
+              <div className='flex items-center justify-between border-b border-border/50 pb-4'>
+                <div>
+                  <h3 className='font-heading font-bold text-foreground flex items-center gap-2'>
+                    <TrendingUp className='w-5 h-5 text-primary' /> Hoạt Động Tháng Này
+                  </h3>
+                  <p className='text-xs text-muted-foreground'>Lượt rửa xe tích luỹ trong tháng {new Date().getMonth() + 1}</p>
+                </div>
+                <div className='text-right'>
+                  <p className='text-[10px] uppercase font-black tracking-wider text-muted-foreground'>Tháng trước</p>
+                  <p className='text-sm font-bold text-foreground'>{loyalty?.visitsLastMonth ?? 0} lượt</p>
+                </div>
               </div>
 
-              {nextTierConfig ? (
-                <div className='space-y-4'>
-                  <div className='flex items-end justify-between text-sm'>
-                    <span className='font-medium text-muted-foreground'>
-                      Tiến độ tới hạng{' '}
-                      <span className='font-semibold text-foreground'>
-                        {TIER_LABELS[nextTierConfig.tierName]}
-                      </span>
-                    </span>
-                    <span className='font-semibold text-primary'>
-                      {formatNumber(points)} /{' '}
-                      {formatNumber(nextTierConfig.minLoyaltyPoints)}
-                    </span>
-                  </div>
-                  <div className='h-2.5 overflow-hidden rounded-full bg-muted'>
+              {/* Progress Bar & Goals */}
+              <div className='space-y-4'>
+                <div className='flex justify-between items-end text-sm'>
+                  <span className='font-bold text-foreground/80'>Lượt rửa hiện tại</span>
+                  <span className='font-black text-primary text-base'>
+                    {loyalty?.visitsThisMonth ?? 0} <span className='text-xs font-semibold text-muted-foreground'>lượt</span>
+                  </span>
+                </div>
+
+                {/* Progress track */}
+                <div className='h-3 bg-muted rounded-full overflow-hidden relative border border-border/20'>
+                  {nextTierConfig ? (
                     <div
-                      className='h-full rounded-full bg-primary transition-all duration-500'
-                      style={{ width: `${tierProgress}%` }}
+                      className='h-full bg-linear-to-r from-primary to-blue-600 rounded-full transition-all duration-500'
+                      style={{
+                        width: `${Math.min(
+                          ((loyalty?.visitsThisMonth ?? 0) / nextTierConfig.minVisitsPerMonth) * 100,
+                          100
+                        )}%`,
+                      }}
                     />
-                  </div>
-                  <div className='flex items-start gap-3 rounded-xl border border-border bg-muted/40 p-4 text-sm text-muted-foreground'>
-                    <Sparkles className='mt-0.5 h-5 w-5 shrink-0 text-primary' />
-                    <p>
-                      Bạn cần thêm{' '}
-                      <strong className='text-foreground'>
-                        {formatNumber(pointsToNext)} điểm
-                      </strong>{' '}
-                      để lên hạng{' '}
-                      <strong className='text-primary'>
-                        {TIER_LABELS[nextTierConfig.tierName]}
-                      </strong>
-                      .
-                    </p>
-                  </div>
+                  ) : (
+                    <div className='h-full bg-linear-to-r from-cyan-500 to-blue-700 rounded-full w-full' />
+                  )}
                 </div>
-              ) : (
-                <div className='flex items-start gap-3 rounded-xl border border-primary/20 bg-primary/5 p-4 text-sm text-muted-foreground'>
-                  <Crown className='mt-0.5 h-5 w-5 shrink-0 text-primary' />
-                  <p>
-                    Bạn đang ở hạng cao nhất{' '}
-                    <strong className='text-foreground'>
-                      {TIER_LABELS[currentTierName]}
-                    </strong>
-                    . Tiếp tục tích điểm để duy trì hạng qua kỳ reset thường niên.
-                  </p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
 
-          {/* Free-wash voucher progress */}
-          <Card className='rounded-2xl border-border'>
-            <CardContent className='space-y-4 p-6'>
-              <div className='flex items-center justify-between'>
-                <h3 className='flex items-center gap-2 font-heading font-semibold text-foreground'>
-                  <Ticket className='h-5 w-5 text-primary' /> Voucher rửa miễn phí
-                </h3>
-                <span className='text-sm font-semibold text-foreground'>
-                  {washesToward} / {VOUCHER_THRESHOLD}
-                </span>
+                {/* Status Notice */}
+                {nextTierConfig ? (
+                  <div className='bg-[#FFFBF2] border border-[#F9E1B2] rounded-2xl p-4 flex items-start gap-3 text-[#856404] text-xs sm:text-sm shadow-sm'>
+                    <Sparkles className='w-5 h-5 text-orange-400 shrink-0 mt-0.5 animate-pulse' />
+                    <div>
+                      <p className='font-bold'>Chỉ còn một chút nữa!</p>
+                      <p className='text-muted-foreground mt-0.5'>
+                        Bạn cần thêm{' '}
+                        <strong className='text-[#856404]'>
+                          {Math.max(nextTierConfig.minVisitsPerMonth - (loyalty?.visitsThisMonth ?? 0), 0)}
+                        </strong>{' '}
+                        lượt rửa nữa trong tháng này để thăng cấp lên hạng{' '}
+                        <strong className='text-primary capitalize'>{nextTierConfig.tierName}</strong> (yêu cầu{' '}
+                        {nextTierConfig.minVisitsPerMonth} lượt/tháng).
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className='bg-cyan-50/50 border border-cyan-100 rounded-2xl p-4 flex items-start gap-3 text-cyan-800 text-xs sm:text-sm shadow-sm'>
+                    <Crown className='w-5 h-5 text-cyan-500 shrink-0 mt-0.5' />
+                    <div>
+                      <p className='font-bold'>Đỉnh cao Đặc Quyền!</p>
+                      <p className='text-muted-foreground mt-0.5'>
+                        Bạn đang sở hữu hạng thành viên cao cấp nhất{' '}
+                        <strong className='text-cyan-600'>Platinum</strong>. Hãy tiếp tục duy trì lượt rửa xe đều đặn mỗi tháng để hưởng các đặc quyền đẳng cấp.
+                      </p>
+                    </div>
+                  </div>
+                )}
               </div>
-              <div className='h-2.5 overflow-hidden rounded-full bg-muted'>
-                <div
-                  className='h-full rounded-full bg-primary transition-all duration-500'
-                  style={{ width: `${voucherProgress}%` }}
-                />
-              </div>
-              <p className='text-sm text-muted-foreground'>
-                Còn{' '}
-                <strong className='text-foreground'>
-                  {Math.max(VOUCHER_THRESHOLD - washesToward, 0)} đơn hoàn tất
-                </strong>{' '}
-                nữa là hệ thống tự cấp một voucher rửa miễn phí (có giới hạn giá
-                trị và thời hạn sử dụng).
-              </p>
             </CardContent>
           </Card>
         </div>
 
-        {/* Right: current benefits */}
+        {/* Right Column: Key Benefits Brief */}
         <div className='lg:col-span-5'>
-          <Card className='flex h-full flex-col rounded-2xl border-border'>
-            <CardHeader className='border-b border-border pb-4'>
-              <CardTitle className='flex items-center gap-2 text-base font-semibold'>
-                <Crown className='h-5 w-5 text-primary' /> Đặc quyền hạng hiện tại
-              </CardTitle>
-            </CardHeader>
-            <CardContent className='flex-1 space-y-4 p-6'>
-              {currentTierConfig ? (
-                <>
-                  <BenefitRow
-                    icon={<Award className='h-5 w-5 text-primary' />}
-                    label='Ưu đãi giảm giá'
-                    value={
-                      currentTierConfig.discountPercent > 0
-                        ? `Giảm ${currentTierConfig.discountPercent}% trong khung giờ vàng`
-                        : 'Chưa có ưu đãi giảm giá'
-                    }
-                  />
-                  <BenefitRow
-                    icon={<Calendar className='h-5 w-5 text-primary' />}
-                    label='Cửa sổ đặt lịch'
-                    value={`Đặt trước tối đa ${currentTierConfig.bookingWindowDays} ngày`}
-                  />
-                  <BenefitRow
-                    icon={<Coins className='h-5 w-5 text-primary' />}
-                    label='Hệ số tích điểm'
-                    value={`${currentTierConfig.pointsPer1000Vnd} điểm / 1.000đ chi tiêu`}
-                  />
-                </>
-              ) : (
-                <p className='py-6 text-center text-sm text-muted-foreground'>
-                  Chưa có cấu hình đặc quyền cho hạng của bạn.
-                </p>
-              )}
-            </CardContent>
-            <div className='border-t border-border bg-muted/30 p-6'>
-              <div className='flex items-center gap-2 text-xs text-muted-foreground'>
-                <Info className='h-4 w-4 shrink-0' />
-                <p>
-                  Hạng được xác định theo điểm tích lũy. Điểm được reset định kỳ
-                  hằng năm.
-                </p>
+          <Card className='border-none shadow-xl shadow-black/5 rounded-3xl overflow-hidden bg-white/80 backdrop-blur-md h-full flex flex-col justify-between'>
+            <div>
+              <CardHeader className='border-b border-border/50 pb-4'>
+                <CardTitle className='text-base font-bold flex items-center gap-2'>
+                  <Crown className='w-5 h-5 text-primary' /> Đặc Quyền Hiện Tại Của Bạn
+                </CardTitle>
+              </CardHeader>
+              <CardContent className='p-6 space-y-4'>
+                {currentTierConfig ? (
+                  <div className='space-y-4'>
+                    <div className='flex items-center gap-3 p-3 rounded-2xl bg-primary/5 border border-primary/10'>
+                      <div className='p-2 rounded-xl bg-white shadow-sm text-primary'>
+                        <Award className='w-5 h-5' />
+                      </div>
+                      <div>
+                        <p className='text-xs text-muted-foreground'>Ưu đãi giảm giá</p>
+                        <p className='text-sm font-bold text-foreground'>
+                          Giảm {currentTierConfig.discountPercent}% cho tất cả dịch vụ rửa xe
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className='flex items-center gap-3 p-3 rounded-2xl bg-blue-50/50 border border-blue-100/50'>
+                      <div className='p-2 rounded-xl bg-white shadow-sm text-blue-600'>
+                        <Calendar className='w-5 h-5' />
+                      </div>
+                      <div>
+                        <p className='text-xs text-muted-foreground'>Thời gian đặt lịch trước</p>
+                        <p className='text-sm font-bold text-foreground'>
+                          Đặt lịch trước tối đa {currentTierConfig.bookingWindowDays} ngày
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className='flex items-center gap-3 p-3 rounded-2xl bg-amber-50/50 border border-amber-100/50'>
+                      <div className='p-2 rounded-xl bg-white shadow-sm text-amber-500'>
+                        <Coins className='w-5 h-5' />
+                      </div>
+                      <div>
+                        <p className='text-xs text-muted-foreground'>Hệ số tích điểm</p>
+                        <p className='text-sm font-bold text-foreground'>
+                          Nhận {currentTierConfig.pointsPer1000Vnd} PTS cho mỗi 1.000đ thanh toán
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <p className='text-sm text-muted-foreground text-center py-6'>Không có cấu hình đặc quyền hạng của bạn.</p>
+                )}
+              </CardContent>
+            </div>
+
+            <div className='p-6 border-t border-border/50 bg-muted/20'>
+              <div className='flex gap-2 items-center text-xs text-muted-foreground'>
+                <Info className='w-4 h-4 shrink-0 text-muted-foreground' />
+                <p>Hạng hội viên được duyệt xét lại tự động vào ngày đầu tiên mỗi tháng dựa trên số lượt rửa thực tế.</p>
               </div>
             </div>
           </Card>
         </div>
       </div>
 
-      {/* Tiers comparison */}
+      {/* Tiers Comparison Grid */}
       <div className='space-y-4'>
         <div>
-          <h2 className='flex items-center gap-2 font-heading text-lg font-semibold text-foreground'>
-            <Crown className='h-5 w-5 text-primary' /> So sánh các hạng thành viên
+          <h2 className='font-heading text-lg font-bold text-foreground flex items-center gap-2'>
+            <Crown className='w-5 h-5 text-yellow-500' /> Bảng So Sánh Quyền Lợi Các Hạng Thành Viên
           </h2>
-          <p className='text-xs text-muted-foreground'>
-            Lộ trình thăng hạng theo điểm tích lũy và quyền lợi đi kèm.
-          </p>
+          <p className='text-xs text-muted-foreground'>Khám phá lộ trình thăng hạng và các quyền lợi độc quyền kèm theo.</p>
         </div>
 
-        <div className='grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4'>
+        <div className='grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6'>
           {sortedTiers.map((t) => {
-            const isMyTier = t.tierName === currentTierName;
-            const style = tierStyles[t.tierName.toLowerCase()] ?? tierStyles.none;
+            const isMyTier = t.tierName.toLowerCase() === currentTierName;
+            const style = tierStyles[t.tierName.toLowerCase()] || tierStyles.member;
+
             return (
               <div
                 key={t.id}
-                className={`relative flex flex-col overflow-hidden rounded-2xl border bg-card transition-all ${
+                className={`bg-white rounded-3xl border shadow-sm overflow-hidden flex flex-col justify-between relative transition-all duration-300 ${
                   isMyTier
-                    ? 'border-primary ring-1 ring-primary/20'
-                    : 'border-border hover:border-primary/40'
+                    ? 'border-primary ring-2 ring-primary/20 scale-[1.02] -translate-y-1 shadow-md'
+                    : 'border-border/60 hover:-translate-y-0.5 hover:shadow-md'
                 }`}
               >
                 {isMyTier && (
-                  <div className='absolute top-0 right-0 z-10 flex items-center gap-1 rounded-bl-2xl bg-primary px-3 py-1 text-[9px] font-bold tracking-wide text-primary-foreground uppercase'>
-                    <Crown className='h-3 w-3' /> Hạng của bạn
+                  <div className='absolute top-0 right-0 bg-primary text-white text-[9px] font-black uppercase tracking-wider py-1 px-3 rounded-bl-2xl shadow-sm z-10 flex items-center gap-1'>
+                    <Crown className='w-3 h-3' /> Hạng của bạn
                   </div>
                 )}
-                <div
-                  className={`relative bg-linear-to-br p-5 text-white ${style.gradient}`}
-                >
-                  <Crown className='mb-2 h-6 w-6' />
-                  <h3 className='font-heading text-lg font-bold tracking-wide'>
-                    {TIER_LABELS[t.tierName]}
-                  </h3>
-                  <p className='mt-1 text-[11px] font-medium text-white/70'>
-                    {t.minLoyaltyPoints === 0
-                      ? 'Mặc định khi đăng ký'
-                      : `Từ ${formatNumber(t.minLoyaltyPoints)} điểm`}
+
+                {/* Header of Tier Config Card */}
+                <div className={`bg-gradient-to-br ${style.gradient} p-5 text-white relative overflow-hidden`}>
+                  <div className='absolute top-0 right-0 w-16 h-16 bg-white/10 rounded-full blur-xl -mr-6 -mt-6' />
+                  <Crown className='w-6 h-6 mb-2 relative z-10' />
+                  <h3 className='font-heading font-black text-lg capitalize tracking-wide relative z-10'>{t.tierName}</h3>
+                  <p className='text-[10px] text-white/70 mt-1 relative z-10 flex items-center gap-1 font-medium'>
+                    <TrendingUp className='w-3 h-3' /> Yêu cầu: {t.minVisitsPerMonth} lượt rửa/tháng
                   </p>
                 </div>
-                <div className='flex flex-col gap-3.5 p-5 text-xs'>
-                  <div className='flex items-center justify-between'>
-                    <span className='font-medium text-muted-foreground'>
-                      Giảm giá (giờ vàng)
-                    </span>
-                    <span className='text-sm font-bold text-primary'>
-                      {t.discountPercent}%
-                    </span>
+
+                {/* Details list */}
+                <div className='p-5 flex flex-col gap-4 bg-white/80'>
+                  <div className='space-y-3.5'>
+                    <div className='flex justify-between items-center text-xs'>
+                      <span className='text-muted-foreground font-medium'>Ưu đãi giảm giá</span>
+                      <span className='font-black text-primary text-sm'>{t.discountPercent}%</span>
+                    </div>
+                    <div className='flex justify-between items-center text-xs'>
+                      <span className='text-muted-foreground font-medium'>Đặt lịch trước</span>
+                      <span className='font-bold text-foreground'>{t.bookingWindowDays} ngày</span>
+                    </div>
+                    <div className='flex justify-between items-center text-xs'>
+                      <span className='text-muted-foreground font-medium'>Tỉ lệ tích điểm</span>
+                      <span className='font-bold text-foreground'>{t.pointsPer1000Vnd} PTS / 1.000đ</span>
+                    </div>
                   </div>
-                  <div className='flex items-center justify-between'>
-                    <span className='font-medium text-muted-foreground'>
-                      Đặt lịch trước
-                    </span>
-                    <span className='font-semibold text-foreground'>
-                      {t.bookingWindowDays} ngày
-                    </span>
-                  </div>
-                  <div className='flex items-center justify-between'>
-                    <span className='font-medium text-muted-foreground'>
-                      Tích điểm
-                    </span>
-                    <span className='font-semibold text-foreground'>
-                      {t.pointsPer1000Vnd} / 1.000đ
+
+                  <div className='pt-3 border-t border-border/40 text-center'>
+                    <span className={`inline-flex px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider ${
+                      t.isActive ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                    }`}>
+                      {t.isActive ? 'Đang hoạt động' : 'Tạm khoá'}
                     </span>
                   </div>
                 </div>
@@ -420,26 +416,6 @@ export default function LoyaltyPage() {
             );
           })}
         </div>
-      </div>
-    </div>
-  );
-}
-
-function BenefitRow({
-  icon,
-  label,
-  value,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  value: string;
-}) {
-  return (
-    <div className='flex items-center gap-3 rounded-xl border border-border bg-muted/30 p-3'>
-      <div className='rounded-lg bg-card p-2 shadow-sm'>{icon}</div>
-      <div>
-        <p className='text-xs text-muted-foreground'>{label}</p>
-        <p className='text-sm font-semibold text-foreground'>{value}</p>
       </div>
     </div>
   );
