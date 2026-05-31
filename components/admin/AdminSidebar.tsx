@@ -64,10 +64,9 @@ export function AdminSidebar() {
 
   return (
     <aside
-      className={`flex flex-col bg-foreground text-white transition-all duration-300 shrink-0 ${
+      className={`sticky top-0 h-screen self-start flex flex-col bg-foreground text-white transition-all duration-300 shrink-0 ${
         collapsed ? 'w-[72px]' : 'w-64'
       }`}
-      style={{ minHeight: '100vh' }}
     >
       {/* ── Logo + Collapse toggle ── */}
       <div className='flex items-center gap-2 px-4 py-5 border-b border-white/10'>

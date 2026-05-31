@@ -425,12 +425,20 @@ export default function MyOrdersPage() {
                       <div className="flex items-center gap-2">
                         <CreditCard className="w-4 h-4 text-primary shrink-0" />
                         <span className="text-foreground font-bold">
-                          {order.paymentMethod === 'online' ? 'Chuyển khoản' : 'Tiền mặt'} • 
+                          {order.paymentMethod === 'online' ? 'Chuyển khoản' : 'Tiền mặt'} •
                           <span className={cn(
                             "ml-1 font-extrabold",
-                            order.paymentStatus === 'paid' ? "text-emerald-500" : "text-amber-500"
+                            order.paymentStatus === 'paid'
+                              ? "text-emerald-500"
+                              : Number(order.amount) === 0
+                              ? "text-emerald-600"
+                              : "text-amber-500"
                           )}>
-                            {order.paymentStatus === 'paid' ? 'Đã trả' : 'Chưa trả'}
+                            {order.paymentStatus === 'paid'
+                              ? 'Đã trả'
+                              : Number(order.amount) === 0
+                              ? 'Miễn phí (voucher)'
+                              : 'Chưa trả'}
                           </span>
                         </span>
                       </div>
