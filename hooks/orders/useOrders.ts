@@ -8,6 +8,7 @@ import {
   getAvailableSlots,
   getActiveServiceTypes,
   getMyVouchers,
+  getMyLoyalty,
   previewOrder,
 } from '@/lib/customer-api';
 import {
@@ -121,6 +122,24 @@ export const useMyVouchers = (
     queryFn: async (): Promise<Voucher[]> => {
       const res = await getMyVouchers(status);
       return res.data?.data ?? res.data ?? [];
+    },
+  });
+};
+
+/** Tài khoản loyalty của khách (điểm + tiến độ voucher rửa miễn phí). */
+export interface MyLoyalty {
+  tierName: string;
+  pointsBalance: number;
+  successfulWashesTowardVoucher: number;
+  totalSuccessfulWashes: number;
+}
+
+export const useMyLoyalty = () => {
+  return useQuery({
+    queryKey: ['my-loyalty'],
+    queryFn: async (): Promise<MyLoyalty | null> => {
+      const res = await getMyLoyalty();
+      return res.data?.data ?? res.data ?? null;
     },
   });
 };
