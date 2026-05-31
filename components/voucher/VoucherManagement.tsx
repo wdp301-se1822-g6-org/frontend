@@ -526,15 +526,31 @@ export function VoucherManagement({ mode }: { mode: VoucherMode }) {
                           {v.code}
                         </td>
                         <td className='px-5 py-3.5 text-foreground/80'>
-                          {mode === 'admin' ? (
-                            <span title={v.customerId}>
-                              {customerName(v.customerId)}
-                            </span>
-                          ) : (
-                            <span className='font-mono text-xs text-foreground/60'>
-                              {v.customerId}
-                            </span>
-                          )}
+                          {(() => {
+                            // Ưu tiên tên kèm theo từ BE (cả manager đều có);
+                            // admin còn map thêm từ danh sách user đã tải.
+                            const name =
+                              v.customerName ??
+                              (mode === 'admin'
+                                ? customerName(v.customerId)
+                                : undefined);
+                            return name && name !== v.customerId ? (
+                              <span title={v.customerId}>
+                                <span className='font-semibold text-foreground'>
+                                  {name}
+                                </span>
+                                {v.customerEmail && (
+                                  <span className='block text-[11px] text-muted-foreground'>
+                                    {v.customerEmail}
+                                  </span>
+                                )}
+                              </span>
+                            ) : (
+                              <span className='font-mono text-xs text-foreground/60'>
+                                {v.customerId}
+                              </span>
+                            );
+                          })()}
                         </td>
                         <td className='px-5 py-3.5 font-semibold text-foreground'>
                           {formatCurrency(v.discountCapVnd)}

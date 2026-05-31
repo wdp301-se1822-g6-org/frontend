@@ -999,10 +999,14 @@ function BookingFlow() {
                                     setSelectedVoucherId(found.id);
                                     setVoucherCodeError('');
                                     setVoucherCodeInput('');
+                                    toast.success(
+                                      `Đã áp dụng voucher ${found.code} — giảm tối đa ${formatCurrency(found.discountCapVnd)}`
+                                    );
                                   } else {
                                     setVoucherCodeError(
                                       'Mã không hợp lệ hoặc không thuộc tài khoản của bạn.'
                                     );
+                                    toast.error('Mã voucher không hợp lệ hoặc không thuộc tài khoản của bạn.');
                                   }
                                 }}
                                 className="px-4 py-2.5 rounded-xl bg-primary text-white text-sm font-bold hover:bg-primary/90 shrink-0 cursor-pointer"
