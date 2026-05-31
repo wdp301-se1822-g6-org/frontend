@@ -35,6 +35,7 @@ import {
   useAvailableSlots,
   useCreateOrder,
   useMyVouchers,
+  useMyLoyalty,
   usePreviewOrder,
 } from '@/hooks/orders/useOrders';
 import { cn } from '@/lib/utils';
@@ -246,6 +247,12 @@ function BookingFlow() {
     return serviceTypes.find((s: ServiceTypeItem) => (s._id || s.id) === selectedServiceId);
   }, [serviceTypes, selectedServiceId]);
 
+  // ─── Tiến độ voucher rửa miễn phí (mốc 10 lần rửa) ───
+  const { data: myLoyalty } = useMyLoyalty();
+  const WASHES_PER_FREE_VOUCHER = 10; // khớp BE
+  const towardVoucher = myLoyalty?.successfulWashesTowardVoucher ?? 0;
+  const washesToVoucher = Math.max(WASHES_PER_FREE_VOUCHER - towardVoucher, 0);
+
   // ─── Voucher & xem trước giá ───
   const { data: myVouchers = [] } = useMyVouchers('unused');
   // BE đã lọc status=unused và cron tự đẩy voucher hết hạn sang EXPIRED.
@@ -452,6 +459,37 @@ function BookingFlow() {
 
         {/* Steps navigation */}
         {renderStepsIndicator()}
+
+        {/* Tiến độ voucher rửa miễn phí (hiển thị mọi bước) */}
+        {myLoyalty && (
+          <div className="mb-6 rounded-2xl border border-amber-200 bg-amber-50/70 px-4 py-3 flex items-center gap-3">
+            <div className="shrink-0 w-9 h-9 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center">
+              <Ticket className="w-5 h-5" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center justify-between gap-2 mb-1">
+                <p className="text-sm font-bold text-amber-800">
+                  {washesToVoucher > 0 ? (
+                    <>
+                      Còn <span className="font-black">{washesToVoucher}</span> lần rửa nữa để nhận voucher rửa miễn phí!
+                    </>
+                  ) : (
+                    'Tuyệt vời — bạn sắp nhận voucher rửa miễn phí!'
+                  )}
+                </p>
+                <span className="text-xs font-black text-amber-700 shrink-0">
+                  {towardVoucher}/{WASHES_PER_FREE_VOUCHER}
+                </span>
+              </div>
+              <div className="h-2 bg-amber-100 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-linear-to-r from-amber-400 to-orange-500 rounded-full transition-all"
+                  style={{ width: `${Math.min((towardVoucher / WASHES_PER_FREE_VOUCHER) * 100, 100)}%` }}
+                />
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Main Step Wrapper */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
