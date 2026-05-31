@@ -13,6 +13,7 @@ import {
   TrendingUp,
   Info,
   Loader2,
+  Ticket,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
@@ -104,20 +105,24 @@ export default function LoyaltyPage() {
       ? sortedTiers[currentTierIndex + 1]
       : null;
 
-  // Format date safely
-  const formatDate = (dateStr?: string) => {
-    if (!dateStr) return 'N/A';
-    try {
-      const d = new Date(dateStr);
-      return d.toLocaleDateString('vi-VN', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-      });
-    } catch {
-      return dateStr;
-    }
-  };
+  // ─── Tiến độ voucher rửa miễn phí (mốc 10 lần rửa) ──────────
+  const WASHES_PER_FREE_VOUCHER = 10; // khớp WASHES_PER_FREE_VOUCHER ở BE
+  const towardVoucher = loyalty?.successfulWashesTowardVoucher ?? 0;
+  const washesToVoucher = Math.max(WASHES_PER_FREE_VOUCHER - towardVoucher, 0);
+  const voucherPct = Math.min(
+    (towardVoucher / WASHES_PER_FREE_VOUCHER) * 100,
+    100
+  );
+
+  // ─── Tiến độ thăng hạng (theo điểm tích lũy) ────────────────
+  const pointsBalance = loyalty?.pointsBalance ?? 0;
+  const pointsToNextTier = nextTierConfig
+    ? Math.max(nextTierConfig.minLoyaltyPoints - pointsBalance, 0)
+    : 0;
+  const tierPct =
+    nextTierConfig && nextTierConfig.minLoyaltyPoints > 0
+      ? Math.min((pointsBalance / nextTierConfig.minLoyaltyPoints) * 100, 100)
+      : 100;
 
   if (isLoading) {
     return (
@@ -146,7 +151,7 @@ export default function LoyaltyPage() {
           <Award className='w-7 h-7 text-primary' /> Khách Hàng Thân Thiết
         </h1>
         <p className='text-sm text-muted-foreground'>
-          Tích lũy lượt rửa xe hàng tháng để nâng hạng hội viên và hưởng ưu đãi đặc quyền.
+          Tích điểm qua mỗi lần rửa để nâng hạng, và cứ {WASHES_PER_FREE_VOUCHER} lần rửa nhận ngay 1 voucher rửa miễn phí.
         </p>
       </div>
 
@@ -199,84 +204,92 @@ export default function LoyaltyPage() {
               </div>
               <div className='text-right'>
                 <p className='text-[9px] font-black uppercase tracking-widest text-white/50 flex items-center gap-1 justify-end'>
-                  <Calendar className='w-3 h-3' /> Hạn Dùng Điểm
+                  <Sparkles className='w-3 h-3' /> Tổng Lượt Rửa
                 </p>
-                <p className='text-sm font-bold'>
-                  {formatDate(loyalty?.pointsExpireAt)}
+                <p className='text-lg font-black tracking-wide'>
+                  {(loyalty?.totalSuccessfulWashes ?? 0).toLocaleString()}{' '}
+                  <span className='text-xs font-semibold text-white/70'>lần</span>
                 </p>
               </div>
             </div>
           </div>
 
-          {/* Visits & Level Progress Card */}
+          {/* Voucher & Tier Progress Card */}
           <Card className='border-none shadow-xl shadow-black/5 rounded-3xl overflow-hidden bg-white/80 backdrop-blur-md'>
             <CardContent className='p-6 space-y-6'>
-              <div className='flex items-center justify-between border-b border-border/50 pb-4'>
-                <div>
-                  <h3 className='font-heading font-bold text-foreground flex items-center gap-2'>
-                    <TrendingUp className='w-5 h-5 text-primary' /> Hoạt Động Tháng Này
-                  </h3>
-                  <p className='text-xs text-muted-foreground'>Lượt rửa xe tích luỹ trong tháng {new Date().getMonth() + 1}</p>
+              {/* Tiến độ voucher rửa miễn phí */}
+              <div className='space-y-3'>
+                <div className='flex items-center justify-between gap-3'>
+                  <div>
+                    <h3 className='font-heading font-bold text-foreground flex items-center gap-2'>
+                      <Ticket className='w-5 h-5 text-primary' /> Tiến Độ Voucher Rửa Miễn Phí
+                    </h3>
+                    <p className='text-xs text-muted-foreground'>
+                      Cứ {WASHES_PER_FREE_VOUCHER} lần rửa hoàn thành, bạn nhận 1 voucher rửa miễn phí.
+                    </p>
+                  </div>
+                  <span className='font-black text-primary text-base shrink-0'>
+                    {towardVoucher}/{WASHES_PER_FREE_VOUCHER}
+                  </span>
                 </div>
-                <div className='text-right'>
-                  <p className='text-[10px] uppercase font-black tracking-wider text-muted-foreground'>Tháng trước</p>
-                  <p className='text-sm font-bold text-foreground'>{loyalty?.visitsLastMonth ?? 0} lượt</p>
+                <div className='h-3 bg-muted rounded-full overflow-hidden relative border border-border/20'>
+                  <div
+                    className='h-full bg-linear-to-r from-primary to-blue-600 rounded-full transition-all duration-500'
+                    style={{ width: `${voucherPct}%` }}
+                  />
+                </div>
+                <div className='bg-[#FFFBF2] border border-[#F9E1B2] rounded-2xl p-4 flex items-start gap-3 text-[#856404] text-xs sm:text-sm shadow-sm'>
+                  <Sparkles className='w-5 h-5 text-orange-400 shrink-0 mt-0.5' />
+                  <p>
+                    Còn{' '}
+                    <strong className='text-[#856404]'>{washesToVoucher}</strong> lần
+                    rửa nữa để nhận <strong>voucher rửa miễn phí</strong>!
+                  </p>
                 </div>
               </div>
 
-              {/* Progress Bar & Goals */}
-              <div className='space-y-4'>
-                <div className='flex justify-between items-end text-sm'>
-                  <span className='font-bold text-foreground/80'>Lượt rửa hiện tại</span>
-                  <span className='font-black text-primary text-base'>
-                    {loyalty?.visitsThisMonth ?? 0} <span className='text-xs font-semibold text-muted-foreground'>lượt</span>
+              {/* Tiến độ thăng hạng theo điểm */}
+              <div className='space-y-3 border-t border-border/50 pt-5'>
+                <div className='flex items-center justify-between gap-3'>
+                  <h3 className='font-heading font-bold text-foreground flex items-center gap-2'>
+                    <TrendingUp className='w-5 h-5 text-primary' /> Tiến Độ Thăng Hạng
+                  </h3>
+                  <span className='font-black text-primary text-base shrink-0'>
+                    {pointsBalance.toLocaleString()}{' '}
+                    <span className='text-xs font-semibold text-muted-foreground'>PTS</span>
                   </span>
                 </div>
-
-                {/* Progress track */}
                 <div className='h-3 bg-muted rounded-full overflow-hidden relative border border-border/20'>
-                  {nextTierConfig ? (
-                    <div
-                      className='h-full bg-linear-to-r from-primary to-blue-600 rounded-full transition-all duration-500'
-                      style={{
-                        width: `${Math.min(
-                          ((loyalty?.visitsThisMonth ?? 0) / nextTierConfig.minVisitsPerMonth) * 100,
-                          100
-                        )}%`,
-                      }}
-                    />
-                  ) : (
-                    <div className='h-full bg-linear-to-r from-cyan-500 to-blue-700 rounded-full w-full' />
-                  )}
+                  <div
+                    className={`h-full rounded-full transition-all duration-500 ${
+                      nextTierConfig
+                        ? 'bg-linear-to-r from-primary to-blue-600'
+                        : 'bg-linear-to-r from-cyan-500 to-blue-700'
+                    }`}
+                    style={{ width: `${tierPct}%` }}
+                  />
                 </div>
-
-                {/* Status Notice */}
                 {nextTierConfig ? (
-                  <div className='bg-[#FFFBF2] border border-[#F9E1B2] rounded-2xl p-4 flex items-start gap-3 text-[#856404] text-xs sm:text-sm shadow-sm'>
-                    <Sparkles className='w-5 h-5 text-orange-400 shrink-0 mt-0.5 animate-pulse' />
-                    <div>
-                      <p className='font-bold'>Chỉ còn một chút nữa!</p>
-                      <p className='text-muted-foreground mt-0.5'>
-                        Bạn cần thêm{' '}
-                        <strong className='text-[#856404]'>
-                          {Math.max(nextTierConfig.minVisitsPerMonth - (loyalty?.visitsThisMonth ?? 0), 0)}
-                        </strong>{' '}
-                        lượt rửa nữa trong tháng này để thăng cấp lên hạng{' '}
-                        <strong className='text-primary capitalize'>{nextTierConfig.tierName}</strong> (yêu cầu{' '}
-                        {nextTierConfig.minVisitsPerMonth} lượt/tháng).
-                      </p>
-                    </div>
+                  <div className='bg-primary/5 border border-primary/10 rounded-2xl p-4 flex items-start gap-3 text-foreground/80 text-xs sm:text-sm'>
+                    <Crown className='w-5 h-5 text-primary shrink-0 mt-0.5' />
+                    <p>
+                      Còn{' '}
+                      <strong className='text-primary'>
+                        {pointsToNextTier.toLocaleString()}
+                      </strong>{' '}
+                      điểm nữa để lên hạng{' '}
+                      <strong className='text-primary capitalize'>
+                        {nextTierConfig.tierName}
+                      </strong>{' '}
+                      (cần {nextTierConfig.minLoyaltyPoints.toLocaleString()} điểm).
+                    </p>
                   </div>
                 ) : (
                   <div className='bg-cyan-50/50 border border-cyan-100 rounded-2xl p-4 flex items-start gap-3 text-cyan-800 text-xs sm:text-sm shadow-sm'>
                     <Crown className='w-5 h-5 text-cyan-500 shrink-0 mt-0.5' />
-                    <div>
-                      <p className='font-bold'>Đỉnh cao Đặc Quyền!</p>
-                      <p className='text-muted-foreground mt-0.5'>
-                        Bạn đang sở hữu hạng thành viên cao cấp nhất{' '}
-                        <strong className='text-cyan-600'>Platinum</strong>. Hãy tiếp tục duy trì lượt rửa xe đều đặn mỗi tháng để hưởng các đặc quyền đẳng cấp.
-                      </p>
-                    </div>
+                    <p>
+                      Bạn đang ở hạng cao nhất. Tiếp tục tích điểm để duy trì đặc quyền!
+                    </p>
                   </div>
                 )}
               </div>
@@ -341,7 +354,7 @@ export default function LoyaltyPage() {
             <div className='p-6 border-t border-border/50 bg-muted/20'>
               <div className='flex gap-2 items-center text-xs text-muted-foreground'>
                 <Info className='w-4 h-4 shrink-0 text-muted-foreground' />
-                <p>Hạng hội viên được duyệt xét lại tự động vào ngày đầu tiên mỗi tháng dựa trên số lượt rửa thực tế.</p>
+                <p>Hạng hội viên được nâng tự động theo tổng điểm tích lũy. Điểm được cộng sau mỗi đơn rửa hoàn thành.</p>
               </div>
             </div>
           </Card>
@@ -383,7 +396,7 @@ export default function LoyaltyPage() {
                   <Crown className='w-6 h-6 mb-2 relative z-10' />
                   <h3 className='font-heading font-black text-lg capitalize tracking-wide relative z-10'>{t.tierName}</h3>
                   <p className='text-[10px] text-white/70 mt-1 relative z-10 flex items-center gap-1 font-medium'>
-                    <TrendingUp className='w-3 h-3' /> Yêu cầu: {t.minVisitsPerMonth} lượt rửa/tháng
+                    <TrendingUp className='w-3 h-3' /> Cần {t.minLoyaltyPoints.toLocaleString()} điểm
                   </p>
                 </div>
 

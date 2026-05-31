@@ -2,19 +2,20 @@ export interface LoyaltyAccount {
   id: string;
   customerId: string;
   tierConfigId: string;
-  tierName: 'Member' | 'Silver' | 'Gold' | 'Platinum';
+  tierName: string; // None | Member/Bronze | Silver | Gold | Platinum
   pointsBalance: number;
-  visitsThisMonth: number;
-  visitsLastMonth: number;
-  consecutiveLowMonths: number;
-  tierReviewedAt?: string;
-  pointsExpireAt?: string;
+  /** Số lần rửa hoàn thành tính từ voucher gần nhất (reset về 0 ở mốc 10). */
+  successfulWashesTowardVoucher: number;
+  /** Tổng số lần rửa hoàn thành trọn đời (không reset). */
+  totalSuccessfulWashes: number;
+  lastAnnualResetAt?: string;
 }
 
 export interface TierConfig {
   id: string;
-  tierName: 'Member' | 'Silver' | 'Gold' | 'Platinum';
-  minVisitsPerMonth: number;
+  tierName: string;
+  /** Điểm tối thiểu để đạt hạng này. */
+  minLoyaltyPoints: number;
   bookingWindowDays: number;
   priorityLevel: number;
   pointsPer1000Vnd: number; // Points awarded per 1,000 VND spent
