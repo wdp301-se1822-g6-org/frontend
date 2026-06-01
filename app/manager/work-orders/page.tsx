@@ -41,6 +41,7 @@ interface WorkOrderData {
     status?: string;
   };
   assignedWasherId?: string;
+  assignedWasherName?: string;
   washerId?: {
     _id: string;
     fullName?: string;
@@ -260,9 +261,14 @@ export default function ManagerWorkOrdersPage() {
                 const plate = wo.vehicleSnapshot?.plate ?? '—';
                 const service = wo.serviceName ?? '—';
                 
-                // Tìm thợ phụ trách dựa vào assignedWasherId trong danh sách washers
+                // Ưu tiên tên thợ BE trả kèm (manager không gọi được /admin/users),
+                // fallback về danh sách washers nếu có.
                 const washerObj = washers.find((w) => w._id === wo.assignedWasherId || w.id === wo.assignedWasherId);
-                const washer = washerObj?.fullName ?? washerObj?.name ?? (wo.assignedWasherId ? 'Đã giao (Chờ nhận)' : undefined);
+                const washer =
+                  wo.assignedWasherName ??
+                  washerObj?.fullName ??
+                  washerObj?.name ??
+                  (wo.assignedWasherId ? 'Đã giao (Chờ nhận)' : undefined);
 
                 const isPending = wo.status === 'waiting' || wo.status === 'assigned';
                 const isInProgress = wo.status === 'in_progress' || wo.status === 'returned';

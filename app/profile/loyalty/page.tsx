@@ -151,7 +151,7 @@ export default function LoyaltyPage() {
           <Award className='w-7 h-7 text-primary' /> Khách Hàng Thân Thiết
         </h1>
         <p className='text-sm text-muted-foreground'>
-          Tích điểm qua mỗi lần rửa để nâng hạng, và cứ {WASHES_PER_FREE_VOUCHER} lần rửa nhận ngay 1 voucher rửa miễn phí.
+          Tích điểm qua mỗi lần rửa để nâng hạng, và cứ {WASHES_PER_FREE_VOUCHER} lượt rửa hợp lệ nhận ngay voucher thưởng bằng ~5% chi tiêu của các lượt đó.
         </p>
       </div>
 
@@ -222,10 +222,10 @@ export default function LoyaltyPage() {
                 <div className='flex items-center justify-between gap-3'>
                   <div>
                     <h3 className='font-heading font-bold text-foreground flex items-center gap-2'>
-                      <Ticket className='w-5 h-5 text-primary' /> Tiến Độ Voucher Rửa Miễn Phí
+                      <Ticket className='w-5 h-5 text-primary' /> Tiến Độ Voucher Thưởng
                     </h3>
                     <p className='text-xs text-muted-foreground'>
-                      Cứ {WASHES_PER_FREE_VOUCHER} lần rửa hoàn thành, bạn nhận 1 voucher rửa miễn phí.
+                      Cứ {WASHES_PER_FREE_VOUCHER} lượt rửa hợp lệ, bạn nhận voucher thưởng bằng ~5% chi tiêu của các lượt đó.
                     </p>
                   </div>
                   <span className='font-black text-primary text-base shrink-0'>
@@ -242,8 +242,8 @@ export default function LoyaltyPage() {
                   <Sparkles className='w-5 h-5 text-orange-400 shrink-0 mt-0.5' />
                   <p>
                     Còn{' '}
-                    <strong className='text-[#856404]'>{washesToVoucher}</strong> lần
-                    rửa nữa để nhận <strong>voucher rửa miễn phí</strong>!
+                    <strong className='text-[#856404]'>{washesToVoucher}</strong> lượt
+                    rửa hợp lệ nữa để nhận <strong>voucher thưởng</strong>!
                   </p>
                 </div>
               </div>

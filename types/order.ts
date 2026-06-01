@@ -96,6 +96,8 @@ export interface ServiceType {
 export interface Voucher {
   id: string;
   customerId: string;
+  customerName?: string;
+  customerEmail?: string;
   code: string;
   type: 'FREE_WASH' | string;
   status: 'unused' | 'used' | 'expired' | string;

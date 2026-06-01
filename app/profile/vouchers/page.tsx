@@ -110,7 +110,7 @@ export default function MyVouchersPage() {
           <Ticket className='w-10 h-10 mx-auto mb-3 text-foreground/20' />
           <p className='font-semibold'>Chưa có voucher nào ở mục này.</p>
           <p className='text-xs mt-1'>
-            Cứ 10 lần rửa hoàn thành, bạn sẽ nhận 1 voucher rửa miễn phí.
+            Cứ 10 lượt rửa hợp lệ, bạn sẽ nhận 1 voucher thưởng (~5% chi tiêu).
           </p>
         </div>
       ) : (

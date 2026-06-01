@@ -471,10 +471,10 @@ function BookingFlow() {
                 <p className="text-sm font-bold text-amber-800">
                   {washesToVoucher > 0 ? (
                     <>
-                      Còn <span className="font-black">{washesToVoucher}</span> lần rửa nữa để nhận voucher rửa miễn phí!
+                      Còn <span className="font-black">{washesToVoucher}</span> lượt rửa hợp lệ nữa để nhận voucher thưởng (~5% chi tiêu)!
                     </>
                   ) : (
-                    'Tuyệt vời — bạn sắp nhận voucher rửa miễn phí!'
+                    'Tuyệt vời — bạn sắp nhận voucher thưởng!'
                   )}
                 </p>
                 <span className="text-xs font-black text-amber-700 shrink-0">
@@ -999,10 +999,14 @@ function BookingFlow() {
                                     setSelectedVoucherId(found.id);
                                     setVoucherCodeError('');
                                     setVoucherCodeInput('');
+                                    toast.success(
+                                      `Đã áp dụng voucher ${found.code} — giảm tối đa ${formatCurrency(found.discountCapVnd)}`
+                                    );
                                   } else {
                                     setVoucherCodeError(
                                       'Mã không hợp lệ hoặc không thuộc tài khoản của bạn.'
                                     );
+                                    toast.error('Mã voucher không hợp lệ hoặc không thuộc tài khoản của bạn.');
                                   }
                                 }}
                                 className="px-4 py-2.5 rounded-xl bg-primary text-white text-sm font-bold hover:bg-primary/90 shrink-0 cursor-pointer"

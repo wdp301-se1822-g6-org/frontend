@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { 
   Calendar, 
@@ -82,12 +82,21 @@ export default function MyOrdersPage() {
     }).catch(err => console.error(err));
   }, []);
 
-  // Alert success booking if redirect from flow
+  // Alert success booking if redirect from flow — chỉ bắn 1 lần rồi xoá query
+  // (tránh chồng toast do React strict mode double-invoke / re-render).
+  const successToastShown = useRef(false);
   useEffect(() => {
-    if (searchParams.get('success') === 'true') {
-      toast.success('Đặt lịch thành công! Chào mừng ông chủ đến với WAVE.');
+    if (
+      searchParams.get('success') === 'true' &&
+      !successToastShown.current
+    ) {
+      successToastShown.current = true;
+      toast.success('Đặt lịch thành công! Chào mừng bạn đến với WAVE.', {
+        id: 'booking-success',
+      });
+      router.replace('/profile/orders', { scroll: false });
     }
-  }, [searchParams]);
+  }, [searchParams, router]);
 
   // Map serviceTypeId -> Name
   const getServiceName = (id: string) => {
@@ -425,12 +434,20 @@ export default function MyOrdersPage() {
                       <div className="flex items-center gap-2">
                         <CreditCard className="w-4 h-4 text-primary shrink-0" />
                         <span className="text-foreground font-bold">
-                          {order.paymentMethod === 'online' ? 'Chuyển khoản' : 'Tiền mặt'} • 
+                          {order.paymentMethod === 'online' ? 'Chuyển khoản' : 'Tiền mặt'} •
                           <span className={cn(
                             "ml-1 font-extrabold",
-                            order.paymentStatus === 'paid' ? "text-emerald-500" : "text-amber-500"
+                            order.paymentStatus === 'paid'
+                              ? "text-emerald-500"
+                              : Number(order.amount) === 0
+                              ? "text-emerald-600"
+                              : "text-amber-500"
                           )}>
-                            {order.paymentStatus === 'paid' ? 'Đã trả' : 'Chưa trả'}
+                            {order.paymentStatus === 'paid'
+                              ? 'Đã trả'
+                              : Number(order.amount) === 0
+                              ? 'Miễn phí (voucher)'
+                              : 'Chưa trả'}
                           </span>
                         </span>
                       </div>

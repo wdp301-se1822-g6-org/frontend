@@ -5,6 +5,7 @@ import {
   adminGrantVoucher,
   adminRevokeVoucher,
   adminGetUsers,
+  adminGetOrders,
   type GrantVoucherPayload,
 } from '@/lib/admin-api';
 import { getErrorMessage } from '@/lib/getErrorMessage';
@@ -127,76 +128,70 @@ function GrantModal({
             <label className='block text-xs font-black uppercase tracking-widest text-foreground/40 mb-1.5'>
               Khách hàng
             </label>
-            {mode === 'admin' ? (
-              <>
-                {selectedCustomer ? (
-                  <div className='flex items-center justify-between gap-2 rounded-xl border border-primary/40 bg-primary/5 px-4 py-2.5'>
-                    <div className='min-w-0'>
-                      <p className='text-sm font-bold text-foreground truncate'>
-                        {selectedCustomer.name}
-                      </p>
-                      <p className='text-[11px] text-muted-foreground truncate'>
-                        {selectedCustomer.email}
-                      </p>
-                    </div>
-                    <button
-                      onClick={() => {
-                        setCustomerId('');
-                        setSearch('');
-                      }}
-                      className='text-xs font-bold text-primary shrink-0 cursor-pointer'
-                    >
-                      Đổi
-                    </button>
-                  </div>
-                ) : (
-                  <>
-                    <div className='relative'>
-                      <Search className='w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-foreground/30' />
-                      <input
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
-                        placeholder='Tìm theo tên hoặc email…'
-                        className='w-full border border-border rounded-xl pl-9 pr-4 py-2.5 text-sm focus:outline-none focus:border-primary/50'
-                      />
-                    </div>
-                    {filteredCustomers.length > 0 && (
-                      <div className='mt-2 border border-border rounded-xl divide-y divide-border max-h-52 overflow-y-auto'>
-                        {filteredCustomers.map((c) => (
-                          <button
-                            key={c.id}
-                            onClick={() => setCustomerId(c.id)}
-                            className='w-full text-left px-4 py-2.5 hover:bg-slate-50 cursor-pointer'
-                          >
-                            <p className='text-sm font-semibold text-foreground truncate'>
-                              {c.name}
-                            </p>
-                            <p className='text-[11px] text-muted-foreground truncate'>
-                              {c.email}
-                            </p>
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                    {search.trim() && filteredCustomers.length === 0 && (
-                      <p className='mt-2 text-xs text-muted-foreground'>
-                        Không tìm thấy khách hàng phù hợp.
-                      </p>
-                    )}
-                  </>
-                )}
-              </>
+            {selectedCustomer ? (
+              <div className='flex items-center justify-between gap-2 rounded-xl border border-primary/40 bg-primary/5 px-4 py-2.5'>
+                <div className='min-w-0'>
+                  <p className='text-sm font-bold text-foreground truncate'>
+                    {selectedCustomer.name}
+                  </p>
+                  <p className='text-[11px] text-muted-foreground truncate'>
+                    {selectedCustomer.email}
+                  </p>
+                </div>
+                <button
+                  onClick={() => {
+                    setCustomerId('');
+                    setSearch('');
+                  }}
+                  className='text-xs font-bold text-primary shrink-0 cursor-pointer'
+                >
+                  Đổi
+                </button>
+              </div>
             ) : (
               <>
-                <input
-                  value={customerId}
-                  onChange={(e) => setCustomerId(e.target.value)}
-                  placeholder='Dán customerId (ID khách hàng)'
-                  className='w-full border border-border rounded-xl px-4 py-2.5 text-sm font-mono focus:outline-none focus:border-primary/50'
-                />
-                <p className='mt-1.5 text-[11px] text-muted-foreground'>
-                  Lấy ID khách từ trang Đơn đặt lịch / chi tiết khách hàng.
-                </p>
+                <div className='relative'>
+                  <Search className='w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-foreground/30' />
+                  <input
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    placeholder='Tìm theo tên hoặc email…'
+                    className='w-full border border-border rounded-xl pl-9 pr-4 py-2.5 text-sm focus:outline-none focus:border-primary/50'
+                  />
+                </div>
+                {filteredCustomers.length > 0 && (
+                  <div className='mt-2 border border-border rounded-xl divide-y divide-border max-h-52 overflow-y-auto'>
+                    {filteredCustomers.map((c) => (
+                      <button
+                        key={c.id}
+                        onClick={() => setCustomerId(c.id)}
+                        className='w-full text-left px-4 py-2.5 hover:bg-slate-50 cursor-pointer'
+                      >
+                        <p className='text-sm font-semibold text-foreground truncate'>
+                          {c.name}
+                        </p>
+                        <p className='text-[11px] text-muted-foreground truncate'>
+                          {c.email}
+                        </p>
+                      </button>
+                    ))}
+                  </div>
+                )}
+                {customers.length === 0 && (
+                  <p className='mt-2 text-xs text-muted-foreground'>
+                    Chưa có khách hàng để chọn
+                    {mode === 'manager'
+                      ? ' (danh sách lấy từ các đơn đặt lịch).'
+                      : '.'}
+                  </p>
+                )}
+                {search.trim() &&
+                  customers.length > 0 &&
+                  filteredCustomers.length === 0 && (
+                    <p className='mt-2 text-xs text-muted-foreground'>
+                      Không tìm thấy khách hàng phù hợp.
+                    </p>
+                  )}
               </>
             )}
           </div>
@@ -392,21 +387,42 @@ export function VoucherManagement({ mode }: { mode: VoucherMode }) {
     },
   });
 
-  // Customers (admin only) — for the searchable picker + name map.
+  // Danh sách khách cho bộ chọn + map tên.
+  // - Admin: lấy từ /admin/users (đầy đủ khách hàng).
+  // - Manager: KHÔNG được phép gọi /admin/users, nên suy ra khách từ các đơn
+  //   đặt lịch (/admin/orders manager xem được, đã kèm customerId + tên + email).
   const { data: customersData } = useQuery({
-    queryKey: ['admin-customers-for-voucher'],
-    enabled: mode === 'admin',
+    queryKey: ['voucher-customers', mode],
     queryFn: async (): Promise<CustomerLite[]> => {
-      const res = await adminGetUsers({ role: 'customer', limit: 100 });
+      if (mode === 'admin') {
+        const res = await adminGetUsers({ role: 'customer', limit: 100 });
+        const rows =
+          (res.data?.data?.data as Record<string, unknown>[]) ??
+          (res.data?.data as Record<string, unknown>[]) ??
+          [];
+        return rows.map((u) => ({
+          id: String(u._id ?? u.id ?? ''),
+          name: String(u.fullName ?? u.name ?? 'Khách hàng'),
+          email: String(u.email ?? ''),
+        }));
+      }
+      // manager → dedupe khách từ danh sách đơn
+      const res = await adminGetOrders({ limit: 100 });
       const rows =
-        (res.data?.data?.data as Record<string, unknown>[]) ??
         (res.data?.data as Record<string, unknown>[]) ??
+        (res.data as Record<string, unknown>[]) ??
         [];
-      return rows.map((u) => ({
-        id: String(u._id ?? u.id ?? ''),
-        name: String(u.fullName ?? u.name ?? 'Khách hàng'),
-        email: String(u.email ?? ''),
-      }));
+      const map = new Map<string, CustomerLite>();
+      for (const o of rows) {
+        const id = String(o.customerId ?? '');
+        if (!id || map.has(id)) continue;
+        map.set(id, {
+          id,
+          name: String(o.customerName ?? 'Khách hàng'),
+          email: String(o.customerEmail ?? ''),
+        });
+      }
+      return [...map.values()];
     },
   });
   const customers = customersData ?? [];
@@ -526,15 +542,28 @@ export function VoucherManagement({ mode }: { mode: VoucherMode }) {
                           {v.code}
                         </td>
                         <td className='px-5 py-3.5 text-foreground/80'>
-                          {mode === 'admin' ? (
-                            <span title={v.customerId}>
-                              {customerName(v.customerId)}
-                            </span>
-                          ) : (
-                            <span className='font-mono text-xs text-foreground/60'>
-                              {v.customerId}
-                            </span>
-                          )}
+                          {(() => {
+                            // Ưu tiên tên kèm theo từ BE; nếu không có thì map
+                            // từ danh sách khách đã tải (admin: từ users,
+                            // manager: từ các đơn đặt lịch).
+                            const name = v.customerName ?? customerName(v.customerId);
+                            return name && name !== v.customerId ? (
+                              <span title={v.customerId}>
+                                <span className='font-semibold text-foreground'>
+                                  {name}
+                                </span>
+                                {v.customerEmail && (
+                                  <span className='block text-[11px] text-muted-foreground'>
+                                    {v.customerEmail}
+                                  </span>
+                                )}
+                              </span>
+                            ) : (
+                              <span className='font-mono text-xs text-foreground/60'>
+                                {v.customerId}
+                              </span>
+                            );
+                          })()}
                         </td>
                         <td className='px-5 py-3.5 font-semibold text-foreground'>
                           {formatCurrency(v.discountCapVnd)}
@@ -603,8 +632,7 @@ export function VoucherManagement({ mode }: { mode: VoucherMode }) {
         {mode === 'manager' && (
           <p className='mt-4 flex items-center gap-2 text-xs text-muted-foreground'>
             <AlertCircle className='w-3.5 h-3.5 shrink-0' />
-            Quản lý cấp voucher bằng cách dán ID khách hàng (lấy từ trang Đơn đặt
-            lịch).
+            Danh sách khách để cấp voucher được lấy từ những khách đã có đơn đặt lịch.
           </p>
         )}
       </div>
