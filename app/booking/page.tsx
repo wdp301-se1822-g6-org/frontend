@@ -274,7 +274,7 @@ function BookingFlow() {
   });
 
   const isFreeOrder = preview?.amount === 0;
-  // Đơn 0đ buộc thanh toán tiền mặt — BE từ chối online khi total = 0.
+  // Đơn 0đ buộc thanh toán tiền mặt - BE từ chối online khi total = 0.
   const effectivePaymentMethod: 'online' | 'cash' = isFreeOrder
     ? 'cash'
     : paymentMethod;
@@ -474,7 +474,7 @@ function BookingFlow() {
                       Còn <span className="font-black">{washesToVoucher}</span> lượt rửa hợp lệ nữa để nhận voucher thưởng (~5% chi tiêu)!
                     </>
                   ) : (
-                    'Tuyệt vời — bạn sắp nhận voucher thưởng!'
+                    'Tuyệt vời - bạn sắp nhận voucher thưởng!'
                   )}
                 </p>
                 <span className="text-xs font-black text-amber-700 shrink-0">
@@ -876,7 +876,7 @@ function BookingFlow() {
                         <>
                         <div className="flex items-center gap-1.5 mb-3 text-[11px] text-amber-600 font-semibold">
                           <Sparkles className="w-3.5 h-3.5 shrink-0" />
-                          Ô màu vàng là Giờ Vàng — đặt vào khung này được giảm giá theo hạng thành viên.
+                          Ô màu vàng là Giờ Vàng - đặt vào khung này được giảm giá theo hạng thành viên.
                         </div>
                         <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
                           {availableSlots.map((slot: AvailableSlot) => {
@@ -1000,7 +1000,7 @@ function BookingFlow() {
                                     setVoucherCodeError('');
                                     setVoucherCodeInput('');
                                     toast.success(
-                                      `Đã áp dụng voucher ${found.code} — giảm tối đa ${formatCurrency(found.discountCapVnd)}`
+                                      `Đã áp dụng voucher ${found.code} - giảm tối đa ${formatCurrency(found.discountCapVnd)}`
                                     );
                                   } else {
                                     setVoucherCodeError(
@@ -1143,7 +1143,7 @@ function BookingFlow() {
                       {isFreeOrder && (
                         <p className="text-[11px] text-muted-foreground flex items-center gap-1.5">
                           <AlertCircle className="w-3.5 h-3.5 text-primary" />
-                          Đơn được voucher giảm về 0đ — chỉ thanh toán tiền mặt tại quầy.
+                          Đơn được voucher giảm về 0đ - chỉ thanh toán tiền mặt tại quầy.
                         </p>
                       )}
                     </div>

@@ -146,10 +146,10 @@ export default function AdminUsersPage() {
                               <div className='w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center text-primary font-black text-sm'>
                                 {(u.fullName ?? u.name ?? '?')[0]?.toUpperCase()}
                               </div>
-                              <span className='font-semibold text-foreground'>{u.fullName ?? u.name ?? '—'}</span>
+                              <span className='font-semibold text-foreground'>{u.fullName ?? u.name ?? '-'}</span>
                             </div>
                           </td>
-                          <td className='px-5 py-4 text-foreground/60 text-sm'>{u.email ?? '—'}</td>
+                          <td className='px-5 py-4 text-foreground/60 text-sm'>{u.email ?? '-'}</td>
                           <td className='px-5 py-4'>
                             <span className={`inline-flex px-2.5 py-1 rounded-lg text-[11px] font-black uppercase tracking-wider ${role.cls}`}>{role.label}</span>
                           </td>
@@ -157,7 +157,7 @@ export default function AdminUsersPage() {
                             <span className={`inline-flex px-2.5 py-1 rounded-lg text-[11px] font-black uppercase tracking-wider ${status.cls}`}>{status.label}</span>
                           </td>
                           <td className='px-5 py-4 text-foreground/50 text-xs'>
-                            {u.createdAt ? new Date(u.createdAt).toLocaleDateString('vi-VN') : '—'}
+                            {u.createdAt ? new Date(u.createdAt).toLocaleDateString('vi-VN') : '-'}
                           </td>
                           <td className='px-5 py-4'>
                             <div className='flex items-center gap-2'>

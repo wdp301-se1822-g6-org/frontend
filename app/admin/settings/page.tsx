@@ -23,9 +23,9 @@ export default function AdminSettingsPage() {
             </div>
             <div className='grid grid-cols-1 md:grid-cols-2 gap-5'>
               {[
-                { label: 'Họ và tên', value: authUser?.name ?? '—' },
-                { label: 'Email', value: authUser?.email ?? '—' },
-                { label: 'Vai trò', value: authUser?.role ?? '—' },
+                { label: 'Họ và tên', value: authUser?.name ?? '-' },
+                { label: 'Email', value: authUser?.email ?? '-' },
+                { label: 'Vai trò', value: authUser?.role ?? '-' },
                 { label: 'Trạng thái', value: authUser?.isActive ? 'Hoạt động' : 'Vô hiệu' },
               ].map(({ label, value }) => (
                 <div key={label}>
@@ -47,7 +47,7 @@ export default function AdminSettingsPage() {
             <div className='flex flex-col gap-4'>
               {[
                 { label: 'Tên hệ thống', value: 'WAVE Car Wash' },
-                { label: 'API Endpoint', value: process.env.NEXT_PUBLIC_API_URL ?? '—' },
+                { label: 'API Endpoint', value: process.env.NEXT_PUBLIC_API_URL ?? '-' },
                 { label: 'Phiên bản', value: 'v1.0.0' },
                 { label: 'Môi trường', value: process.env.NODE_ENV ?? 'production' },
               ].map(({ label, value }) => (

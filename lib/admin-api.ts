@@ -1,7 +1,15 @@
 import { axiosInstance } from '@/lib/axios';
+import { ENDPOINTS } from '@/services/endpoints';
+import type { DashboardQuery, DashboardReport } from '@/types/dashboard';
 
 // ─── Auth ──────────────────────────────────────────────
 export const adminGetMe = () => axiosInstance.get('/auth/me');
+
+// ─── Management Reporting Dashboard ─────────────────────
+export const adminGetDashboard = (params?: DashboardQuery) =>
+  axiosInstance.get<DashboardReport>(ENDPOINTS.adminDashboard.report, {
+    params,
+  });
 
 // ─── Users ─────────────────────────────────────────────
 export const adminGetUsers = (params?: Record<string, unknown>) =>

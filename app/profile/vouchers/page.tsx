@@ -36,7 +36,7 @@ const tabs: { value: string; label: string }[] = [
 ];
 
 const fmtDate = (d?: string) =>
-  d ? new Date(d).toLocaleDateString('vi-VN') : '—';
+  d ? new Date(d).toLocaleDateString('vi-VN') : '-';
 
 export default function MyVouchersPage() {
   const [tab, setTab] = useState('all');
@@ -176,7 +176,7 @@ export default function MyVouchersPage() {
 
                   {isUsable && (
                     <p className='mt-3 text-[11px] text-primary font-semibold'>
-                      → Áp dụng ở Bước 4 khi đặt lịch.
+                      Áp dụng ở Bước 4 khi đặt lịch.
                     </p>
                   )}
                 </div>

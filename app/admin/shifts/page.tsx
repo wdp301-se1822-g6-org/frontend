@@ -282,7 +282,7 @@ export default function AdminShiftsPage() {
     queryFn: () => adminGetShifts({ limit: 100 }),
   });
 
-  // Danh sách nhân viên (washers & cashiers) để gán ca — dùng endpoint riêng
+  // Danh sách nhân viên (washers & cashiers) để gán ca - dùng endpoint riêng
   // mà cả manager lẫn admin đều gọi được (trả về id THẬT, active).
   const { data: usersRes } = useQuery({
     queryKey: ['admin-shifts-staff'],
@@ -382,8 +382,8 @@ export default function AdminShiftsPage() {
                 const staffIdStr = typeof s.staffId === 'object' ? s.staffId?._id ?? s.staffId?.id : s.staffId;
                 const staffUser = staffList.find((u) => (u._id ?? u.id) === staffIdStr);
                 const staffName = staffUser?.fullName ?? staffUser?.name ?? (typeof s.staffId === 'object' ? s.staffId?.fullName ?? s.staffId?.name : '') ?? 'Chưa xác định';
-                const startTime = s.startAt ? new Date(s.startAt).toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' }) : '—';
-                const endTime = s.endAt ? new Date(s.endAt).toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' }) : '—';
+                const startTime = s.startAt ? new Date(s.startAt).toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' }) : '-';
+                const endTime = s.endAt ? new Date(s.endAt).toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' }) : '-';
                 const isCancelled = s.status === 'cancelled';
                 const isActive = s.status === 'active';
 

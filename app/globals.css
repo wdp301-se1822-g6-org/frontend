@@ -108,14 +108,14 @@
 }
 
 :root {
-  /* Clean neutral base — 1 primary blue, the rest are cool grays */
+  /* Clean neutral base - 1 primary blue, the rest are cool grays */
   --background: oklch(0.99 0.002 255);
   --foreground: oklch(0.21 0.02 256);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.21 0.02 256);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.21 0.02 256);
-  /* Single brand color — confident, not neon */
+  /* Single brand color - confident, not neon */
   --primary: oklch(0.52 0.13 252);
   --primary-foreground: oklch(0.99 0.005 255);
   /* Secondary is a neutral surface, not a second loud color */

@@ -4,7 +4,7 @@ import { AdminTopbar } from '@/components/admin/AdminTopbar';
 import { adminGetTierConfigs, adminUpdateTierConfig, adminToggleTierConfig } from '@/lib/admin-api';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
-import { Crown, Pencil, Power, X } from 'lucide-react';
+import { Check, Crown, Pencil, Power, X } from 'lucide-react';
 
 type Tier = { _id?: string; id?: string; name: string; minPoints?: number; discountPercent?: number; benefits?: string[]; isActive?: boolean };
 
@@ -102,7 +102,7 @@ export default function AdminTiersPage() {
                         <div>
                           <p className='text-[10px] font-black uppercase tracking-widest text-foreground/55 mb-2'>Quyền lợi</p>
                           <ul className='flex flex-col gap-1'>
-                            {t.benefits.map((b, i) => <li key={i} className='text-xs text-foreground/60 flex gap-1.5'>✓ {b}</li>)}
+                            {t.benefits.map((b, i) => <li key={i} className='text-xs text-foreground/60 flex gap-1.5'><Check className='w-3.5 h-3.5 mt-0.5 shrink-0 text-primary' />{b}</li>)}
                           </ul>
                         </div>
                       )}

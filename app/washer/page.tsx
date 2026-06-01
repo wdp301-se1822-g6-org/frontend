@@ -255,8 +255,8 @@ export default function WasherDashboard() {
             <div className='space-y-6'>
               {workOrders.map((wo) => {
                 const customer = `Mã phiếu: ${wo.code || wo.id.slice(-6).toUpperCase()}`;
-                const plate = wo.vehicleSnapshot?.plate ?? '—';
-                const service = wo.serviceName ?? '—';
+                const plate = wo.vehicleSnapshot?.plate ?? '-';
+                const service = wo.serviceName ?? '-';
                 
                 const isPending = wo.status === 'assigned' || wo.status === 'waiting';
                 const isInProgress = wo.status === 'in_progress' || wo.status === 'returned';
@@ -368,7 +368,7 @@ export default function WasherDashboard() {
                             })}
                           </div>
 
-                          {/* 📸 Trình quản lý ảnh kiểm định (Trước & Sau khi rửa - Không dùng Mock Ảnh) */}
+                          {/* Trình quản lý ảnh kiểm định (Trước & Sau khi rửa - Không dùng Mock Ảnh) */}
                           <div className='mt-6 mb-6 border-t border-slate-100 pt-5 space-y-6'>
                             {/* 1. Trước khi rửa */}
                             <div>

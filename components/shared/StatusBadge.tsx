@@ -18,7 +18,7 @@ const TONE_TO_VARIANT: Record<
 type StatusBadgeProps = {
   /** Nhãn hiển thị, ví dụ "Hoàn thành". */
   label: string;
-  /** Tông màu — lấy từ `*_STATUS_META` trong constants. */
+  /** Tông màu - lấy từ `*_STATUS_META` trong constants. */
   tone?: StatusTone;
   /** Hiện chấm tròn màu phía trước. */
   withDot?: boolean;

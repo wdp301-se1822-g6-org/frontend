@@ -90,7 +90,7 @@ export function BeforeAfterSection() {
 
       <div className='max-w-7xl mx-auto px-4 relative z-10'>
         <div className='grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 items-center'>
-          {/* LEFT — Draggable Before/After Slider */}
+          {/* LEFT - Draggable Before/After Slider */}
           <div className='order-2 lg:order-1'>
             {/* Labels above */}
             <div className='flex justify-between mb-3 px-1'>
@@ -166,12 +166,13 @@ export function BeforeAfterSection() {
             </div>
 
             {/* Drag hint */}
-            <p className='text-center text-muted-foreground text-xs font-semibold mt-4 tracking-wider'>
-              ← Kéo để so sánh →
+            <p className='flex items-center justify-center gap-1.5 text-center text-muted-foreground text-xs font-semibold mt-4 tracking-wider'>
+              <ChevronsLeftRight className='w-3.5 h-3.5' />
+              Kéo để so sánh
             </p>
           </div>
 
-          {/* RIGHT — Content */}
+          {/* RIGHT - Content */}
           <div className='order-1 lg:order-2 flex flex-col gap-5 sm:gap-7'>
             {/* Label */}
             <div className='flex items-center gap-3'>

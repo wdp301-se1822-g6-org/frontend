@@ -6,7 +6,7 @@ import { useEffect } from 'react';
 import { ShieldAlert } from 'lucide-react';
 
 /**
- * CashierGuard — bọc bất kỳ nội dung cashier nào.
+ * CashierGuard - bọc bất kỳ nội dung cashier nào.
  * - Chưa đăng nhập → redirect /login
  * - Đã đăng nhập nhưng không phải cashier → trang lỗi 403
  */

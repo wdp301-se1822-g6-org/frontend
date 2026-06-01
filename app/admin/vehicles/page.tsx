@@ -81,22 +81,22 @@ export default function AdminVehiclesPage() {
                             <div className='w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center'>
                               <Car className='w-4 h-4 text-primary' />
                             </div>
-                            <span className='font-black text-foreground font-mono'>{v.licensePlate ?? '—'}</span>
+                            <span className='font-black text-foreground font-mono'>{v.licensePlate ?? '-'}</span>
                           </div>
                         </td>
                         <td className='px-5 py-4 font-semibold text-foreground'>
-                          {v.ownerName ?? v.userId?.fullName ?? '—'}
+                          {v.ownerName ?? v.userId?.fullName ?? '-'}
                           {v.ownerPhone && (
                             <span className='block text-[11px] font-normal text-foreground/50'>
                               {v.ownerPhone}
                             </span>
                           )}
                         </td>
-                        <td className='px-5 py-4 text-foreground/70'>{v.brand ?? v.make ?? '—'}</td>
-                        <td className='px-5 py-4 text-foreground/70'>{v.model ?? '—'}</td>
-                        <td className='px-5 py-4 text-foreground/60'>{v.vehicleTypeName ?? (typeof v.vehicleTypeId === 'object' ? v.vehicleTypeId?.name : undefined) ?? v.vehicleType ?? '—'}</td>
-                        <td className='px-5 py-4 text-foreground/60'>{v.color ?? '—'}</td>
-                        <td className='px-5 py-4 text-foreground/50'>{v.year ?? '—'}</td>
+                        <td className='px-5 py-4 text-foreground/70'>{v.brand ?? v.make ?? '-'}</td>
+                        <td className='px-5 py-4 text-foreground/70'>{v.model ?? '-'}</td>
+                        <td className='px-5 py-4 text-foreground/60'>{v.vehicleTypeName ?? (typeof v.vehicleTypeId === 'object' ? v.vehicleTypeId?.name : undefined) ?? v.vehicleType ?? '-'}</td>
+                        <td className='px-5 py-4 text-foreground/60'>{v.color ?? '-'}</td>
+                        <td className='px-5 py-4 text-foreground/50'>{v.year ?? '-'}</td>
                       </tr>
                     );
                   })}

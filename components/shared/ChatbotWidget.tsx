@@ -36,7 +36,7 @@ export default function ChatbotWidget() {
     {
       id: 'welcome',
       role: 'assistant',
-      content: 'Chào mừng ông chủ đến với WAVE Auto-Wash! 🌊 Tôi là trợ lý ảo AI, tôi có thể giúp gì cho ông chủ hôm nay?'
+      content: 'Chào mừng ông chủ đến với WAVE Auto-Wash! Tôi là trợ lý ảo AI, tôi có thể giúp gì cho ông chủ hôm nay?'
     }
   ]);
   const [input, setInput] = useState('');
@@ -129,7 +129,7 @@ export default function ChatbotWidget() {
       setMessages(prev => [...prev, {
         id: nextMsgId('err'),
         role: 'assistant',
-        content: '⚠️ Xin lỗi ông chủ, đường truyền kết nối với bộ não AI của tôi đang gặp chút sự cố. Ông chủ vui lòng thử lại sau giây lát!'
+        content: 'Xin lỗi ông chủ, đường truyền kết nối với bộ não AI của tôi đang gặp chút sự cố. Ông chủ vui lòng thử lại sau giây lát!'
       }]);
     } finally {
       setIsLoading(false);
@@ -144,7 +144,7 @@ export default function ChatbotWidget() {
         {
           id: 'welcome',
           role: 'assistant',
-          content: 'Chào mừng ông chủ đến với WAVE Auto-Wash! 🌊 Tôi đã làm mới cuộc hội thoại. Tôi có thể giúp gì cho ông chủ lúc này?'
+          content: 'Chào mừng ông chủ đến với WAVE Auto-Wash! Tôi đã làm mới cuộc hội thoại. Tôi có thể giúp gì cho ông chủ lúc này?'
         }
       ]);
       toast.success('Đã làm mới cuộc hội thoại thành công.');

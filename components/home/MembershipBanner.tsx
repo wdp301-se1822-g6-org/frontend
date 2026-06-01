@@ -37,7 +37,7 @@ export function MembershipBanner() {
                   Chương trình thành viên đặc biệt
                 </div>
                 <div className='font-heading text-foreground text-xl sm:text-2xl lg:text-3xl mt-2 tracking-tight'>
-                  Đặt lịch sớm — Ưu đãi lớn với hạng{' '}
+                  Đặt lịch sớm - Ưu đãi lớn với hạng{' '}
                   <span className='bg-linear-to-r from-primary via-purple-500 to-fuchsia-500 bg-clip-text text-transparent font-black'>
                     Platinum
                   </span>

@@ -1,4 +1,4 @@
-/** Đường dẫn route tập trung — tránh hard-code chuỗi path rải rác trong app. */
+/** Đường dẫn route tập trung - tránh hard-code chuỗi path rải rác trong app. */
 export const ROUTES = {
   home: '/',
   login: '/login',
