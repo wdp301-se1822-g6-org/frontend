@@ -38,6 +38,7 @@ import {
   DateRangeFilter,
   type DateFilterValue,
 } from '@/components/admin/dashboard/DateRangeFilter';
+import { DonutChart } from '@/components/admin/dashboard/DonutChart';
 import {
   BarList,
   DashboardSection,
@@ -241,6 +242,40 @@ function DashboardBody({ report }: { report: DashboardReport }) {
             icon={Ticket}
           />
         </div>
+
+        {/* Tỷ trọng tổng hợp cho các card KPI ở trên */}
+        <div className='grid gap-4 lg:grid-cols-2'>
+          <Panel
+            title='Cơ cấu doanh thu'
+            hint='Doanh thu gộp được chia thành thực nhận, giảm giá và hoàn tiền'
+          >
+            <DonutChart
+              data={[
+                { label: 'Thực nhận', value: overview.netRevenue },
+                { label: 'Giảm giá', value: overview.discountAmount },
+                { label: 'Hoàn tiền', value: overview.refundAmount },
+              ]}
+              formatValue={formatCurrency}
+              centerCaption='doanh thu gộp'
+              emptyMessage='Chưa có doanh thu trong khoảng thời gian này'
+            />
+          </Panel>
+          <Panel
+            title='Cơ cấu đặt lịch'
+            hint='Tổng đặt lịch chia theo trạng thái xử lý'
+          >
+            <DonutChart
+              data={[
+                { label: 'Hoàn thành', value: overview.completedBookings },
+                { label: 'Đang chờ xử lý', value: overview.pendingBookings },
+                { label: 'Đã huỷ', value: overview.cancelledBookings },
+                { label: 'Không đến', value: overview.noShowBookings },
+              ]}
+              centerCaption='đơn'
+              emptyMessage='Chưa có booking nào trong khoảng thời gian này'
+            />
+          </Panel>
+        </div>
       </DashboardSection>
 
       {/* 2 ─ REVENUE ANALYTICS */}
@@ -283,43 +318,28 @@ function DashboardBody({ report }: { report: DashboardReport }) {
             </dl>
           </Panel>
 
-          <Panel title='Doanh thu theo dịch vụ'>
-            <BarList
-              items={revenueToBars(revenue.byService)}
-              format={formatCurrency}
-              emptyMessage='Chưa có doanh thu trong kỳ này'
+          <Panel title='Tỷ trọng doanh thu theo dịch vụ'>
+            <DonutChart
+              data={revenue.byService.map((s) => ({
+                label: s.name,
+                value: s.revenue,
+              }))}
+              formatValue={formatCurrency}
+              centerCaption='doanh thu'
+              emptyMessage='Chưa có doanh thu theo dịch vụ trong khoảng thời gian này'
             />
           </Panel>
 
-          <Panel title='Doanh thu theo phương thức & loại xe'>
-            <div className='flex flex-col gap-5'>
-              <div>
-                <p className='mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground'>
-                  Phương thức thanh toán
-                </p>
-                <BarList
-                  items={revenue.byPaymentMethod.map((r) => ({
-                    label: PAYMENT_LABELS[r.name] ?? r.name,
-                    value: r.revenue,
-                    caption: `${formatNumber(r.orders)} đơn`,
-                  }))}
-                  format={formatCurrency}
-                  emptyMessage='Chưa có dữ liệu'
-                  accent='bg-success'
-                />
-              </div>
-              <div>
-                <p className='mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground'>
-                  Loại xe
-                </p>
-                <BarList
-                  items={revenueToBars(revenue.byVehicleType)}
-                  format={formatCurrency}
-                  emptyMessage='Chưa có dữ liệu'
-                  accent='bg-primary'
-                />
-              </div>
-            </div>
+          <Panel title='Tỷ trọng theo phương thức thanh toán'>
+            <DonutChart
+              data={revenue.byPaymentMethod.map((r) => ({
+                label: PAYMENT_LABELS[r.name] ?? r.name,
+                value: r.revenue,
+              }))}
+              formatValue={formatCurrency}
+              centerCaption='doanh thu'
+              emptyMessage='Chưa có doanh thu trong khoảng thời gian này'
+            />
           </Panel>
         </div>
 
@@ -364,19 +384,20 @@ function DashboardBody({ report }: { report: DashboardReport }) {
           />
         </div>
         <div className='grid gap-4 lg:grid-cols-3'>
-          <Panel title='Trạng thái đặt lịch' className='lg:col-span-1'>
-            <ul className='flex flex-col gap-2.5 text-sm'>
-              {Object.entries(bookings.statusSummary).map(([key, count]) => (
-                <li key={key} className='flex items-center justify-between'>
-                  <span className='text-muted-foreground'>
-                    {STATUS_LABELS[key] ?? key}
-                  </span>
-                  <span className='font-semibold text-foreground tabular-nums'>
-                    {formatNumber(count)}
-                  </span>
-                </li>
-              ))}
-            </ul>
+          <Panel
+            title='Tỷ trọng trạng thái đặt lịch'
+            className='lg:col-span-1'
+          >
+            <DonutChart
+              data={Object.entries(bookings.statusSummary).map(
+                ([key, count]) => ({
+                  label: STATUS_LABELS[key] ?? key,
+                  value: count,
+                }),
+              )}
+              centerCaption='đơn'
+              emptyMessage='Chưa có booking nào trong khoảng thời gian này'
+            />
           </Panel>
           <Panel
             title='Khung giờ đông khách'
@@ -610,20 +631,21 @@ function DashboardBody({ report }: { report: DashboardReport }) {
       >
         <div className='grid gap-4 lg:grid-cols-2'>
           <Panel
-            title='Số lượng xe theo loại'
+            title='Cơ cấu loại xe hiện có'
             hint={
               vehicles.topType
-                ? `Phổ biến nhất: ${vehicles.topType}`
-                : undefined
+                ? `Tổng xe trên hệ thống (không theo kỳ) · phổ biến nhất: ${vehicles.topType}`
+                : 'Tổng xe hiện có trên hệ thống (không theo kỳ)'
             }
           >
-            <BarList
-              items={vehicles.byType.map((v) => ({
+            <DonutChart
+              data={vehicles.byType.map((v) => ({
                 label: v.name,
                 value: v.count,
               }))}
-              format={(v) => `${formatNumber(v)} xe`}
-              emptyMessage='Chưa có phương tiện'
+              formatValue={(v) => `${formatNumber(v)} xe`}
+              centerCaption='xe'
+              emptyMessage='Chưa có phương tiện nào'
             />
           </Panel>
           <Panel title='Doanh thu theo loại xe'>
@@ -670,32 +692,49 @@ function DashboardBody({ report }: { report: DashboardReport }) {
             tone='destructive'
           />
         </div>
-        <Panel
-          title='Top khách được cấp nhiều voucher nhất'
-          hint='Voucher phát trong kỳ đã chọn'
-        >
-          <RankingTable
-            rows={voucherLoyalty.topCustomersByVouchers}
-            rowKey={(r) => r.id}
-            emptyMessage='Chưa có voucher nào được phát trong kỳ này'
-            columns={[
-              { header: '#', cell: (_r, i) => <RankBadge index={i} /> },
-              {
-                header: 'Khách hàng',
-                cell: (r) => <span className='font-medium'>{r.name}</span>,
-              },
-              {
-                header: 'Số voucher',
-                align: 'right',
-                cell: (r) => (
-                  <span className='font-semibold tabular-nums'>
-                    {formatNumber(r.value)}
-                  </span>
-                ),
-              },
-            ]}
-          />
-        </Panel>
+        <div className='grid gap-4 lg:grid-cols-3'>
+          <Panel
+            title='Tỷ trọng trạng thái voucher'
+            hint='Voucher phát trong kỳ đã chọn'
+          >
+            <DonutChart
+              data={[
+                { label: 'Chưa dùng', value: voucherLoyalty.unused },
+                { label: 'Đã dùng', value: voucherLoyalty.used },
+                { label: 'Hết hạn', value: voucherLoyalty.expired },
+              ]}
+              centerCaption='voucher'
+              emptyMessage='Chưa có voucher nào trong khoảng thời gian này'
+            />
+          </Panel>
+          <Panel
+            title='Top khách được cấp nhiều voucher nhất'
+            hint='Voucher phát trong kỳ đã chọn'
+            className='lg:col-span-2'
+          >
+            <RankingTable
+              rows={voucherLoyalty.topCustomersByVouchers}
+              rowKey={(r) => r.id}
+              emptyMessage='Chưa có voucher nào được phát trong kỳ này'
+              columns={[
+                { header: '#', cell: (_r, i) => <RankBadge index={i} /> },
+                {
+                  header: 'Khách hàng',
+                  cell: (r) => <span className='font-medium'>{r.name}</span>,
+                },
+                {
+                  header: 'Số voucher',
+                  align: 'right',
+                  cell: (r) => (
+                    <span className='font-semibold tabular-nums'>
+                      {formatNumber(r.value)}
+                    </span>
+                  ),
+                },
+              ]}
+            />
+          </Panel>
+        </div>
       </DashboardSection>
 
       {/* 8 ─ SERVICE ANALYTICS */}
@@ -899,7 +938,7 @@ function DayRevenueChart({
         return (
           <div
             key={d.key}
-            className='group flex min-w-4.5 flex-1 flex-col items-center justify-end'
+            className='group flex min-w-4.5 max-w-16 flex-1 flex-col items-center justify-end'
             style={{ height: '100%' }}
             title={`${d.key}: ${formatCurrency(d.revenue)} (${d.orders} đơn)`}
           >
