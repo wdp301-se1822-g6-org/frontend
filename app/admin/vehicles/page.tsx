@@ -12,10 +12,12 @@ interface VehicleData {
   licensePlate?: string;
   userId?: { fullName?: string };
   ownerName?: string;
+  ownerPhone?: string;
   brand?: string;
   make?: string;
   model?: string;
-  vehicleTypeId?: { name?: string };
+  vehicleTypeId?: { name?: string } | string;
+  vehicleTypeName?: string;
   vehicleType?: string;
   color?: string;
   year?: string | number;
@@ -32,7 +34,8 @@ export default function AdminVehiclesPage() {
   });
 
   const vehicles: VehicleData[] = data?.data?.data ?? data?.data ?? [];
-  const total: number = data?.data?.total ?? vehicles.length;
+  const total: number =
+    data?.data?.meta?.total ?? data?.data?.total ?? vehicles.length;
   const filtered = search ? vehicles.filter((v: VehicleData) => JSON.stringify(v).toLowerCase().includes(search.toLowerCase())) : vehicles;
 
   return (
@@ -81,10 +84,17 @@ export default function AdminVehiclesPage() {
                             <span className='font-black text-foreground font-mono'>{v.licensePlate ?? '—'}</span>
                           </div>
                         </td>
-                        <td className='px-5 py-4 font-semibold text-foreground'>{v.userId?.fullName ?? v.ownerName ?? '—'}</td>
+                        <td className='px-5 py-4 font-semibold text-foreground'>
+                          {v.ownerName ?? v.userId?.fullName ?? '—'}
+                          {v.ownerPhone && (
+                            <span className='block text-[11px] font-normal text-foreground/50'>
+                              {v.ownerPhone}
+                            </span>
+                          )}
+                        </td>
                         <td className='px-5 py-4 text-foreground/70'>{v.brand ?? v.make ?? '—'}</td>
                         <td className='px-5 py-4 text-foreground/70'>{v.model ?? '—'}</td>
-                        <td className='px-5 py-4 text-foreground/60'>{v.vehicleTypeId?.name ?? v.vehicleType ?? '—'}</td>
+                        <td className='px-5 py-4 text-foreground/60'>{v.vehicleTypeName ?? (typeof v.vehicleTypeId === 'object' ? v.vehicleTypeId?.name : undefined) ?? v.vehicleType ?? '—'}</td>
                         <td className='px-5 py-4 text-foreground/60'>{v.color ?? '—'}</td>
                         <td className='px-5 py-4 text-foreground/50'>{v.year ?? '—'}</td>
                       </tr>

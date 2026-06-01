@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { 
   Calendar, 
@@ -82,12 +82,21 @@ export default function MyOrdersPage() {
     }).catch(err => console.error(err));
   }, []);
 
-  // Alert success booking if redirect from flow
+  // Alert success booking if redirect from flow — chỉ bắn 1 lần rồi xoá query
+  // (tránh chồng toast do React strict mode double-invoke / re-render).
+  const successToastShown = useRef(false);
   useEffect(() => {
-    if (searchParams.get('success') === 'true') {
-      toast.success('Đặt lịch thành công! Chào mừng ông chủ đến với WAVE.');
+    if (
+      searchParams.get('success') === 'true' &&
+      !successToastShown.current
+    ) {
+      successToastShown.current = true;
+      toast.success('Đặt lịch thành công! Chào mừng bạn đến với WAVE.', {
+        id: 'booking-success',
+      });
+      router.replace('/profile/orders', { scroll: false });
     }
-  }, [searchParams]);
+  }, [searchParams, router]);
 
   // Map serviceTypeId -> Name
   const getServiceName = (id: string) => {
