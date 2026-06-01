@@ -258,8 +258,8 @@ export default function ManagerWorkOrdersPage() {
             <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
               {workOrders.map((wo) => {
                 const customer = `Mã phiếu: ${wo.code || wo.id.slice(-6).toUpperCase()}`;
-                const plate = wo.vehicleSnapshot?.plate ?? '—';
-                const service = wo.serviceName ?? '—';
+                const plate = wo.vehicleSnapshot?.plate ?? '-';
+                const service = wo.serviceName ?? '-';
                 
                 // Ưu tiên tên thợ BE trả kèm (manager không gọi được /admin/users),
                 // fallback về danh sách washers nếu có.
@@ -341,7 +341,7 @@ export default function ManagerWorkOrdersPage() {
                         </div>
                       )}
 
-                      {/* 📸 Ảnh chụp kiểm định xe (Tách biệt Trước và Sau khi rửa - Không dùng Mock Ảnh) */}
+                      {/* Ảnh chụp kiểm định xe (Tách biệt Trước và Sau khi rửa - Không dùng Mock Ảnh) */}
                       <div className='mt-3 border-t border-slate-100 pt-3 flex flex-col gap-3'>
                         {/* Trước khi rửa */}
                         <div>

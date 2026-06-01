@@ -153,22 +153,22 @@ export default function AdminBookingsPage() {
                                 {(b.userId?.fullName ?? b.customerName ?? '?')[0]}
                               </div>
                               <span className='font-semibold text-foreground'>
-                                {b.userId?.fullName ?? b.customerName ?? '—'}
+                                {b.userId?.fullName ?? b.customerName ?? '-'}
                               </span>
                             </div>
                           </td>
                           <td className='px-5 py-4 text-foreground/60 font-mono text-xs'>
-                            {b.vehicleId?.licensePlate ?? b.licensePlate ?? '—'}
+                            {b.vehicleId?.licensePlate ?? b.licensePlate ?? '-'}
                           </td>
                           <td className='px-5 py-4 text-foreground/70'>
-                            {b.serviceTypeId?.name ?? b.serviceName ?? '—'}
+                            {b.serviceTypeId?.name ?? b.serviceName ?? '-'}
                           </td>
                           <td className='px-5 py-4 text-foreground/60 text-xs'>
-                            <div>{b.shiftId?.name ?? '—'}</div>
-                            <div className='text-foreground/60'>{(b.scheduledAt ?? b.bookingDate) ? new Date((b.scheduledAt ?? b.bookingDate) as string).toLocaleDateString('vi-VN') : '—'}</div>
+                            <div>{b.shiftId?.name ?? '-'}</div>
+                            <div className='text-foreground/60'>{(b.scheduledAt ?? b.bookingDate) ? new Date((b.scheduledAt ?? b.bookingDate) as string).toLocaleDateString('vi-VN') : '-'}</div>
                           </td>
                           <td className='px-5 py-4 font-black text-foreground'>
-                            {(b.amount ?? b.totalPrice) != null ? `${Number(b.amount ?? b.totalPrice).toLocaleString('vi-VN')}đ` : '—'}
+                            {(b.amount ?? b.totalPrice) != null ? `${Number(b.amount ?? b.totalPrice).toLocaleString('vi-VN')}đ` : '-'}
                           </td>
                           <td className='px-5 py-4'>
                             <span className={`inline-flex px-2.5 py-1 rounded-lg text-[11px] font-black uppercase tracking-wider ${s.cls}`}>

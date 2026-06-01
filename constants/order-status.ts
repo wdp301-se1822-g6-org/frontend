@@ -1,5 +1,5 @@
 /**
- * Trạng thái đơn rửa xe — mirror BE `src/features/order/types/order-status.enum.ts`.
+ * Trạng thái đơn rửa xe - mirror BE `src/features/order/types/order-status.enum.ts`.
  * KHÔNG đổi giá trị string hoặc bảng transition nếu BE chưa đổi.
  */
 export const ORDER_STATUS = {
@@ -21,7 +21,7 @@ export const ORDER_STATUS = {
 
 export type OrderStatus = (typeof ORDER_STATUS)[keyof typeof ORDER_STATUS];
 
-/** Tông màu badge — ánh xạ sang token màu trong globals.css. */
+/** Tông màu badge - ánh xạ sang token màu trong globals.css. */
 export type StatusTone =
   | 'primary'
   | 'info'
@@ -45,7 +45,7 @@ export const ORDER_STATUS_META: Record<
 };
 
 /**
- * Các chuyển trạng thái hợp lệ — mirror BE `order.state-machine.ts`.
+ * Các chuyển trạng thái hợp lệ - mirror BE `order.state-machine.ts`.
  * Dùng cho `BookingActionPanel` để chỉ hiển thị hành động hợp lệ.
  */
 export const ORDER_STATUS_TRANSITIONS: Record<OrderStatus, OrderStatus[]> = {

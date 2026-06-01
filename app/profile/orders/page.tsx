@@ -82,7 +82,7 @@ export default function MyOrdersPage() {
     }).catch(err => console.error(err));
   }, []);
 
-  // Alert success booking if redirect from flow — chỉ bắn 1 lần rồi xoá query
+  // Alert success booking if redirect from flow - chỉ bắn 1 lần rồi xoá query
   // (tránh chồng toast do React strict mode double-invoke / re-render).
   const successToastShown = useRef(false);
   useEffect(() => {

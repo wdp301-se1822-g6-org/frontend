@@ -84,7 +84,7 @@ export function AdminSidebar() {
             </span>
           )}
         </Link>
-        {/* Collapse button — luôn hiển thị trong sidebar */}
+        {/* Collapse button - luôn hiển thị trong sidebar */}
         <button
           onClick={() => setCollapsed((v) => !v)}
           title={collapsed ? 'Mở rộng' : 'Thu gọn'}

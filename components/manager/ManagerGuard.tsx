@@ -6,7 +6,7 @@ import { useEffect } from 'react';
 import { ShieldAlert } from 'lucide-react';
 
 /**
- * ManagerGuard — bọc bất kỳ nội dung manager nào.
+ * ManagerGuard - bọc bất kỳ nội dung manager nào.
  * - Chưa đăng nhập → redirect /login
  * - Đã đăng nhập nhưng không phải manager → trang lỗi 403
  */

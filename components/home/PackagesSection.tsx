@@ -13,7 +13,7 @@ type WashPackage = {
   pricePerWash: string;
   priceMonthly: string | null;
   highlight: boolean;
-  /** Gradient nhận diện gói (kim cương / vàng / bạc / nhanh) — màu sản phẩm có chủ đích. */
+  /** Gradient nhận diện gói (kim cương / vàng / bạc / nhanh) - màu sản phẩm có chủ đích. */
   gradient: string;
   features: string[];
 };

@@ -73,8 +73,8 @@ export function RegisterForm({
           </CardTitle>
           <p className='text-sm font-medium text-muted-foreground'>
             {step === 1
-              ? 'Bước 1/2 — Thông tin liên hệ'
-              : 'Bước 2/2 — Thiết lập mật khẩu'}
+              ? 'Bước 1/2 - Thông tin liên hệ'
+              : 'Bước 2/2 - Thiết lập mật khẩu'}
           </p>
         </CardHeader>
         <CardContent>

@@ -158,16 +158,16 @@ export default function CashierPOSPage() {
                             {orderId.slice(-6).toUpperCase()}
                           </td>
                           <td className='px-5 py-4.5'>
-                            <div className='font-bold text-slate-800'>{o.userId?.fullName ?? o.customerName ?? '—'}</div>
-                            <div className='text-slate-500 text-xs'>{o.userId?.email ?? o.customerEmail ?? '—'}</div>
+                            <div className='font-bold text-slate-800'>{o.userId?.fullName ?? o.customerName ?? '-'}</div>
+                            <div className='text-slate-500 text-xs'>{o.userId?.email ?? o.customerEmail ?? '-'}</div>
                           </td>
                           <td className='px-5 py-4.5'>
                             <span className='font-mono font-black text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded text-xs'>
-                              {o.vehicleId?.licensePlate ?? o.licensePlate ?? '—'}
+                              {o.vehicleId?.licensePlate ?? o.licensePlate ?? '-'}
                             </span>
                           </td>
                           <td className='px-5 py-4.5 text-slate-600 font-medium'>
-                            {o.serviceTypeId?.name ?? o.serviceName ?? '—'}
+                            {o.serviceTypeId?.name ?? o.serviceName ?? '-'}
                           </td>
                           <td className='px-5 py-4.5 font-black text-slate-900 text-base'>
                             {Number(amount).toLocaleString('vi-VN')}đ

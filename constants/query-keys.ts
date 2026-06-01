@@ -1,5 +1,5 @@
 /**
- * Query key tập trung cho TanStack Query — đảm bảo cache key nhất quán,
+ * Query key tập trung cho TanStack Query - đảm bảo cache key nhất quán,
  * tránh mỗi hook tự đặt key một kiểu.
  */
 export const QUERY_KEYS = {

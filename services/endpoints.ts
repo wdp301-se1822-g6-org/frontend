@@ -1,6 +1,6 @@
 /**
  * Bản đồ endpoint tập trung. Hook/service import từ đây thay vì viết
- * chuỗi path rải rác — đổi route chỉ sửa một nơi.
+ * chuỗi path rải rác - đổi route chỉ sửa một nơi.
  * Path khớp với controller của BE (NestJS).
  */
 export const ENDPOINTS = {
@@ -13,7 +13,7 @@ export const ENDPOINTS = {
     otpSend: '/auth/otp/send',
     otpVerify: '/auth/otp/verify',
   },
-  /** Đơn của chính khách hàng — BE `OrderController` (@Controller('me/orders')). */
+  /** Đơn của chính khách hàng - BE `OrderController` (@Controller('me/orders')). */
   orders: {
     mine: '/me/orders',
     mineById: (id: string) => `/me/orders/${id}`,
@@ -21,14 +21,18 @@ export const ENDPOINTS = {
     cancel: (id: string) => `/me/orders/${id}/cancel`,
     availableSlots: '/me/orders/available-slots',
   },
-  /** Đơn phía quầy/quản trị — BE `AdminOrderController` (@Controller('admin/orders')). */
+  /** Báo cáo quản trị / phân tích vận hành - BE `DashboardController` (@Controller('admin/dashboard')). */
+  adminDashboard: {
+    report: '/admin/dashboard',
+  },
+  /** Đơn phía quầy/quản trị - BE `AdminOrderController` (@Controller('admin/orders')). */
   adminOrders: {
     list: '/admin/orders',
     byId: (id: string) => `/admin/orders/${id}`,
     status: (id: string) => `/admin/orders/${id}/status`,
     markPaid: (id: string) => `/admin/orders/${id}/mark-paid`,
   },
-  /** Quản lý Work Orders cho Cashier/Manager — BE `AdminWorkOrderController` */
+  /** Quản lý Work Orders cho Cashier/Manager - BE `AdminWorkOrderController` */
   adminWorkOrders: {
     list: '/admin/work-orders',
     create: '/admin/work-orders',
@@ -36,7 +40,7 @@ export const ENDPOINTS = {
     assign: (id: string) => `/admin/work-orders/${id}/assign`,
     qc: (id: string) => `/admin/work-orders/${id}/qc`,
   },
-  /** Work Orders cho thợ rửa xe — BE `WasherWorkOrderController` */
+  /** Work Orders cho thợ rửa xe - BE `WasherWorkOrderController` */
   washerWorkOrders: {
     list: '/me/work-orders',
     byId: (id: string) => `/me/work-orders/${id}`,

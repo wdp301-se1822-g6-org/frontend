@@ -235,13 +235,13 @@ export default function ManagerDashboard() {
                       return (
                         <tr key={w._id ?? w.id} className='hover:bg-slate-50/40 transition-colors'>
                           <td className='px-6 py-4 font-mono text-xs text-slate-500'>
-                            {w._id ? w._id.slice(-6).toUpperCase() : '—'}
+                            {w._id ? w._id.slice(-6).toUpperCase() : '-'}
                           </td>
                           <td className='px-4 py-4'>
                             <span className='font-bold text-slate-800'>{w.orderId?.userId?.fullName ?? w.orderId?.customerName ?? 'Khách vãng lai'}</span>
                           </td>
                           <td className='px-4 py-4 text-xs font-mono font-bold text-indigo-600 bg-indigo-50/50 rounded px-2 py-1 inline-block mt-3'>
-                            {w.orderId?.vehicleId?.licensePlate ?? w.orderId?.licensePlate ?? '—'}
+                            {w.orderId?.vehicleId?.licensePlate ?? w.orderId?.licensePlate ?? '-'}
                           </td>
                           <td className='px-4 py-4 text-slate-500 font-medium'>
                             {w.washerId?.fullName ?? w.washerId?.name ?? (

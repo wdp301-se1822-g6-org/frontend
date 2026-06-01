@@ -51,7 +51,7 @@ const statusTabs: { value: string; label: string }[] = [
 ];
 
 const fmtDate = (d?: string) =>
-  d ? new Date(d).toLocaleDateString('vi-VN') : '—';
+  d ? new Date(d).toLocaleDateString('vi-VN') : '-';
 
 // ─────────────────────────── Grant modal ───────────────────────────
 function GrantModal({
@@ -270,7 +270,7 @@ function GrantModal({
               className='w-full border border-border rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-primary/50 resize-none'
             />
             <p className='mt-1.5 text-[11px] text-muted-foreground'>
-              Tối thiểu 5 ký tự — lưu vào nhật ký để giải trình.
+              Tối thiểu 5 ký tự - lưu vào nhật ký để giải trình.
             </p>
           </div>
         </div>
@@ -579,7 +579,7 @@ export function VoucherManagement({ mode }: { mode: VoucherMode }) {
                           {fmtDate(v.expiresAt)}
                         </td>
                         <td className='px-5 py-3.5 text-foreground/60 max-w-[220px] truncate'>
-                          {v.grantedReason ?? '—'}
+                          {v.grantedReason ?? '-'}
                         </td>
                         <td className='px-5 py-3.5 text-right'>
                           {v.status === 'unused' ? (
@@ -590,7 +590,7 @@ export function VoucherManagement({ mode }: { mode: VoucherMode }) {
                               <Ban className='w-3.5 h-3.5' /> Thu hồi
                             </button>
                           ) : (
-                            <span className='text-xs text-foreground/30'>—</span>
+                            <span className='text-xs text-foreground/30'>-</span>
                           )}
                         </td>
                       </tr>

@@ -13,7 +13,7 @@ type RoleGuardProps = {
 };
 
 /**
- * Ẩn/hiện UI theo role — gom logic kiểm tra quyền rải rác về một chỗ.
+ * Ẩn/hiện UI theo role - gom logic kiểm tra quyền rải rác về một chỗ.
  * Lưu ý: đây chỉ là guard ở tầng UI; việc chặn truy cập route vẫn do
  * layout/route group và BE đảm nhiệm.
  */

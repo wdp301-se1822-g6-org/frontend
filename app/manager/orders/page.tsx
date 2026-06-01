@@ -173,22 +173,22 @@ export default function ManagerOrdersPage() {
                                 {(o.userId?.fullName ?? o.customerName ?? '?')[0]}
                               </div>
                               <span className='font-bold text-slate-800'>
-                                {o.userId?.fullName ?? o.customerName ?? '—'}
+                                {o.userId?.fullName ?? o.customerName ?? '-'}
                               </span>
                             </div>
                           </td>
                           <td className='px-5 py-4 text-xs font-mono font-bold text-indigo-600 bg-indigo-50/30 rounded px-2 py-0.5 inline-block mt-4'>
-                            {o.vehicleId?.licensePlate ?? o.licensePlate ?? '—'}
+                            {o.vehicleId?.licensePlate ?? o.licensePlate ?? '-'}
                           </td>
                           <td className='px-5 py-4 text-slate-600 font-medium'>
-                            {o.serviceTypeId?.name ?? o.serviceName ?? '—'}
+                            {o.serviceTypeId?.name ?? o.serviceName ?? '-'}
                           </td>
                           <td className='px-5 py-4 text-slate-500 text-xs'>
-                            <div className='font-semibold text-slate-700'>{o.shiftId?.name ?? '—'}</div>
-                            <div className='text-slate-500'>{(o.scheduledAt ?? o.bookingDate) ? new Date((o.scheduledAt ?? o.bookingDate) as string).toLocaleDateString('vi-VN') : '—'}</div>
+                            <div className='font-semibold text-slate-700'>{o.shiftId?.name ?? '-'}</div>
+                            <div className='text-slate-500'>{(o.scheduledAt ?? o.bookingDate) ? new Date((o.scheduledAt ?? o.bookingDate) as string).toLocaleDateString('vi-VN') : '-'}</div>
                           </td>
                           <td className='px-5 py-4 font-black text-slate-800'>
-                            {(o.amount ?? o.totalPrice) != null ? `${Number(o.amount ?? o.totalPrice).toLocaleString('vi-VN')}đ` : '—'}
+                            {(o.amount ?? o.totalPrice) != null ? `${Number(o.amount ?? o.totalPrice).toLocaleString('vi-VN')}đ` : '-'}
                           </td>
                           <td className='px-5 py-4'>
                             <span className={`inline-flex px-2 py-0.5 rounded-lg text-xs font-bold ${s.cls}`}>

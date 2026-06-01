@@ -1,6 +1,14 @@
 'use client';
 
-import { MapPin, Phone, Mail, Send, Clock, ChevronRight } from 'lucide-react';
+import {
+  MapPin,
+  Phone,
+  Mail,
+  Send,
+  Clock,
+  ChevronRight,
+  Check,
+} from 'lucide-react';
 import { useState } from 'react';
 
 const locations = [
@@ -62,7 +70,7 @@ export function ContactSection() {
         </div>
 
         <div className='grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-10 items-start'>
-          {/* LEFT — Locations */}
+          {/* LEFT - Locations */}
           <div className='flex flex-col gap-5'>
             <p className='text-sm font-semibold uppercase tracking-widest text-foreground/40 mb-2'>
               Hệ thống chi nhánh
@@ -100,7 +108,7 @@ export function ContactSection() {
             ))}
           </div>
 
-          {/* RIGHT — Contact Form */}
+          {/* RIGHT - Contact Form */}
           <div className='bg-linear-to-br from-primary/8 via-purple-100/40 to-fuchsia-100/40 border border-primary/15 rounded-[1.75rem] sm:rounded-[2.5rem] p-6 sm:p-10 shadow-sm relative overflow-hidden'>
             {/* Decorative blobs inside card */}
             <div className='absolute -top-16 -right-16 w-56 h-56 bg-primary/10 rounded-full blur-3xl pointer-events-none' />
@@ -180,7 +188,10 @@ export function ContactSection() {
                   className='flex items-center justify-center gap-3 bg-primary text-white font-semibold px-8 py-4 rounded-xl text-sm uppercase tracking-widest hover:bg-primary/90 hover:-translate-y-0.5 transition-all duration-200 shadow-lg shadow-primary/25 mt-2'
                 >
                   {sent ? (
-                    <>✓ Đã gửi thành công!</>
+                    <>
+                      <Check className='w-4 h-4' />
+                      Đã gửi thành công!
+                    </>
                   ) : (
                     <>
                       <Send className='w-4 h-4' />
