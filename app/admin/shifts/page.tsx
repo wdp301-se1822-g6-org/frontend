@@ -6,7 +6,7 @@ import {
   adminCreateShift,
   adminUpdateShift,
   adminToggleShift,
-  adminGetUsers
+  adminGetShiftStaff
 } from '@/lib/admin-api';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
@@ -43,25 +43,6 @@ type UserData = {
   email?: string;
   role?: string;
 };
-
-const FALLBACK_STAFF: UserData[] = [
-  {
-    _id: "6a069f4666ba32cfd229da66",
-    id: "6a069f4666ba32cfd229da66",
-    fullName: "Nhân viên Rửa xe (Mặc định)",
-    name: "Nhân viên Rửa xe (Mặc định)",
-    email: "washer@washauto.local",
-    role: "washer"
-  },
-  {
-    _id: "6b069f4666ba32cfd229da67",
-    id: "6b069f4666ba32cfd229da67",
-    fullName: "Nhân viên Thu ngân (Mặc định)",
-    name: "Nhân viên Thu ngân (Mặc định)",
-    email: "cashier@washauto.local",
-    role: "cashier"
-  }
-];
 
 function ShiftModal({
   item,
@@ -301,58 +282,13 @@ export default function AdminShiftsPage() {
     queryFn: () => adminGetShifts({ limit: 100 }),
   });
 
-  // Lấy danh sách nhân viên (washers & cashiers) để giao việc
+  // Danh sách nhân viên (washers & cashiers) để gán ca — dùng endpoint riêng
+  // mà cả manager lẫn admin đều gọi được (trả về id THẬT, active).
   const { data: usersRes } = useQuery({
-    queryKey: ['admin-shifts-users'],
-    queryFn: async () => {
-      let wList: UserData[] = [];
-      let cList: UserData[] = [];
-      
-      try {
-        const washers = await adminGetUsers({ role: 'washer', limit: 100 });
-        wList = washers?.data?.data ?? washers?.data ?? [];
-      } catch (err) {
-        console.warn("Bypassing washer fetch 403 using active shifts and fallbacks:", err);
-      }
-
-      try {
-        const cashiers = await adminGetUsers({ role: 'cashier', limit: 100 });
-        cList = cashiers?.data?.data ?? cashiers?.data ?? [];
-      } catch (err) {
-        console.warn("Bypassing cashier fetch 403 using active shifts and fallbacks:", err);
-      }
-
-      // Nếu cả hai đều rỗng (lỗi 403), chúng ta tự động phục hồi từ shifts đang chạy + fallback
-      if (wList.length === 0 && cList.length === 0) {
-        let shiftsList: Shift[] = [];
-        try {
-          const shiftsData = await adminGetShifts({ limit: 100 });
-          shiftsList = shiftsData?.data?.data ?? shiftsData?.data ?? [];
-        } catch {
-          // ignore
-        }
-        
-        const extractedStaffMap = new Map<string, UserData>();
-        
-        shiftsList.forEach((s) => {
-          if (s.staffId && typeof s.staffId === 'object') {
-            const staff = s.staffId as UserData;
-            const staffId = staff._id ?? staff.id;
-            if (staffId && (staff.role === 'washer' || staff.role === 'cashier')) {
-              extractedStaffMap.set(staffId, staff);
-            }
-          }
-        });
-        
-        // Thêm mặc định nếu chưa tồn tại
-        FALLBACK_STAFF.forEach((fallback) => {
-          extractedStaffMap.set(fallback._id!, fallback);
-        });
-        
-        return Array.from(extractedStaffMap.values());
-      }
-      
-      return [...wList, ...cList];
+    queryKey: ['admin-shifts-staff'],
+    queryFn: async (): Promise<UserData[]> => {
+      const res = await adminGetShiftStaff();
+      return (res.data?.data ?? res.data ?? []) as UserData[];
     },
   });
 

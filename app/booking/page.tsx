@@ -471,10 +471,10 @@ function BookingFlow() {
                 <p className="text-sm font-bold text-amber-800">
                   {washesToVoucher > 0 ? (
                     <>
-                      Còn <span className="font-black">{washesToVoucher}</span> lần rửa nữa để nhận voucher rửa miễn phí!
+                      Còn <span className="font-black">{washesToVoucher}</span> lượt rửa hợp lệ nữa để nhận voucher thưởng (~5% chi tiêu)!
                     </>
                   ) : (
-                    'Tuyệt vời — bạn sắp nhận voucher rửa miễn phí!'
+                    'Tuyệt vời — bạn sắp nhận voucher thưởng!'
                   )}
                 </p>
                 <span className="text-xs font-black text-amber-700 shrink-0">
