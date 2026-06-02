@@ -2,9 +2,9 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { 
-  MessageSquare, Send, Sparkles, RefreshCw,
-  Bot, User, Minimize2, ArrowRight 
+  MessageSquare, Send, RefreshCw, User, Minimize2, ArrowRight 
 } from 'lucide-react';
+import Image from 'next/image';
 import { sendChatMessage, getChatSessionHistory } from '@/lib/chat-api';
 import { toast } from 'sonner';
 import { usePathname } from 'next/navigation';
@@ -36,7 +36,7 @@ export default function ChatbotWidget() {
     {
       id: 'welcome',
       role: 'assistant',
-      content: 'Chào mừng ông chủ đến với WAVE Auto-Wash! Tôi là trợ lý ảo AI, tôi có thể giúp gì cho ông chủ hôm nay?'
+      content: 'Chào mừng ông chủ đến với WAVE Auto-Wash! Tôi là trợ lý ảo, tôi có thể giúp gì cho ông chủ hôm nay?'
     }
   ]);
   const [input, setInput] = useState('');
@@ -69,20 +69,17 @@ export default function ChatbotWidget() {
       });
       getChatSessionHistory(storedSession)
         .then((res) => {
-          // Lấy trực tiếp từ res.data.messages theo cấu trúc backend thực tế
           const history = res.data?.messages ?? [];
           if (history.length > 0) {
-            // Định dạng lại tin nhắn từ API khớp với state
             const formatted: Message[] = history.map((msg: ApiChatMessage, idx: number) => ({
               id: `msg-${idx}`,
-              role: msg.role === 'model' ? 'assistant' : 'user', // Map role 'model' của BE thành 'assistant' của FE
+              role: msg.role === 'model' ? 'assistant' : 'user',
               content: msg.content
             }));
             setMessages(formatted);
           }
         })
         .catch(() => {
-          // Nếu session cũ bị lỗi/quá hạn, xóa đi để reset session mới
           localStorage.removeItem('wave_chat_session_id');
           setSessionId(null);
         })
@@ -101,35 +98,32 @@ export default function ChatbotWidget() {
     const userMessageText = textToSend.trim();
     setInput('');
 
-    // Thêm tin nhắn của User vào UI ngay lập tức
     const userMsgId = nextMsgId('user');
     setMessages(prev => [...prev, { id: userMsgId, role: 'user', content: userMessageText }]);
     setIsLoading(true);
 
     try {
       const res = await sendChatMessage(userMessageText, sessionId || undefined);
-      const data = res.data; // Lấy trực tiếp từ res.data
+      const data = res.data;
       if (data) {
-        // Lưu sessionId nếu là phiên mới
         if (!sessionId && data.sessionId) {
           setSessionId(data.sessionId);
           localStorage.setItem('wave_chat_session_id', data.sessionId);
         }
 
-        // Thêm câu trả lời của AI vào UI
         setMessages(prev => [...prev, {
           id: nextMsgId('ai'),
           role: 'assistant',
-          content: data.reply // Dùng reply thay vì answer
+          content: data.reply
         }]);
       }
     } catch (err) {
-      const errMsg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message ?? 'Đã xảy ra lỗi khi kết nối máy chủ AI.';
-      toast.error(`Trợ lý AI lỗi: ${errMsg}`);
+      const errMsg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message ?? 'Đã xảy ra lỗi khi kết nối máy chủ.';
+      toast.error(`Trợ lý lỗi: ${errMsg}`);
       setMessages(prev => [...prev, {
         id: nextMsgId('err'),
         role: 'assistant',
-        content: 'Xin lỗi ông chủ, đường truyền kết nối với bộ não AI của tôi đang gặp chút sự cố. Ông chủ vui lòng thử lại sau giây lát!'
+        content: 'Xin lỗi ông chủ, đường truyền kết nối với máy chủ của tôi đang gặp chút sự cố. Ông chủ vui lòng thử lại sau giây lát!'
       }]);
     } finally {
       setIsLoading(false);
@@ -161,49 +155,59 @@ export default function ChatbotWidget() {
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          className="relative w-14 h-14 rounded-full bg-gradient-to-tr from-indigo-600 via-indigo-500 to-indigo-600 text-white shadow-2xl flex items-center justify-center transition-all duration-300 hover:scale-110 hover:rotate-12 hover:shadow-indigo-500/30 active:scale-95 group focus:outline-none ring-4 ring-indigo-500/10"
+          className="relative w-14 h-14 rounded-full bg-primary text-white shadow-2xl flex items-center justify-center transition-all duration-300 hover:scale-110 hover:rotate-6 active:scale-95 group focus:outline-none ring-4 ring-primary/10 cursor-pointer"
         >
-          {/* Neon Glow Pulse Effect */}
-          <div className="absolute inset-0 rounded-full bg-indigo-500/20 animate-ping opacity-75 pointer-events-none" />
+          {/* Subtle primary glow pulse */}
+          <div className="absolute inset-0 rounded-full bg-primary/20 animate-ping opacity-75 pointer-events-none" />
           
           <MessageSquare className="w-6 h-6 transition-transform group-hover:scale-110" />
           
-          {/* Badge Trợ lý AI */}
-          <span className="absolute -top-1 -right-1 bg-emerald-500 border-2 border-white w-3.5 h-3.5 rounded-full animate-pulse" />
+          {/* Active green dot */}
+          <span className="absolute -top-1 -right-1 bg-emerald-500 border-2 border-white w-3.5 h-3.5 rounded-full" />
         </button>
       )}
 
       {/* ── KHUNG CỬA SỔ CHAT (Chat Window) ── */}
       {isOpen && (
-        <div className="w-[360px] sm:w-[390px] h-[520px] bg-white/95 backdrop-blur-md rounded-3xl border border-slate-200/60 shadow-2xl flex flex-col overflow-hidden animate-in slide-in-from-bottom-12 fade-in duration-300">
+        <div
+          className="w-[360px] sm:w-[390px] h-[520px] bg-white/85 backdrop-blur-xl rounded-[2rem] border border-white/20 shadow-2xl flex flex-col overflow-hidden transition-all duration-300 ease-out transform scale-100 opacity-100 animate-fade-in-up"
+        >
           
           {/* Header */}
-          <div className="bg-gradient-to-r from-slate-900 to-indigo-950 p-4 text-white flex items-center justify-between shadow-md">
-            <div className="flex items-center gap-3">
-              <div className="relative w-9 h-9 rounded-xl bg-indigo-600/30 border border-indigo-500/30 flex items-center justify-center text-indigo-400">
-                <Bot className="w-5 h-5" />
-                <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 border border-slate-900 rounded-full" />
+          <div className="bg-gradient-to-r from-slate-950 via-slate-900 to-primary/95 p-4 text-white flex items-center justify-between shadow-md relative overflow-hidden">
+            {/* Glass reflection line */}
+            <div className="absolute top-0 left-0 right-0 h-px bg-white/10" />
+            <div className="flex items-center gap-3 relative z-10">
+              <div className="relative w-9 h-9 rounded-xl overflow-hidden border border-white/15 flex items-center justify-center shrink-0">
+                <Image
+                  src="/logo-wave.jpg"
+                  alt="WAVE"
+                  width={36}
+                  height={36}
+                  className="object-cover"
+                />
+                <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 border border-slate-955 rounded-full animate-pulse" />
               </div>
               <div>
-                <h3 className="font-heading font-black text-sm tracking-wide flex items-center gap-1">
-                  Trợ lý WAVE AI <Sparkles className="w-3.5 h-3.5 text-indigo-400 fill-indigo-400/20" />
+                <h3 className="font-heading font-black text-sm tracking-wide">
+                  Trợ lý WAVE
                 </h3>
-                <p className="text-[10px] text-slate-400 font-semibold">Tự động trả lời • Hoạt động 24/7</p>
+                <p className="text-[10px] text-slate-350 font-medium">Tự động phản hồi • Hoạt động 24/7</p>
               </div>
             </div>
             
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5 relative z-10">
               <button 
                 onClick={handleResetChat}
                 title="Làm mới cuộc chat"
-                className="p-1.5 rounded-lg hover:bg-white/10 text-slate-400 hover:text-white transition-all active:scale-90"
+                className="p-1.5 rounded-lg hover:bg-white/10 text-slate-300 hover:text-white transition-colors cursor-pointer"
               >
                 <RefreshCw className="w-4 h-4" />
               </button>
               <button 
                 onClick={() => setIsOpen(false)}
                 title="Thu nhỏ"
-                className="p-1.5 rounded-lg hover:bg-white/10 text-slate-400 hover:text-white transition-all active:scale-90"
+                className="p-1.5 rounded-lg hover:bg-white/10 text-slate-300 hover:text-white transition-colors cursor-pointer"
               >
                 <Minimize2 className="w-4 h-4" />
               </button>
@@ -211,25 +215,35 @@ export default function ChatbotWidget() {
           </div>
 
           {/* Messages Container */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50/50 scrollbar-thin">
+          <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50/40 scrollbar-thin">
             {messages.map((msg) => {
               const isAi = msg.role === 'assistant';
               return (
                 <div key={msg.id} className={`flex gap-2.5 max-w-[85%] ${isAi ? '' : 'ml-auto flex-row-reverse'}`}>
                   {/* Avatar */}
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 border ${
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 overflow-hidden border ${
                     isAi 
-                      ? 'bg-indigo-50 border-indigo-100 text-indigo-600' 
-                      : 'bg-slate-100 border-slate-200 text-slate-700'
+                      ? 'border-primary/10' 
+                      : 'bg-slate-100 border-slate-200 text-slate-600'
                   }`}>
-                    {isAi ? <Bot className="w-4 h-4" /> : <User className="w-4 h-4" />}
+                    {isAi ? (
+                      <Image
+                        src="/logo-wave.jpg"
+                        alt="WAVE"
+                        width={32}
+                        height={32}
+                        className="object-cover"
+                      />
+                    ) : (
+                      <User className="w-4 h-4" />
+                    )}
                   </div>
 
                   {/* Message Bubble */}
-                  <div className={`rounded-2xl px-3.5 py-2.5 text-xs font-semibold leading-relaxed shadow-sm ${
+                  <div className={`px-4 py-2.5 text-xs font-medium leading-relaxed shadow-xs ${
                     isAi 
-                      ? 'bg-white text-slate-700 border border-slate-100' 
-                      : 'bg-gradient-to-tr from-indigo-600 to-indigo-500 text-white'
+                      ? 'bg-white/90 border border-slate-100 text-slate-700 rounded-2xl rounded-tl-sm' 
+                      : 'bg-primary text-white rounded-2xl rounded-tr-sm'
                   }`}>
                     {msg.content}
                   </div>
@@ -240,13 +254,19 @@ export default function ChatbotWidget() {
             {/* AI Typing Indicator */}
             {isLoading && (
               <div className="flex gap-2.5 max-w-[85%]">
-                <div className="w-8 h-8 rounded-full bg-indigo-50 border border-indigo-100 text-indigo-600 flex items-center justify-center shrink-0">
-                  <Bot className="w-4 h-4" />
+                <div className="w-8 h-8 rounded-full border border-primary/10 overflow-hidden shrink-0">
+                  <Image
+                    src="/logo-wave.jpg"
+                    alt="WAVE"
+                    width={32}
+                    height={32}
+                    className="object-cover"
+                  />
                 </div>
-                <div className="bg-white text-slate-700 border border-slate-100 rounded-2xl px-4 py-3 text-xs shadow-sm flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                  <span className="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                  <span className="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                <div className="bg-white/90 border border-slate-100 rounded-2xl rounded-tl-sm px-4 py-3 text-xs shadow-xs flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 bg-primary/60 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                  <span className="w-1.5 h-1.5 bg-primary/60 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                  <span className="w-1.5 h-1.5 bg-primary/60 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
                 </div>
               </div>
             )}
@@ -256,18 +276,18 @@ export default function ChatbotWidget() {
 
           {/* Quick FAQs Suggestions */}
           {messages.length === 1 && !isLoading && (
-            <div className="p-3 bg-white border-t border-slate-100 flex flex-col gap-1.5 shrink-0">
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider pl-1 mb-0.5">Gợi ý câu hỏi thường gặp</p>
+            <div className="p-3 bg-white/70 backdrop-blur-md border-t border-slate-100 flex flex-col gap-1.5 shrink-0">
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1 mb-0.5">Gợi ý câu hỏi thường gặp</p>
               <div className="flex flex-col gap-1.5 max-h-[110px] overflow-y-auto scrollbar-thin">
                 {QUICK_QUESTIONS.map((q, idx) => (
                   <button
                     key={idx}
                     type="button"
                     onClick={() => handleSendMessage(q)}
-                    className="w-full text-left px-3 py-1.5 rounded-xl border border-slate-100 hover:border-indigo-100 hover:bg-indigo-50/20 text-slate-600 hover:text-indigo-600 font-semibold text-[11px] transition-all flex items-center justify-between group"
+                    className="w-full text-left px-3 py-2 rounded-xl border border-slate-100 hover:border-primary/20 hover:bg-primary/5 text-slate-600 hover:text-primary font-medium text-[11px] transition-all flex items-center justify-between group cursor-pointer"
                   >
                     <span>{q}</span>
-                    <ArrowRight className="w-3 h-3 opacity-0 group-hover:opacity-100 transform translate-x-2 group-hover:translate-x-0 transition-all" />
+                    <ArrowRight className="w-3 h-3 opacity-0 group-hover:opacity-100 transform translate-x-1 group-hover:translate-x-0 transition-all text-primary" />
                   </button>
                 ))}
               </div>
@@ -277,19 +297,19 @@ export default function ChatbotWidget() {
           {/* Input Footer */}
           <form
             onSubmit={(e) => { e.preventDefault(); handleSendMessage(input); }}
-            className="p-3 bg-white border-t border-slate-150/60 flex gap-2 shrink-0 items-center"
+            className="p-3 bg-white/80 backdrop-blur-md border-t border-slate-100 flex gap-2 shrink-0 items-center"
           >
             <input
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder="Nhập câu hỏi của ông chủ..."
-              className="flex-1 bg-slate-50 border border-slate-200 focus:border-indigo-500 rounded-xl px-4 py-2.5 text-xs font-semibold focus:outline-none transition-all placeholder:text-slate-350 text-slate-700"
+              className="flex-1 bg-slate-50/50 border border-slate-200 focus:border-primary/50 focus:ring-1 focus:ring-primary/50 rounded-xl px-4 py-2.5 text-xs font-medium focus:outline-none transition-all placeholder:text-slate-400 text-slate-700"
             />
             <button
               type="submit"
               disabled={!input.trim() || isLoading}
-              className="p-2.5 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white rounded-xl shadow-md transition-all active:scale-95 shrink-0 flex items-center justify-center"
+              className="p-2.5 bg-primary hover:bg-primary/90 disabled:opacity-50 text-white rounded-xl shadow-md transition-colors shrink-0 flex items-center justify-center cursor-pointer"
             >
               <Send className="w-4 h-4" />
             </button>
