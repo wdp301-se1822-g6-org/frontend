@@ -3,6 +3,7 @@ import { Be_Vietnam_Pro, Plus_Jakarta_Sans } from 'next/font/google';
 
 import AppProvider from '@/providers/AppProvider';
 import ChatbotWidget from '@/components/shared/ChatbotWidget';
+import PWAHandler from '@/components/shared/PWAHandler';
 
 import './globals.css';
 
@@ -23,6 +24,11 @@ export const metadata: Metadata = {
   icons: {
     icon: '/logo-wave.jpg',
   },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'WAVE',
+  },
 };
 
 export default function RootLayout({
@@ -37,6 +43,7 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body className='min-h-full flex flex-col font-sans'>
+        <PWAHandler />
         <AppProvider>
           {children}
           <ChatbotWidget />

@@ -1321,17 +1321,6 @@ function BookingFlow() {
                   })()}
                 </div>
 
-                {/* Security badges */}
-                <div className="bg-slate-50 dark:bg-slate-800/40 p-3 rounded-xl flex items-center gap-3 border border-slate-100">
-                  <div className="text-emerald-500 shrink-0">
-                    <ShieldCheck className="w-5 h-5" />
-                  </div>
-                  <div className="text-[10px] text-muted-foreground leading-snug">
-                    <span className="font-black text-foreground block">Đảm bảo an toàn 100%</span>
-                    Cam kết giữ chỗ, hủy lịch miễn phí trước 2 tiếng qua ứng dụng.
-                  </div>
-                </div>
-
               </CardContent>
             </Card>
           </div>
