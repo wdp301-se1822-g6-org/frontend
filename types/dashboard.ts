@@ -139,7 +139,11 @@ export interface ScheduleAnalytics {
   peakHours: HourBucket[];
 }
 
+/** `full` = admin; `manager` = customer-identifying rankings redacted server-side. */
+export type DashboardScope = 'full' | 'manager';
+
 export interface DashboardReport {
+  scope: DashboardScope;
   range: { fromDate: string; toDate: string; period: string | null };
   overview: DashboardOverview;
   revenue: RevenueAnalytics;
