@@ -38,6 +38,7 @@ import {
   DateRangeFilter,
   type DateFilterValue,
 } from '@/components/admin/dashboard/DateRangeFilter';
+import { CancellationNoShowSection } from '@/components/admin/dashboard/CancellationNoShow';
 import { DonutChart } from '@/components/admin/dashboard/DonutChart';
 import {
   BarList,
@@ -836,7 +837,15 @@ function DashboardBody({ report }: { report: DashboardReport }) {
         </Panel>
       </DashboardSection>
 
-      {/* 10 ─ SCHEDULE & CAPACITY */}
+      {/* 10 ─ CANCELLATION & NO-SHOW */}
+      {report.cancellationNoShow && (
+        <CancellationNoShowSection
+          data={report.cancellationNoShow}
+          variant='admin'
+        />
+      )}
+
+      {/* 11 ─ SCHEDULE & CAPACITY */}
       <DashboardSection
         title='Lịch & Năng lực (Schedule & Capacity)'
         subtitle='Tỷ lệ lấp đầy slot và khung giờ cao điểm.'
