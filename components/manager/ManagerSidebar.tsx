@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
   LayoutDashboard,
+  PieChart,
   CalendarCheck,
   Wrench,
   LogOut,
@@ -20,6 +21,7 @@ import { axiosInstance } from '@/lib/axios';
 
 const navItems = [
   { href: '/manager',             icon: LayoutDashboard, label: 'Tổng quan' },
+  { href: '/manager/dashboard',   icon: PieChart,        label: 'Báo cáo vận hành' },
   { href: '/manager/orders',      icon: CalendarCheck,   label: 'Đơn đặt lịch' },
   { href: '/manager/work-orders', icon: Wrench,          label: 'Vận hành rửa xe' },
   { href: '/manager/vehicles',    icon: Car,             label: 'Quản lý xe' },
