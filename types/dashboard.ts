@@ -139,6 +139,33 @@ export interface ScheduleAnalytics {
   peakHours: HourBucket[];
 }
 
+export interface CustomerRiskRow {
+  id: string;
+  name: string;
+  /** Masked phone (090****567); null when redacted for the manager scope. */
+  phoneMasked: string | null;
+  totalBookings: number;
+  count: number;
+  rate: number;
+  lastAt: string | null;
+}
+
+export interface CancellationNoShowAnalytics {
+  totalCancelled: number;
+  totalNoShow: number;
+  cancellationRate: number;
+  noShowRate: number;
+  topCancellingCustomers: CustomerRiskRow[];
+  topNoShowCustomers: CustomerRiskRow[];
+  cancelledByService: NamedCount[];
+  noShowByService: NamedCount[];
+  cancelledByHour: HourBucket[];
+  noShowByHour: HourBucket[];
+  cancellationReasons: NamedCount[];
+  trendByDay: { key: string; cancelled: number; noShow: number }[];
+  notes: string[];
+}
+
 /** `full` = admin; `manager` = customer-identifying rankings redacted server-side. */
 export type DashboardScope = 'full' | 'manager';
 
@@ -154,6 +181,8 @@ export interface DashboardReport {
   voucherLoyalty: VoucherLoyaltyAnalytics;
   services: ServiceAnalytics;
   refundDispute: RefundDisputeAnalytics;
+  /** Optional: an older backend build may not return this section yet. */
+  cancellationNoShow?: CancellationNoShowAnalytics;
   schedule: ScheduleAnalytics;
 }
 
