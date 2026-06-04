@@ -14,22 +14,13 @@ import { useState } from 'react';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import {
   AlertTriangle,
-  BadgePercent,
-  Banknote,
   CalendarCheck,
-  Car,
   CircleDollarSign,
   Clock,
   CreditCard,
-  Gift,
-  Info,
   Layers,
-  Repeat,
   Sparkles,
-  Ticket,
   TrendingDown,
-  Undo2,
-  UserPlus,
   Users,
   Wrench,
 } from 'lucide-react';
@@ -38,7 +29,6 @@ import {
   DateRangeFilter,
   type DateFilterValue,
 } from '@/components/admin/dashboard/DateRangeFilter';
-import { CancellationNoShowSection } from '@/components/admin/dashboard/CancellationNoShow';
 import { DonutChart } from '@/components/admin/dashboard/DonutChart';
 import {
   BarList,
@@ -54,7 +44,7 @@ import { QueryBoundary } from '@/components/shared/QueryBoundary';
 import { adminGetDashboard } from '@/lib/admin-api';
 import { DEFAULT_PERIOD, getRangeForPeriod } from '@/lib/date-range';
 import { formatCurrency, formatNumber, formatPercent } from '@/lib/format';
-import type { DashboardReport, NamedRevenue } from '@/types/dashboard';
+import type { DashboardReport } from '@/types/dashboard';
 
 /* ─── Labels ──────────────────────────────────────────────────────────── */
 
@@ -72,14 +62,6 @@ const PAYMENT_LABELS: Record<string, string> = {
   online: 'Chuyển khoản (PayOS)',
   cash: 'Tiền mặt',
 };
-
-function revenueToBars(rows: NamedRevenue[]) {
-  return rows.map((r) => ({
-    label: r.name,
-    value: r.revenue,
-    caption: `${formatNumber(r.orders)} đơn`,
-  }));
-}
 
 /* ─── Page ────────────────────────────────────────────────────────────── */
 
@@ -156,9 +138,13 @@ export default function AdminDashboardPage() {
 /* ─── Body ────────────────────────────────────────────────────────────── */
 
 function DashboardBody({ report }: { report: DashboardReport }) {
-  const { overview, revenue, bookings, washers, customers } = report;
-  const { vehicles, voucherLoyalty, services, refundDispute, schedule } =
-    report;
+  const { overview, revenue, bookings, washers } = report;
+  const inProgressBookings = bookings.statusSummary['in_progress'] ?? 0;
+  // "Đang chờ xử lý" không gồm số đang rửa để tránh đếm trùng trong biểu đồ.
+  const waitingBookings = Math.max(
+    overview.pendingBookings - inProgressBookings,
+    0,
+  );
 
   return (
     <div className='flex flex-col gap-10'>
@@ -177,36 +163,22 @@ function DashboardBody({ report }: { report: DashboardReport }) {
             tone='success'
           />
           <KpiCard
-            label='Doanh thu gộp'
-            value={formatCurrency(overview.grossRevenue)}
-            hint='Trước giảm giá'
-            icon={Banknote}
-            tone='primary'
-          />
-          <KpiCard
-            label='Tổng giảm giá'
-            value={formatCurrency(overview.discountAmount)}
-            hint='Voucher + giờ vàng'
-            icon={BadgePercent}
-            tone='warning'
-          />
-          <KpiCard
-            label='Hoàn tiền'
-            value={formatCurrency(overview.refundAmount)}
-            hint='Đơn đã refund'
-            icon={Undo2}
-            tone='destructive'
-          />
-          <KpiCard
             label='Tổng đặt lịch'
             value={formatNumber(overview.totalBookings)}
             hint={`${formatNumber(overview.completedBookings)} hoàn thành`}
             icon={CalendarCheck}
           />
           <KpiCard
+            label='Đang rửa'
+            value={formatNumber(inProgressBookings)}
+            hint='Xe đang được xử lý'
+            icon={Sparkles}
+            tone='primary'
+          />
+          <KpiCard
             label='Đang chờ xử lý'
-            value={formatNumber(overview.pendingBookings)}
-            hint='Chưa hoàn thành'
+            value={formatNumber(waitingBookings)}
+            hint='Chưa vào rửa'
             icon={Clock}
           />
           <KpiCard
@@ -223,24 +195,14 @@ function DashboardBody({ report }: { report: DashboardReport }) {
             icon={CreditCard}
           />
           <KpiCard
-            label='Khách hàng'
-            value={formatNumber(overview.totalCustomers)}
-            icon={Users}
-          />
-          <KpiCard
-            label='Phương tiện'
-            value={formatNumber(overview.totalVehicles)}
-            icon={Car}
-          />
-          <KpiCard
             label='Thợ đang hoạt động'
             value={formatNumber(overview.activeWashers)}
             icon={Wrench}
           />
           <KpiCard
-            label='Voucher đã dùng'
-            value={formatNumber(overview.usedVouchers)}
-            icon={Ticket}
+            label='Khách hàng'
+            value={formatNumber(overview.totalCustomers)}
+            icon={Users}
           />
         </div>
 
@@ -268,7 +230,8 @@ function DashboardBody({ report }: { report: DashboardReport }) {
             <DonutChart
               data={[
                 { label: 'Hoàn thành', value: overview.completedBookings },
-                { label: 'Đang chờ xử lý', value: overview.pendingBookings },
+                { label: 'Đang rửa', value: inProgressBookings },
+                { label: 'Đang chờ xử lý', value: waitingBookings },
                 { label: 'Đã huỷ', value: overview.cancelledBookings },
                 { label: 'Không đến', value: overview.noShowBookings },
               ]}
@@ -508,396 +471,6 @@ function DashboardBody({ report }: { report: DashboardReport }) {
         </Panel>
       </DashboardSection>
 
-      {/* 5 ─ CUSTOMER ANALYTICS */}
-      <DashboardSection
-        title='Phân tích khách hàng (Customer Analytics)'
-        subtitle='Khách nhiều xe nhất, chi tiêu nhiều nhất, đặt lịch nhiều nhất.'
-        icon={Users}
-      >
-        <div className='grid grid-cols-2 gap-3 lg:grid-cols-4'>
-          <KpiCard
-            label='Khách hàng mới'
-            value={formatNumber(customers.newCustomers)}
-            hint='Đăng ký trong kỳ'
-            icon={UserPlus}
-            tone='primary'
-          />
-          <KpiCard
-            label='Khách quay lại'
-            value={formatNumber(customers.returningCustomers)}
-            hint='>1 đơn hoàn thành'
-            icon={Repeat}
-            tone='success'
-          />
-          <KpiCard
-            label='Tỷ lệ quay lại'
-            value={formatPercent(customers.retentionRate)}
-            icon={TrendingDown}
-          />
-          <KpiCard
-            label='Tổng khách hàng'
-            value={formatNumber(overview.totalCustomers)}
-            icon={Users}
-          />
-        </div>
-        <div className='grid gap-4 lg:grid-cols-3'>
-          <Panel title='Top khách nhiều xe nhất'>
-            <RankingTable
-              rows={customers.topByVehicles}
-              rowKey={(r) => r.id}
-              emptyMessage='Chưa có dữ liệu phương tiện'
-              columns={[
-                { header: '#', cell: (_r, i) => <RankBadge index={i} /> },
-                {
-                  header: 'Khách hàng',
-                  cell: (r) => <span className='font-medium'>{r.name}</span>,
-                },
-                {
-                  header: 'Số xe',
-                  align: 'right',
-                  cell: (r) => (
-                    <span className='font-semibold tabular-nums'>
-                      {formatNumber(r.value)}
-                    </span>
-                  ),
-                },
-              ]}
-            />
-          </Panel>
-          <Panel title='Top khách chi tiêu nhiều nhất'>
-            <RankingTable
-              rows={customers.topBySpending}
-              rowKey={(r) => r.id}
-              emptyMessage='Chưa có chi tiêu trong kỳ này'
-              columns={[
-                { header: '#', cell: (_r, i) => <RankBadge index={i} /> },
-                {
-                  header: 'Khách hàng',
-                  cell: (r) => <span className='font-medium'>{r.name}</span>,
-                },
-                {
-                  header: 'Chi tiêu',
-                  align: 'right',
-                  cell: (r) => (
-                    <span className='font-semibold tabular-nums'>
-                      {formatCurrency(r.value)}
-                    </span>
-                  ),
-                },
-              ]}
-            />
-          </Panel>
-          <Panel title='Top khách đặt lịch nhiều nhất'>
-            <RankingTable
-              rows={customers.topByBookings}
-              rowKey={(r) => r.id}
-              emptyMessage='Chưa có đặt lịch trong kỳ này'
-              columns={[
-                { header: '#', cell: (_r, i) => <RankBadge index={i} /> },
-                {
-                  header: 'Khách hàng',
-                  cell: (r) => <span className='font-medium'>{r.name}</span>,
-                },
-                {
-                  header: 'Số đơn',
-                  align: 'right',
-                  cell: (r) => (
-                    <span className='font-semibold tabular-nums'>
-                      {formatNumber(r.value)}
-                    </span>
-                  ),
-                },
-              ]}
-            />
-          </Panel>
-        </div>
-        <Panel title='Phân bố hạng thành viên (Tier)'>
-          <BarList
-            items={customers.tierDistribution.map((t) => ({
-              label: t.name,
-              value: t.count,
-            }))}
-            format={(v) => `${formatNumber(v)} khách`}
-            emptyMessage='Chưa có tài khoản loyalty'
-            accent='bg-primary'
-          />
-        </Panel>
-      </DashboardSection>
-
-      {/* 6 ─ VEHICLE ANALYTICS */}
-      <DashboardSection
-        title='Phân tích phương tiện (Vehicle Analytics)'
-        subtitle='Loại xe phổ biến và doanh thu theo loại xe.'
-        icon={Car}
-      >
-        <div className='grid gap-4 lg:grid-cols-2'>
-          <Panel
-            title='Cơ cấu loại xe hiện có'
-            hint={
-              vehicles.topType
-                ? `Tổng xe trên hệ thống (không theo kỳ) · phổ biến nhất: ${vehicles.topType}`
-                : 'Tổng xe hiện có trên hệ thống (không theo kỳ)'
-            }
-          >
-            <DonutChart
-              data={vehicles.byType.map((v) => ({
-                label: v.name,
-                value: v.count,
-              }))}
-              formatValue={(v) => `${formatNumber(v)} xe`}
-              centerCaption='xe'
-              emptyMessage='Chưa có phương tiện nào'
-            />
-          </Panel>
-          <Panel title='Doanh thu theo loại xe'>
-            <BarList
-              items={revenueToBars(vehicles.revenueByType)}
-              format={formatCurrency}
-              emptyMessage='Chưa có doanh thu trong kỳ này'
-              accent='bg-success'
-            />
-          </Panel>
-        </div>
-      </DashboardSection>
-
-      {/* 7 ─ VOUCHER & LOYALTY */}
-      <DashboardSection
-        title='Voucher & Khách hàng thân thiết (Voucher & Loyalty)'
-        subtitle='“Ai là người có nhiều voucher nhất?” và mức độ sử dụng voucher.'
-        icon={Gift}
-      >
-        <div className='grid grid-cols-2 gap-3 lg:grid-cols-4'>
-          <KpiCard
-            label='Voucher đã phát'
-            value={formatNumber(voucherLoyalty.totalIssued)}
-            icon={Ticket}
-          />
-          <KpiCard
-            label='Đã dùng'
-            value={formatNumber(voucherLoyalty.used)}
-            hint={`Tỷ lệ ${formatPercent(voucherLoyalty.redemptionRate)}`}
-            icon={Gift}
-            tone='success'
-          />
-          <KpiCard
-            label='Chưa dùng / Hết hạn'
-            value={`${formatNumber(voucherLoyalty.unused)} / ${formatNumber(voucherLoyalty.expired)}`}
-            icon={Clock}
-            tone='warning'
-          />
-          <KpiCard
-            label='Chi phí voucher'
-            value={formatCurrency(voucherLoyalty.voucherCost)}
-            hint='Theo trần giảm giá đã dùng'
-            icon={BadgePercent}
-            tone='destructive'
-          />
-        </div>
-        <div className='grid gap-4 lg:grid-cols-3'>
-          <Panel
-            title='Tỷ trọng trạng thái voucher'
-            hint='Voucher phát trong kỳ đã chọn'
-          >
-            <DonutChart
-              data={[
-                { label: 'Chưa dùng', value: voucherLoyalty.unused },
-                { label: 'Đã dùng', value: voucherLoyalty.used },
-                { label: 'Hết hạn', value: voucherLoyalty.expired },
-              ]}
-              centerCaption='voucher'
-              emptyMessage='Chưa có voucher nào trong khoảng thời gian này'
-            />
-          </Panel>
-          <Panel
-            title='Top khách được cấp nhiều voucher nhất'
-            hint='Voucher phát trong kỳ đã chọn'
-            className='lg:col-span-2'
-          >
-            <RankingTable
-              rows={voucherLoyalty.topCustomersByVouchers}
-              rowKey={(r) => r.id}
-              emptyMessage='Chưa có voucher nào được phát trong kỳ này'
-              columns={[
-                { header: '#', cell: (_r, i) => <RankBadge index={i} /> },
-                {
-                  header: 'Khách hàng',
-                  cell: (r) => <span className='font-medium'>{r.name}</span>,
-                },
-                {
-                  header: 'Số voucher',
-                  align: 'right',
-                  cell: (r) => (
-                    <span className='font-semibold tabular-nums'>
-                      {formatNumber(r.value)}
-                    </span>
-                  ),
-                },
-              ]}
-            />
-          </Panel>
-        </div>
-      </DashboardSection>
-
-      {/* 8 ─ SERVICE ANALYTICS */}
-      <DashboardSection
-        title='Phân tích dịch vụ (Service Analytics)'
-        subtitle='Dịch vụ dùng nhiều nhất và tạo doanh thu cao nhất.'
-        icon={Layers}
-      >
-        <div className='grid gap-4 lg:grid-cols-2'>
-          <Panel title='Dịch vụ được dùng nhiều nhất'>
-            <BarList
-              items={services.mostUsed.map((s) => ({
-                label: s.name,
-                value: s.count,
-              }))}
-              format={(v) => `${formatNumber(v)} đơn`}
-              emptyMessage='Chưa có đặt lịch trong kỳ này'
-            />
-          </Panel>
-          <Panel title='Dịch vụ tạo doanh thu cao nhất'>
-            <BarList
-              items={revenueToBars(services.byRevenue)}
-              format={formatCurrency}
-              emptyMessage='Chưa có doanh thu trong kỳ này'
-              accent='bg-success'
-            />
-          </Panel>
-        </div>
-      </DashboardSection>
-
-      {/* 9 ─ REFUND & DISPUTE */}
-      <DashboardSection
-        title='Hoàn tiền & Khiếu nại (Refund & Dispute)'
-        subtitle='Hoàn tiền và chỉ số làm lại (QC) - proxy cho khiếu nại.'
-        icon={Undo2}
-      >
-        <div className='grid grid-cols-2 gap-3 lg:grid-cols-4'>
-          <KpiCard
-            label='Số đơn hoàn tiền'
-            value={formatNumber(refundDispute.refundCount)}
-            icon={Undo2}
-            tone='destructive'
-          />
-          <KpiCard
-            label='Tổng hoàn tiền'
-            value={formatCurrency(refundDispute.refundAmount)}
-            icon={Banknote}
-            tone='destructive'
-          />
-          <KpiCard
-            label='Lượt QC trả về'
-            value={formatNumber(refundDispute.qcRejections)}
-            hint='Tổng các thợ top'
-            icon={AlertTriangle}
-            tone='warning'
-          />
-          <KpiCard
-            label='Tỷ lệ làm lại'
-            value={formatPercent(refundDispute.reworkRate)}
-            hint='Trên đơn hoàn thành'
-            icon={Repeat}
-          />
-        </div>
-        <Panel title='Số lần QC trả về theo thợ'>
-          <RankingTable
-            rows={refundDispute.disputesByWasher}
-            rowKey={(r) => r.id}
-            emptyMessage='Chưa có lượt QC trả về nào - chất lượng đạt chuẩn'
-            columns={[
-              { header: '#', cell: (_r, i) => <RankBadge index={i} /> },
-              {
-                header: 'Thợ rửa',
-                cell: (r) => <span className='font-medium'>{r.name}</span>,
-              },
-              {
-                header: 'Lượt trả về',
-                align: 'right',
-                cell: (r) => (
-                  <span className='font-semibold tabular-nums text-warning'>
-                    {formatNumber(r.value)}
-                  </span>
-                ),
-              },
-            ]}
-          />
-          {refundDispute.notes.length > 0 && (
-            <ul className='mt-4 space-y-1.5 border-t border-border pt-3'>
-              {refundDispute.notes.map((note, i) => (
-                <li
-                  key={i}
-                  className='flex gap-2 text-xs text-muted-foreground'
-                >
-                  <Info className='mt-0.5 size-3.5 shrink-0 text-muted-foreground/60' />
-                  {note}
-                </li>
-              ))}
-            </ul>
-          )}
-        </Panel>
-      </DashboardSection>
-
-      {/* 10 ─ CANCELLATION & NO-SHOW */}
-      {report.cancellationNoShow && (
-        <CancellationNoShowSection
-          data={report.cancellationNoShow}
-          variant='admin'
-        />
-      )}
-
-      {/* 11 ─ SCHEDULE & CAPACITY */}
-      <DashboardSection
-        title='Lịch & Năng lực (Schedule & Capacity)'
-        subtitle='Tỷ lệ lấp đầy slot và khung giờ cao điểm.'
-        icon={Clock}
-      >
-        <div className='grid grid-cols-2 gap-3 lg:grid-cols-4'>
-          <KpiCard
-            label='Tổng ca làm'
-            value={formatNumber(schedule.totalShifts)}
-            icon={Clock}
-          />
-          <KpiCard
-            label='Tổng sức chứa'
-            value={formatNumber(schedule.totalCapacity)}
-            hint='Slot tối đa'
-            icon={Layers}
-          />
-          <KpiCard
-            label='Slot đã đặt / trống'
-            value={`${formatNumber(schedule.bookedSlots)} / ${formatNumber(schedule.availableSlots)}`}
-            icon={CalendarCheck}
-          />
-          <KpiCard
-            label='Tỷ lệ lấp đầy'
-            value={formatPercent(schedule.utilizationRate)}
-            icon={TrendingDown}
-            tone='primary'
-          />
-        </div>
-        <Panel title='Khung giờ cao điểm (Top 3)'>
-          {schedule.peakHours.length === 0 ? (
-            <EmptyBlock message='Chưa có đặt lịch trong kỳ này' />
-          ) : (
-            <ul className='flex flex-wrap gap-3'>
-              {schedule.peakHours.map((h) => (
-                <li
-                  key={h.hour}
-                  className='flex items-center gap-2 rounded-lg border border-border bg-muted/40 px-4 py-2'
-                >
-                  <Clock className='size-4 text-primary' />
-                  <span className='font-semibold text-foreground'>
-                    {h.hour}:00 – {h.hour + 1}:00
-                  </span>
-                  <span className='text-sm text-muted-foreground'>
-                    {formatNumber(h.count)} đơn
-                  </span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </Panel>
-      </DashboardSection>
     </div>
   );
 }

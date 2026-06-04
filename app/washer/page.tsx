@@ -257,7 +257,9 @@ export default function WasherDashboard() {
                 const customer = `Mã phiếu: ${wo.code || wo.id.slice(-6).toUpperCase()}`;
                 const plate = wo.vehicleSnapshot?.plate ?? '-';
                 const service = wo.serviceName ?? '-';
-                
+                // Ảnh lưu theo orderId để khớp ảnh thu ngân chụp trước khi rửa.
+                const photoKey = wo.orderId;
+
                 const isPending = wo.status === 'assigned' || wo.status === 'waiting';
                 const isInProgress = wo.status === 'in_progress' || wo.status === 'returned';
                 const isCompleted = wo.status === 'quality_check' || wo.status === 'done';
@@ -368,95 +370,63 @@ export default function WasherDashboard() {
                             })}
                           </div>
 
-                          {/* Trình quản lý ảnh kiểm định (Trước & Sau khi rửa - Không dùng Mock Ảnh) */}
+                          {/* Ảnh kiểm định xe - lưu theo orderId */}
                           <div className='mt-6 mb-6 border-t border-slate-100 pt-5 space-y-6'>
-                            {/* 1. Trước khi rửa */}
+                            {/* 1. Trước khi rửa - CHỈ XEM (thu ngân chụp khi nhận xe) */}
                             <div>
                               <p className='text-xs font-black text-slate-500 uppercase tracking-wider mb-3 flex items-center gap-1.5'>
                                 <Camera className='w-4 h-4 text-amber-500' />
                                 1. Ảnh trước khi rửa (Trầy xước/Móp méo có sẵn)
                               </p>
-                              
-                              <div className='grid grid-cols-4 gap-3'>
-                                {(inspectionPhotos[wo.id]?.preWash && inspectionPhotos[wo.id].preWash.length > 0) ? (
-                                  <>
-                                    {inspectionPhotos[wo.id].preWash.map((photo, pIdx) => (
-                                      <div key={pIdx} className='group relative aspect-square rounded-xl overflow-hidden border border-slate-200 shadow-sm bg-slate-50'>
-                                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                                        <img src={photo} alt='Pre-wash' className='w-full h-full object-cover group-hover:scale-105 transition-transform duration-200' />
-                                        <div className='absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-150 flex items-center justify-center gap-2'>
-                                          <button 
-                                            type='button'
-                                            onClick={() => setPreviewPhoto(photo)}
-                                            className='w-7 h-7 bg-white/90 hover:bg-white text-slate-700 rounded-lg flex items-center justify-center shadow-sm'
-                                          >
-                                            <Eye className='w-4 h-4' />
-                                          </button>
-                                          <button 
-                                            type='button'
-                                            onClick={() => handleDeletePhoto(wo.id, pIdx, 'pre')}
-                                            className='w-7 h-7 bg-rose-500/90 hover:bg-rose-500 text-white rounded-lg flex items-center justify-center shadow-sm'
-                                          >
-                                            <Trash2 className='w-4 h-4' />
-                                          </button>
-                                        </div>
+
+                              {(inspectionPhotos[photoKey]?.preWash && inspectionPhotos[photoKey].preWash.length > 0) ? (
+                                <div className='grid grid-cols-4 gap-3'>
+                                  {inspectionPhotos[photoKey].preWash.map((photo, pIdx) => (
+                                    <div
+                                      key={pIdx}
+                                      onClick={() => setPreviewPhoto(photo)}
+                                      className='group relative aspect-square rounded-xl overflow-hidden border border-slate-200 shadow-sm bg-slate-50 cursor-pointer'
+                                    >
+                                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                                      <img src={photo} alt='Pre-wash' className='w-full h-full object-cover group-hover:scale-105 transition-transform duration-200' />
+                                      <div className='absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity duration-150 flex items-center justify-center'>
+                                        <Eye className='w-5 h-5 text-white' />
                                       </div>
-                                    ))}
-                                    <label className='aspect-square rounded-xl border border-dashed border-slate-300 hover:border-indigo-500 bg-slate-50/50 hover:bg-indigo-50/10 cursor-pointer flex flex-col items-center justify-center gap-1 transition-all duration-200'>
-                                      <Plus className='w-5 h-5 text-slate-500' />
-                                      <span className='text-[10px] font-bold text-slate-500 uppercase tracking-wider'>Thêm ảnh</span>
-                                      <input 
-                                        type='file' 
-                                        multiple 
-                                        accept='image/*' 
-                                        className='hidden' 
-                                        onChange={(e) => handleUploadPhotos(wo.id, e.target.files, 'pre')} 
-                                      />
-                                    </label>
-                                  </>
-                                ) : (
-                                  <div className='col-span-4 p-4 rounded-xl border border-dashed border-slate-200 bg-slate-50/40 flex flex-col items-center justify-center gap-2 text-center py-6'>
-                                    <p className='text-xs font-semibold text-slate-500 italic'>Chưa chụp ảnh tình trạng trước khi rửa xe.</p>
-                                    <label className='px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs cursor-pointer shadow-md transition-all flex items-center gap-1.5'>
-                                      <Plus className='w-3.5 h-3.5' /> Chụp / Tải ảnh lên
-                                      <input 
-                                        type='file' 
-                                        multiple 
-                                        accept='image/*' 
-                                        className='hidden' 
-                                        onChange={(e) => handleUploadPhotos(wo.id, e.target.files, 'pre')} 
-                                      />
-                                    </label>
-                                  </div>
-                                )}
-                              </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              ) : (
+                                <div className='p-4 rounded-xl border border-dashed border-slate-200 bg-slate-50/40 text-center py-6'>
+                                  <p className='text-xs font-semibold text-slate-500 italic'>Thu ngân chưa chụp ảnh hiện trạng xe lúc nhận. Ảnh sẽ hiển thị ở đây để bạn đối chiếu.</p>
+                                </div>
+                              )}
                             </div>
 
-                            {/* 2. Sau khi rửa */}
+                            {/* 2. Sau khi rửa - thợ chụp/tải lên */}
                             <div>
                               <p className='text-xs font-black text-slate-500 uppercase tracking-wider mb-3 flex items-center gap-1.5'>
                                 <CheckCircle2 className='w-4 h-4 text-emerald-500' />
                                 2. Ảnh sau khi rửa (Nghiệm thu xe sạch đẹp)
                               </p>
-                              
+
                               <div className='grid grid-cols-4 gap-3'>
-                                {(inspectionPhotos[wo.id]?.postWash && inspectionPhotos[wo.id].postWash.length > 0) ? (
+                                {(inspectionPhotos[photoKey]?.postWash && inspectionPhotos[photoKey].postWash.length > 0) ? (
                                   <>
-                                    {inspectionPhotos[wo.id].postWash.map((photo, pIdx) => (
+                                    {inspectionPhotos[photoKey].postWash.map((photo, pIdx) => (
                                       <div key={pIdx} className='group relative aspect-square rounded-xl overflow-hidden border border-slate-200 shadow-sm bg-slate-50'>
                                         {/* eslint-disable-next-line @next/next/no-img-element */}
                                         <img src={photo} alt='Post-wash' className='w-full h-full object-cover group-hover:scale-105 transition-transform duration-200' />
                                         <div className='absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-150 flex items-center justify-center gap-2'>
-                                          <button 
+                                          <button
                                             type='button'
                                             onClick={() => setPreviewPhoto(photo)}
                                             className='w-7 h-7 bg-white/90 hover:bg-white text-slate-700 rounded-lg flex items-center justify-center shadow-sm'
                                           >
                                             <Eye className='w-4 h-4' />
                                           </button>
-                                          <button 
+                                          <button
                                             type='button'
-                                            onClick={() => handleDeletePhoto(wo.id, pIdx, 'post')}
+                                            onClick={() => handleDeletePhoto(photoKey, pIdx, 'post')}
                                             className='w-7 h-7 bg-rose-500/90 hover:bg-rose-500 text-white rounded-lg flex items-center justify-center shadow-sm'
                                           >
                                             <Trash2 className='w-4 h-4' />
@@ -467,12 +437,12 @@ export default function WasherDashboard() {
                                     <label className='aspect-square rounded-xl border border-dashed border-slate-300 hover:border-indigo-500 bg-slate-50/50 hover:bg-indigo-50/10 cursor-pointer flex flex-col items-center justify-center gap-1 transition-all duration-200'>
                                       <Plus className='w-5 h-5 text-slate-500' />
                                       <span className='text-[10px] font-bold text-slate-500 uppercase tracking-wider'>Thêm ảnh</span>
-                                      <input 
-                                        type='file' 
-                                        multiple 
-                                        accept='image/*' 
-                                        className='hidden' 
-                                        onChange={(e) => handleUploadPhotos(wo.id, e.target.files, 'post')} 
+                                      <input
+                                        type='file'
+                                        multiple
+                                        accept='image/*'
+                                        className='hidden'
+                                        onChange={(e) => handleUploadPhotos(photoKey, e.target.files, 'post')}
                                       />
                                     </label>
                                   </>
@@ -481,12 +451,12 @@ export default function WasherDashboard() {
                                     <p className='text-xs font-semibold text-slate-500 italic'>Chưa chụp ảnh nghiệm thu sau khi rửa xe.</p>
                                     <label className='px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs cursor-pointer shadow-md transition-all flex items-center gap-1.5'>
                                       <Plus className='w-3.5 h-3.5' /> Chụp / Tải ảnh lên
-                                      <input 
-                                        type='file' 
-                                        multiple 
-                                        accept='image/*' 
-                                        className='hidden' 
-                                        onChange={(e) => handleUploadPhotos(wo.id, e.target.files, 'post')} 
+                                      <input
+                                        type='file'
+                                        multiple
+                                        accept='image/*'
+                                        className='hidden'
+                                        onChange={(e) => handleUploadPhotos(photoKey, e.target.files, 'post')}
                                       />
                                     </label>
                                   </div>

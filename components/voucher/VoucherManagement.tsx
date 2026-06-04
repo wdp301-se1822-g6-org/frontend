@@ -72,7 +72,6 @@ function GrantModal({
   const [code, setCode] = useState('');
   const [discountCapVnd, setDiscountCapVnd] = useState(100000);
   const [expiresAt, setExpiresAt] = useState('');
-  const [reason, setReason] = useState('');
 
   const codeValid = code.trim() === '' || /^[A-Za-z0-9-]{3,30}$/.test(code.trim());
 
@@ -87,17 +86,14 @@ function GrantModal({
   const selectedCustomer = customers.find((c) => c.id === customerId);
 
   const capValid = discountCapVnd >= 1 && discountCapVnd <= 200000;
-  const canSubmit =
-    customerId.trim().length > 0 &&
-    reason.trim().length >= 5 &&
-    capValid &&
-    codeValid;
+  const canSubmit = customerId.trim().length > 0 && capValid && codeValid;
 
   const submit = () => {
     if (!canSubmit) return;
     onSubmit({
       customerId: customerId.trim(),
-      reason: reason.trim(),
+      // BE vẫn yêu cầu trường reason - gửi mặc định khi cấp thủ công.
+      reason: 'Cấp voucher thủ công',
       discountCapVnd,
       ...(expiresAt ? { expiresAt: new Date(expiresAt).toISOString() } : {}),
       ...(code.trim() ? { code: code.trim().toUpperCase() } : {}),
@@ -255,23 +251,6 @@ function GrantModal({
               onChange={(e) => setExpiresAt(e.target.value)}
               className='w-full border border-border rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-primary/50'
             />
-          </div>
-
-          {/* Reason */}
-          <div>
-            <label className='block text-xs font-black uppercase tracking-widest text-foreground/40 mb-1.5'>
-              Lý do <span className='text-rose-500'>*</span>
-            </label>
-            <textarea
-              value={reason}
-              onChange={(e) => setReason(e.target.value)}
-              rows={3}
-              placeholder='VD: Bồi thường do rửa trễ đơn #1234'
-              className='w-full border border-border rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-primary/50 resize-none'
-            />
-            <p className='mt-1.5 text-[11px] text-muted-foreground'>
-              Tối thiểu 5 ký tự - lưu vào nhật ký để giải trình.
-            </p>
           </div>
         </div>
 
@@ -507,7 +486,6 @@ export function VoucherManagement({ mode }: { mode: VoucherMode }) {
                   <th className='px-5 py-3.5'>Giảm tối đa</th>
                   <th className='px-5 py-3.5'>Trạng thái</th>
                   <th className='px-5 py-3.5'>Hết hạn</th>
-                  <th className='px-5 py-3.5'>Lý do</th>
                   <th className='px-5 py-3.5 text-right'>Thao tác</th>
                 </tr>
               </thead>
@@ -515,7 +493,7 @@ export function VoucherManagement({ mode }: { mode: VoucherMode }) {
                 {isLoading ? (
                   Array.from({ length: 5 }).map((_, i) => (
                     <tr key={i}>
-                      <td colSpan={7} className='px-5 py-4'>
+                      <td colSpan={6} className='px-5 py-4'>
                         <div className='h-5 bg-slate-100 rounded animate-pulse' />
                       </td>
                     </tr>
@@ -523,7 +501,7 @@ export function VoucherManagement({ mode }: { mode: VoucherMode }) {
                 ) : vouchers.length === 0 ? (
                   <tr>
                     <td
-                      colSpan={7}
+                      colSpan={6}
                       className='px-5 py-16 text-center text-muted-foreground'
                     >
                       <Ticket className='w-8 h-8 mx-auto mb-2 text-foreground/20' />
@@ -577,9 +555,6 @@ export function VoucherManagement({ mode }: { mode: VoucherMode }) {
                         </td>
                         <td className='px-5 py-3.5 text-foreground/70'>
                           {fmtDate(v.expiresAt)}
-                        </td>
-                        <td className='px-5 py-3.5 text-foreground/60 max-w-[220px] truncate'>
-                          {v.grantedReason ?? '-'}
                         </td>
                         <td className='px-5 py-3.5 text-right'>
                           {v.status === 'unused' ? (

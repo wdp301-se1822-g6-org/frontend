@@ -65,6 +65,8 @@ interface WorkOrderData {
 export default function ManagerWorkOrdersPage() {
   const qc = useQueryClient();
   const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'in_progress' | 'completed'>('all');
+  // Ảnh kiểm định chỉ để XEM ở trang Vận hành (thu ngân chụp ảnh trước khi rửa
+  // ở trang Lịch hẹn, thợ chụp ảnh sau khi rửa). Lưu chung localStorage theo orderId.
   const [inspectionPhotos] = useState<Record<string, { preWash: string[]; postWash: string[] }>>(() => {
     const stored = localStorage.getItem('wave_inspection_photos');
     if (stored) {
@@ -123,6 +125,23 @@ export default function ManagerWorkOrdersPage() {
   const allWorkOrders: WorkOrderData[] = workOrdersRes?.data?.data ?? workOrdersRes?.data ?? [];
   const fetchedWashers: UserData[] = washersRes?.data?.data ?? washersRes?.data ?? [];
   const washers = fetchedWashers.length > 0 ? fetchedWashers : FALLBACK_WASHERS;
+
+  // Thợ đang bận = đang được giao việc hoặc đang rửa (kể cả rửa lại sau QC).
+  // Những thợ này không hiện trong danh sách để gán tiếp.
+  const busyWasherIds = new Set(
+    allWorkOrders
+      .filter(
+        (wo) =>
+          wo.status === 'assigned' ||
+          wo.status === 'in_progress' ||
+          wo.status === 'returned',
+      )
+      .map((wo) => wo.assignedWasherId)
+      .filter((id): id is string => Boolean(id)),
+  );
+  const availableWashers = washers.filter(
+    (w) => !busyWasherIds.has(w._id) && !busyWasherIds.has(w.id ?? ''),
+  );
 
   // Lọc phiếu rửa xe theo trạng thái ở frontend để khớp tab
   const workOrders = allWorkOrders.filter((wo) => {
@@ -260,6 +279,11 @@ export default function ManagerWorkOrdersPage() {
                 const customer = `Mã phiếu: ${wo.code || wo.id.slice(-6).toUpperCase()}`;
                 const plate = wo.vehicleSnapshot?.plate ?? '-';
                 const service = wo.serviceName ?? '-';
+                // Ảnh lưu theo orderId để khớp với ảnh thu ngân chụp ở trang Lịch hẹn.
+                const woOrderId =
+                  typeof wo.orderId === 'string'
+                    ? wo.orderId
+                    : (wo.orderId?._id ?? wo.id);
                 
                 // Ưu tiên tên thợ BE trả kèm (manager không gọi được /admin/users),
                 // fallback về danh sách washers nếu có.
@@ -341,7 +365,8 @@ export default function ManagerWorkOrdersPage() {
                         </div>
                       )}
 
-                      {/* Ảnh chụp kiểm định xe (Tách biệt Trước và Sau khi rửa - Không dùng Mock Ảnh) */}
+                      {/* Ảnh kiểm định xe (CHỈ XEM): thu ngân chụp trước khi rửa ở trang
+                          Lịch hẹn, thợ chụp sau khi rửa. Lưu theo orderId. */}
                       <div className='mt-3 border-t border-slate-100 pt-3 flex flex-col gap-3'>
                         {/* Trước khi rửa */}
                         <div>
@@ -349,11 +374,11 @@ export default function ManagerWorkOrdersPage() {
                             <Camera className='w-3.5 h-3.5 text-amber-500' />
                             Ảnh trước khi rửa (Trầy xước/Móp méo)
                           </p>
-                          {(inspectionPhotos[wo.id]?.preWash && inspectionPhotos[wo.id].preWash.length > 0) ? (
+                          {(inspectionPhotos[woOrderId]?.preWash && inspectionPhotos[woOrderId].preWash.length > 0) ? (
                             <div className='flex gap-2 overflow-x-auto pb-1 scrollbar-thin'>
-                              {inspectionPhotos[wo.id].preWash.map((photo, pIdx) => (
-                                <div 
-                                  key={pIdx} 
+                              {inspectionPhotos[woOrderId].preWash.map((photo, pIdx) => (
+                                <div
+                                  key={pIdx}
                                   onClick={() => setPreviewPhoto(photo)}
                                   className='relative w-12 h-12 rounded-lg overflow-hidden border border-slate-200 shadow-sm bg-slate-50 cursor-pointer hover:border-amber-500 transition-all shrink-0 group'
                                 >
@@ -376,11 +401,11 @@ export default function ManagerWorkOrdersPage() {
                             <Camera className='w-3.5 h-3.5 text-emerald-500' />
                             Ảnh sau khi rửa (Nghiệm thu sạch đẹp)
                           </p>
-                          {(inspectionPhotos[wo.id]?.postWash && inspectionPhotos[wo.id].postWash.length > 0) ? (
+                          {(inspectionPhotos[woOrderId]?.postWash && inspectionPhotos[woOrderId].postWash.length > 0) ? (
                             <div className='flex gap-2 overflow-x-auto pb-1 scrollbar-thin'>
-                              {inspectionPhotos[wo.id].postWash.map((photo, pIdx) => (
-                                <div 
-                                  key={pIdx} 
+                              {inspectionPhotos[woOrderId].postWash.map((photo, pIdx) => (
+                                <div
+                                  key={pIdx}
                                   onClick={() => setPreviewPhoto(photo)}
                                   className='relative w-12 h-12 rounded-lg overflow-hidden border border-slate-200 shadow-sm bg-slate-50 cursor-pointer hover:border-emerald-500 transition-all shrink-0 group'
                                 >
@@ -463,10 +488,11 @@ export default function ManagerWorkOrdersPage() {
                 <select
                   value={selectedWasherId}
                   onChange={(e) => setSelectedWasherId(e.target.value)}
-                  className='w-full appearance-none bg-white border border-slate-200 rounded-xl px-4 py-3 pr-10 text-sm font-semibold text-slate-700 focus:outline-none focus:border-indigo-500 transition-all'
+                  disabled={availableWashers.length === 0}
+                  className='w-full appearance-none bg-white border border-slate-200 rounded-xl px-4 py-3 pr-10 text-sm font-semibold text-slate-700 focus:outline-none focus:border-indigo-500 transition-all disabled:bg-slate-50 disabled:text-slate-400'
                 >
                   <option value=''>-- Chọn nhân viên đang rảnh --</option>
-                  {washers.map((w) => (
+                  {availableWashers.map((w) => (
                     <option key={w._id} value={w._id}>
                       {w.fullName ?? w.name} ({w.email})
                     </option>
@@ -474,6 +500,13 @@ export default function ManagerWorkOrdersPage() {
                 </select>
                 <ChevronDown className='absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none' />
               </div>
+              {availableWashers.length === 0 && (
+                <p className='mt-2 flex items-center gap-1.5 text-xs font-semibold text-amber-600'>
+                  <Clock className='w-3.5 h-3.5 shrink-0' />
+                  Tất cả thợ đang bận (được giao việc hoặc đang rửa). Vui lòng đợi
+                  thợ hoàn thành.
+                </p>
+              )}
             </div>
 
             <div className='flex gap-3 justify-end'>

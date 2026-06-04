@@ -1,7 +1,7 @@
 'use client';
 
 import { AdminTopbar } from '@/components/admin/AdminTopbar';
-import { adminGetOrders, adminMarkOrderPaid, adminUpdateOrderStatus } from '@/lib/admin-api';
+import { adminGetOrders, adminMarkOrderPaid, adminUpdateOrderStatus, adminCreateWorkOrder } from '@/lib/admin-api';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import {
@@ -54,16 +54,18 @@ export default function CashierPOSPage() {
 
   const orders: OrderData[] = ordersRes?.data?.data ?? ordersRes?.data ?? [];
 
-  // Mutation xử lý thanh toán
+  // Mutation xử lý thanh toán + check-in luôn (thu tiền là nhận xe vào bãi)
   const payMutation = useMutation({
     mutationFn: async (orderId: string) => {
       // 1. Đánh dấu đã thanh toán
       await adminMarkOrderPaid(orderId);
-      // 2. Chuyển trạng thái đơn hàng sang confirmed
-      await adminUpdateOrderStatus(orderId, 'confirmed');
+      // 2. Tạo phiếu rửa xe (check-in)
+      await adminCreateWorkOrder(orderId);
+      // 3. Chuyển trạng thái đơn hàng sang checked_in (đã nhận xe)
+      await adminUpdateOrderStatus(orderId, 'checked_in');
     },
     onSuccess: () => {
-      toast.success('Hóa đơn đã được thanh toán thành công!');
+      toast.success('Đã thu tiền & check-in! Phiếu rửa xe đã được tạo, xe vào bãi.');
       setIsPayOpen(false);
       setPayTarget(null);
       qc.invalidateQueries({ queryKey: ['cashier-pending-orders'] });
@@ -306,7 +308,7 @@ export default function CashierPOSPage() {
                 className='px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-bold text-xs transition-all shadow-md shadow-emerald-600/10 flex items-center gap-1.5'
               >
                 <CheckCircle2 className='w-4 h-4' />
-                Xác nhận đã thu tiền
+                Xác nhận thu tiền & check-in
               </button>
             </div>
           </div>
