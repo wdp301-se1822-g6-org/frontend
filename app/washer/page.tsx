@@ -25,7 +25,8 @@ import { toast } from 'sonner';
 
 interface WorkOrderData {
   id: string;
-  orderId: string;
+  // BE có thể trả orderId dạng chuỗi id hoặc object đã populate ({ _id }).
+  orderId: string | { _id?: string; id?: string };
   code: string;
   vehicleSnapshot?: {
     plate?: string;
@@ -258,7 +259,11 @@ export default function WasherDashboard() {
                 const plate = wo.vehicleSnapshot?.plate ?? '-';
                 const service = wo.serviceName ?? '-';
                 // Ảnh lưu theo orderId để khớp ảnh thu ngân chụp trước khi rửa.
-                const photoKey = wo.orderId;
+                // BE có thể populate orderId thành object -> chuẩn hoá về chuỗi id.
+                const photoKey =
+                  typeof wo.orderId === 'string'
+                    ? wo.orderId
+                    : (wo.orderId?._id ?? wo.orderId?.id ?? wo.id);
 
                 const isPending = wo.status === 'assigned' || wo.status === 'waiting';
                 const isInProgress = wo.status === 'in_progress' || wo.status === 'returned';

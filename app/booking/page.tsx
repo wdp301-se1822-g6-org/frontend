@@ -48,6 +48,20 @@ import type {
 
 type ServiceTypeItem = ServiceTypeBase & { _id?: string };
 
+// Khung Giờ Vàng hiển thị trên FE: sáng 8h–12h và chiều 13h–17h (1pm–5pm).
+// Dùng giờ địa phương (cùng múi giờ với giờ hiển thị của slot).
+const GOLDEN_HOUR_WINDOWS = [
+  { startHour: 8, endHour: 12 },
+  { startHour: 13, endHour: 17 },
+];
+
+const isGoldenHourSlot = (iso: string) => {
+  const hour = new Date(iso).getHours();
+  return GOLDEN_HOUR_WINDOWS.some(
+    (w) => hour >= w.startHour && hour < w.endHour
+  );
+};
+
 interface Vehicle {
   id?: string;
   _id?: string;
@@ -882,7 +896,7 @@ function BookingFlow() {
                           {availableSlots.map((slot: AvailableSlot) => {
                             const isSelected = slot.scheduledAt === selectedSlot;
                             const isFull = slot.remainingCapacity <= 0;
-                            const isGolden = slot.isGoldenHour && !isFull;
+                            const isGolden = isGoldenHourSlot(slot.scheduledAt) && !isFull;
                             // Format time from ISO
                             const timeStr = new Date(slot.scheduledAt).toLocaleTimeString('vi-VN', {
                               hour: '2-digit',
