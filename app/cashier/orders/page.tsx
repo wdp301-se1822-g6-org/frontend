@@ -69,7 +69,7 @@ export default function CashierOrdersPage() {
     localStorage.setItem('wave_inspection_photos', JSON.stringify(next));
   };
 
-  const handleUploadPre = (orderId: string, files: FileList | null) => {
+  const handleUploadPre = async (orderId: string, files: FileList | null) => {
     if (!files || files.length === 0) return;
     const raw = inspectionPhotos[orderId];
     const woPhotos =
@@ -77,22 +77,21 @@ export default function CashierOrdersPage() {
         ? raw
         : { preWash: [], postWash: [] };
     const current = Array.isArray(woPhotos.preWash) ? woPhotos.preWash : [];
-    Promise.all(
-      Array.from(files).map(
-        (file) =>
-          new Promise<string>((resolve) => {
-            const reader = new FileReader();
-            reader.onload = (e) => resolve(e.target?.result as string);
-            reader.readAsDataURL(file);
-          }),
-      ),
-    ).then((b64s) => {
+    
+    const toastId = toast.loading('Đang tải ảnh lên Cloudinary...');
+    try {
+      const { uploadImages } = await import('@/lib/upload-api');
+      const res = await uploadImages(files);
+      const urls = res.data.urls;
       savePhotos({
         ...inspectionPhotos,
-        [orderId]: { ...woPhotos, preWash: [...current, ...b64s] },
+        [orderId]: { ...woPhotos, preWash: [...current, ...urls] },
       });
-      toast.success(`Đã lưu ${b64s.length} ảnh trước khi rửa.`);
-    });
+      toast.success(`Đã tải lên thành công ${urls.length} ảnh trước khi rửa.`, { id: toastId });
+    } catch (err: unknown) {
+      const errMsg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message ?? 'Không thể tải ảnh lên.';
+      toast.error(`Lỗi tải ảnh: ${errMsg}`, { id: toastId });
+    }
   };
 
   const handleDeletePre = (orderId: string, idx: number) => {
@@ -223,11 +222,9 @@ export default function CashierOrdersPage() {
                       const s = statusConfig[o.status ?? ''] ?? { label: o.status, cls: 'bg-slate-100 text-slate-500' };
                       const orderId = o._id ?? o.id ?? '';
                       const isConfirmed = o.status === 'confirmed';
-                      // Xe đã nhận (check-in lúc thu tiền) -> cho chụp ảnh trước khi rửa.
-                      const isReceived =
-                        o.status === 'checked_in' ||
-                        o.status === 'in_progress' ||
-                        o.status === 'completed';
+                      // Chỉ cho phép chụp/xóa/sửa ảnh hiện trạng trước khi rửa khi ở trạng thái checked_in (chờ thợ nhận việc).
+                      // Đang rửa xe (in_progress) hay đã hoàn thành (completed) sẽ chuyển sang chế độ không khả dụng.
+                      const isCheckedIn = o.status === 'checked_in';
                       const preCount = inspectionPhotos[orderId]?.preWash?.length ?? 0;
 
                       return (
@@ -264,7 +261,7 @@ export default function CashierOrdersPage() {
                             </span>
                           </td>
                           <td className='px-5 py-4'>
-                            {isReceived ? (
+                            {isCheckedIn ? (
                               <button
                                 onClick={() => setPhotoTarget(o)}
                                 className='flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs transition-all shadow-sm shadow-amber-500/10 w-fit'
@@ -359,58 +356,71 @@ export default function CashierOrdersPage() {
                 </button>
               </div>
 
-              <div className='grid grid-cols-4 gap-3'>
-                {photos.map((photo, idx) => (
-                  <div
-                    key={idx}
-                    className='group relative aspect-square rounded-xl overflow-hidden border border-slate-200 shadow-sm bg-slate-50'
-                  >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={photo} alt='Pre-wash' className='w-full h-full object-cover' />
-                    <div className='absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2'>
-                      <button
-                        type='button'
-                        onClick={() => setPreviewPhoto(photo)}
-                        className='w-7 h-7 bg-white/90 hover:bg-white text-slate-700 rounded-lg flex items-center justify-center'
-                      >
-                        <Eye className='w-4 h-4' />
-                      </button>
-                      <button
-                        type='button'
-                        onClick={() => handleDeletePre(oid, idx)}
-                        className='w-7 h-7 bg-rose-500/90 hover:bg-rose-500 text-white rounded-lg flex items-center justify-center'
-                      >
-                        <Trash2 className='w-4 h-4' />
-                      </button>
+              {(() => {
+                const isReadOnly = photoTarget.status === 'in_progress' || photoTarget.status === 'completed';
+                return (
+                  <>
+                    <div className='grid grid-cols-4 gap-3'>
+                      {photos.map((photo, idx) => (
+                        <div
+                          key={idx}
+                          className='group relative aspect-square rounded-xl overflow-hidden border border-slate-200 shadow-sm bg-slate-50'
+                        >
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={photo} alt='Pre-wash' className='w-full h-full object-cover' />
+                          <div className='absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2'>
+                            <button
+                              type='button'
+                              onClick={() => setPreviewPhoto(photo)}
+                              className='w-7 h-7 bg-white/90 hover:bg-white text-slate-700 rounded-lg flex items-center justify-center'
+                            >
+                              <Eye className='w-4 h-4' />
+                            </button>
+                            {!isReadOnly && (
+                              <button
+                                type='button'
+                                onClick={() => handleDeletePre(oid, idx)}
+                                className='w-7 h-7 bg-rose-500/90 hover:bg-rose-500 text-white rounded-lg flex items-center justify-center'
+                              >
+                                <Trash2 className='w-4 h-4' />
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                      {!isReadOnly && (
+                        <label className='aspect-square rounded-xl border border-dashed border-slate-300 hover:border-amber-500 bg-slate-50/50 hover:bg-amber-50/30 cursor-pointer flex flex-col items-center justify-center gap-1 transition-all'>
+                          <Plus className='w-5 h-5 text-slate-400' />
+                          <span className='text-[10px] font-bold text-slate-500 uppercase tracking-wider'>
+                            Chụp/Thêm
+                          </span>
+                          <input
+                            type='file'
+                            multiple
+                            accept='image/*'
+                            capture='environment'
+                            className='hidden'
+                            onChange={(e) => handleUploadPre(oid, e.target.files)}
+                          />
+                        </label>
+                      )}
                     </div>
-                  </div>
-                ))}
-                <label className='aspect-square rounded-xl border border-dashed border-slate-300 hover:border-amber-500 bg-slate-50/50 hover:bg-amber-50/30 cursor-pointer flex flex-col items-center justify-center gap-1 transition-all'>
-                  <Plus className='w-5 h-5 text-slate-400' />
-                  <span className='text-[10px] font-bold text-slate-500 uppercase tracking-wider'>
-                    Chụp/Thêm
-                  </span>
-                  <input
-                    type='file'
-                    multiple
-                    accept='image/*'
-                    capture='environment'
-                    className='hidden'
-                    onChange={(e) => handleUploadPre(oid, e.target.files)}
-                  />
-                </label>
-              </div>
 
-              {photos.length === 0 && (
-                <p className='text-xs text-slate-500 italic mt-3 text-center'>
-                  Chưa có ảnh. Bấm ô “Chụp/Thêm” để chụp ảnh hiện trạng xe.
-                </p>
-              )}
+                    {photos.length === 0 && (
+                      <p className='text-xs text-slate-500 italic mt-3 text-center'>
+                        Chưa có ảnh. Bấm ô “Chụp/Thêm” để chụp ảnh hiện trạng xe.
+                      </p>
+                    )}
 
-              <div className='mt-5 flex items-center gap-2 text-[11px] text-slate-500 bg-slate-50 border border-slate-100 rounded-xl p-3'>
-                <AlertCircle className='w-3.5 h-3.5 shrink-0 text-amber-500' />
-                Ảnh sau khi rửa sẽ do thợ rửa chụp khi hoàn thành.
-              </div>
+                    <div className='mt-5 flex items-center gap-2 text-[11px] text-slate-500 bg-slate-50 border border-slate-100 rounded-xl p-3'>
+                      <AlertCircle className='w-3.5 h-3.5 shrink-0 text-amber-500' />
+                      {isReadOnly 
+                        ? 'Đơn hàng đang rửa hoặc đã hoàn tất. Bạn chỉ có quyền xem ảnh hiện trạng.'
+                        : 'Ảnh sau khi rửa sẽ do thợ rửa chụp khi hoàn thành.'}
+                    </div>
+                  </>
+                );
+              })()}
 
               <div className='mt-5 flex justify-end'>
                 <button
