@@ -69,7 +69,7 @@ export default function WasherDashboard() {
   });
   const [previewPhoto, setPreviewPhoto] = useState<string | null>(null);
 
-  const handleUploadPhotos = (woId: string, files: FileList | null, type: 'pre' | 'post') => {
+  const handleUploadPhotos = async (woId: string, files: FileList | null, type: 'pre' | 'post') => {
     if (!files) return;
     
     const rawWoPhotos = inspectionPhotos[woId];
@@ -81,18 +81,12 @@ export default function WasherDashboard() {
       ? (type === 'pre' ? woPhotos.preWash : woPhotos.postWash)
       : [];
     
-    const filePromises = Array.from(files).map(file => {
-      return new Promise<string>((resolve) => {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          resolve(e.target?.result as string);
-        };
-        reader.readAsDataURL(file);
-      });
-    });
-    
-    Promise.all(filePromises).then(newBase64s => {
-      const updatedList = [...currentList, ...newBase64s];
+    const toastId = toast.loading('Đang tải ảnh lên Cloudinary...');
+    try {
+      const { uploadImages } = await import('@/lib/upload-api');
+      const res = await uploadImages(files);
+      const urls = res.data.urls;
+      const updatedList = [...currentList, ...urls];
       const updatedWoPhotos = {
         ...woPhotos,
         [type === 'pre' ? 'preWash' : 'postWash']: updatedList
@@ -100,8 +94,11 @@ export default function WasherDashboard() {
       const newMap = { ...inspectionPhotos, [woId]: updatedWoPhotos };
       setInspectionPhotos(newMap);
       localStorage.setItem('wave_inspection_photos', JSON.stringify(newMap));
-      toast.success(`Đã lưu thêm ${newBase64s.length} ảnh ${type === 'pre' ? 'trước khi rửa' : 'sau khi rửa'}!`);
-    });
+      toast.success(`Đã tải lên thành công ${urls.length} ảnh ${type === 'pre' ? 'trước khi rửa' : 'sau khi rửa'}!`, { id: toastId });
+    } catch (err: unknown) {
+      const errMsg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message ?? 'Không thể tải ảnh lên.';
+      toast.error(`Lỗi tải ảnh: ${errMsg}`, { id: toastId });
+    }
   };
 
   const handleDeletePhoto = (woId: string, photoIdx: number, type: 'pre' | 'post') => {
@@ -164,7 +161,11 @@ export default function WasherDashboard() {
 
   // Mutation Hoàn thành rửa xe
   const finishWashMutation = useMutation({
-    mutationFn: async (woId: string) => {
+    mutationFn: async ({ woId, currentStatus }: { woId: string; currentStatus: string }) => {
+      if (currentStatus === 'returned') {
+        await washerStartWorkOrder(woId);
+        await new Promise((resolve) => setTimeout(resolve, 350));
+      }
       await washerFinishWorkOrder(woId);
     },
     onSuccess: () => {
@@ -265,8 +266,8 @@ export default function WasherDashboard() {
                     ? wo.orderId
                     : (wo.orderId?._id ?? wo.orderId?.id ?? wo.id);
 
-                const isPending = wo.status === 'assigned' || wo.status === 'waiting';
-                const isInProgress = wo.status === 'in_progress' || wo.status === 'returned';
+                const isPending = wo.status === 'assigned' || wo.status === 'waiting' || wo.status === 'returned';
+                const isInProgress = wo.status === 'in_progress';
                 const isCompleted = wo.status === 'quality_check' || wo.status === 'done';
 
                 // Lấy checklist hiện tại cho order này
@@ -301,8 +302,10 @@ export default function WasherDashboard() {
                         isInProgress ? 'bg-indigo-50 text-indigo-700 border border-indigo-100 animate-pulse' :
                         'bg-emerald-50 text-emerald-700 border border-emerald-100'
                       }`}>
-                        {isPending && 'Được giao việc'}
-                        {isInProgress && (wo.status === 'returned' ? 'QC Không đạt (Rửa lại)' : 'Đang tiến hành rửa')}
+                        {wo.status === 'waiting' && 'Chờ phân công'}
+                        {wo.status === 'assigned' && 'Được giao việc'}
+                        {wo.status === 'returned' && 'QC Không đạt (Rửa lại)'}
+                        {isInProgress && 'Đang tiến hành rửa'}
                         {wo.status === 'quality_check' && 'Chờ QC'}
                         {wo.status === 'done' && 'Hoàn thành sạch đẹp'}
                       </span>
@@ -314,7 +317,9 @@ export default function WasherDashboard() {
                       {isPending && (
                         <div className='text-center py-6 max-w-sm mx-auto'>
                           <p className='text-slate-500 text-sm mb-4 leading-relaxed font-medium'>
-                            Xe đã được Cashier giao cho bạn phụ trách. Hãy click &quot;Bắt đầu làm việc&quot; để nhận xe vào khoang rửa.
+                            {wo.status === 'returned' 
+                              ? 'Xe không đạt tiêu chuẩn kiểm định QC. Hãy click "Bắt đầu làm việc" để tiến hành rửa lại.'
+                              : 'Xe đã được giao cho bạn phụ trách. Hãy click "Bắt đầu làm việc" để nhận xe vào khoang rửa.'}
                           </p>
                           <button
                             onClick={() => startWashMutation.mutate(wo.id)}
@@ -480,7 +485,7 @@ export default function WasherDashboard() {
                             )}
 
                             <button
-                              onClick={() => finishWashMutation.mutate(wo.id)}
+                              onClick={() => finishWashMutation.mutate({ woId: wo.id, currentStatus: wo.status })}
                               disabled={finishWashMutation.isPending}
                               className={`w-full py-3.5 rounded-2xl font-black text-sm text-white transition-all shadow-lg flex items-center justify-center gap-1.5 ${
                                 checkedCount === WASH_STEPS.length
