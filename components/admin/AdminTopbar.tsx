@@ -1,6 +1,6 @@
 'use client';
 
-import { Bell, Search } from 'lucide-react';
+import { Bell } from 'lucide-react';
 
 interface AdminTopbarProps {
   title: string;

@@ -355,7 +355,7 @@ export default function CashierOrdersPage() {
 
               {checkInPhotos.length === 0 && (
                 <p className='text-xs text-slate-500 italic mt-3 text-center'>
-                  Chưa có ảnh. Bấm ô "Chụp/Thêm" để chụp ảnh hiện trạng xe trước khi check-in.
+                  Chưa có ảnh. Bấm ô &quot;Chụp/Thêm&quot; để chụp ảnh hiện trạng xe trước khi check-in.
                 </p>
               )}
 

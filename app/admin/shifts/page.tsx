@@ -455,8 +455,8 @@ export default function AdminShiftsPage() {
     },
   });
 
-  const shifts: Shift[] = shiftsRes?.data?.data ?? shiftsRes?.data ?? [];
-  const staffList: UserData[] = usersRes ?? [];
+  const shifts: Shift[] = useMemo(() => shiftsRes?.data?.data ?? shiftsRes?.data ?? [], [shiftsRes]);
+  const staffList: UserData[] = useMemo(() => usersRes ?? [], [usersRes]);
 
   const [saving, setSaving] = useState(false);
 

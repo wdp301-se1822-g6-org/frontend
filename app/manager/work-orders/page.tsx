@@ -239,7 +239,7 @@ export default function ManagerWorkOrdersPage() {
     queryFn: () => adminGetWorkOrders(),
     refetchInterval: 30_000,
   });
-  const all: WorkOrder[] = data?.data?.data ?? data?.data ?? [];
+  const all: WorkOrder[] = useMemo(() => data?.data?.data ?? data?.data ?? [], [data]);
 
   // ── Derived ──
   const dateFiltered = useMemo(

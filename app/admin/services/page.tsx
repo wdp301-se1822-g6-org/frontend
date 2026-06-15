@@ -330,8 +330,8 @@ export default function AdminServicesPage() {
   const toggleSvc = useMutation({ mutationFn: ({ id, isActive }: { id: string; isActive: boolean }) => adminToggleServiceType(id, isActive), onSuccess: () => qc.invalidateQueries({ queryKey: ['admin-service-types'] }) });
   const toggleVeh = useMutation({ mutationFn: ({ id, isActive }: { id: string; isActive: boolean }) => adminToggleVehicleType(id, isActive), onSuccess: () => qc.invalidateQueries({ queryKey: ['admin-vehicle-types'] }) });
 
-  const services: ServiceType[] = svcData?.data?.data ?? svcData?.data ?? [];
-  const vehicles: VehicleType[] = vehData?.data?.data ?? vehData?.data ?? [];
+  const services: ServiceType[] = useMemo(() => svcData?.data?.data ?? svcData?.data ?? [], [svcData]);
+  const vehicles: VehicleType[] = useMemo(() => vehData?.data?.data ?? vehData?.data ?? [], [vehData]);
 
   // Mở/đóng modal kèm reset lỗi cũ của mutation để không hiện thông báo lỗi tồn đọng.
   const openModal = (s: ServiceType | null) => { createSvc.reset(); updateSvc.reset(); setEditService(s); };
