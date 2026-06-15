@@ -88,6 +88,7 @@ export const createOrder = (data: {
 // ─── Order Price Preview (Customer) ────────────────────
 export const previewOrder = (data: {
   serviceTypeId: string;
+  vehicleTypeId: string;
   scheduledAt: string;
   voucherId?: string;
 }) => axiosInstance.post('/me/orders/preview', data);
@@ -109,6 +110,7 @@ export const cancelOrder = (id: string, data: { reason?: string }) =>
 // ─── Available Slots & Shifts ──────────────────────────
 export const getAvailableSlots = (params: {
   serviceTypeId: string;
+  vehicleTypeId: string;
   from: string;
   to: string;
 }) => axiosInstance.get('/me/orders/available-slots', { params });
