@@ -84,22 +84,29 @@ export const useCancelOrder = () => {
 
 export const useAvailableSlots = (params: {
   serviceTypeId: string;
+  vehicleTypeId: string;
   from: string;
   to: string;
   enabled?: boolean;
 }) => {
   return useQuery({
-    queryKey: ['available-slots', params.serviceTypeId, params.from, params.to],
+    queryKey: ['available-slots', params.serviceTypeId, params.vehicleTypeId, params.from, params.to],
     queryFn: async () => {
-      if (!params.serviceTypeId || !params.from || !params.to) return [];
+      if (!params.serviceTypeId || !params.vehicleTypeId || !params.from || !params.to) return [];
       const res = await getAvailableSlots({
         serviceTypeId: params.serviceTypeId,
+        vehicleTypeId: params.vehicleTypeId,
         from: params.from,
         to: params.to,
       });
       return res.data || [];
     },
-    enabled: params.enabled !== false && !!params.serviceTypeId && !!params.from && !!params.to,
+    enabled:
+      params.enabled !== false &&
+      !!params.serviceTypeId &&
+      !!params.vehicleTypeId &&
+      !!params.from &&
+      !!params.to,
   });
 };
 
@@ -150,6 +157,7 @@ export const useMyLoyalty = () => {
  */
 export const usePreviewOrder = (params: {
   serviceTypeId: string;
+  vehicleTypeId: string;
   scheduledAt: string;
   voucherId?: string;
   enabled?: boolean;
@@ -158,13 +166,15 @@ export const usePreviewOrder = (params: {
     queryKey: [
       'order-preview',
       params.serviceTypeId,
+      params.vehicleTypeId,
       params.scheduledAt,
       params.voucherId ?? null,
     ],
     queryFn: async (): Promise<PreviewOrderResponse | null> => {
-      if (!params.serviceTypeId || !params.scheduledAt) return null;
+      if (!params.serviceTypeId || !params.vehicleTypeId || !params.scheduledAt) return null;
       const res = await previewOrder({
         serviceTypeId: params.serviceTypeId,
+        vehicleTypeId: params.vehicleTypeId,
         scheduledAt: params.scheduledAt,
         voucherId: params.voucherId,
       });
@@ -173,6 +183,7 @@ export const usePreviewOrder = (params: {
     enabled:
       params.enabled !== false &&
       !!params.serviceTypeId &&
+      !!params.vehicleTypeId &&
       !!params.scheduledAt,
   });
 };
