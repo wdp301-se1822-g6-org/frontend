@@ -1,10 +1,10 @@
 'use client';
 
 import { AdminTopbar } from '@/components/admin/AdminTopbar';
-import { adminGetOrders, adminCreateWorkOrder, adminUpdateOrderStatus } from '@/lib/admin-api';
+import { adminGetOrders, adminCreateWorkOrder } from '@/lib/admin-api';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
-import { Search, RefreshCw, ChevronDown, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Search, RefreshCw, ChevronDown, CheckCircle2, AlertCircle, Camera, Plus, Trash2, Eye, X } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface OrderData {
@@ -43,6 +43,37 @@ export default function ManagerOrdersPage() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [page, setPage] = useState(1);
 
+  // Check-in kèm ảnh hiện trạng: thu ngân chụp ảnh xe rồi mới xác nhận. Ảnh được
+  // upload lên Cloudinary và gửi kèm khi tạo Work Order (BE lưu vào checkinPhotos,
+  // hiển thị lại ở trang QC). Không dùng localStorage.
+  const [checkInTarget, setCheckInTarget] = useState<OrderData | null>(null);
+  const [checkInPhotos, setCheckInPhotos] = useState<string[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
+  const [previewPhoto, setPreviewPhoto] = useState<string | null>(null);
+
+  const openCheckIn = (o: OrderData) => {
+    setCheckInTarget(o);
+    setCheckInPhotos([]);
+  };
+
+  const handleUploadCheckIn = async (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+    setIsUploading(true);
+    const toastId = toast.loading('Đang tải ảnh lên Cloudinary...');
+    try {
+      const { uploadImages } = await import('@/lib/upload-api');
+      const res = await uploadImages(files);
+      const urls = res.data.urls;
+      setCheckInPhotos((prev) => [...prev, ...urls]);
+      toast.success(`Đã tải lên ${urls.length} ảnh hiện trạng.`, { id: toastId });
+    } catch (err: unknown) {
+      const errMsg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message ?? 'Không thể tải ảnh lên.';
+      toast.error(`Lỗi tải ảnh: ${errMsg}`, { id: toastId });
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
   const { data, isLoading, refetch, isRefetching } = useQuery({
     queryKey: ['manager-orders', page, statusFilter],
     queryFn: () => adminGetOrders({
@@ -51,16 +82,18 @@ export default function ManagerOrdersPage() {
     }),
   });
 
-  // Mutation check-in khách hàng
+  // Mutation check-in khách hàng (kèm ảnh hiện trạng)
   const checkInMutation = useMutation({
-    mutationFn: async (orderId: string) => {
-      // 1. Tạo Work Order (Check-in)
-      await adminCreateWorkOrder(orderId);
-      // 2. Tự động chuyển trạng thái Order sang checked_in
-      await adminUpdateOrderStatus(orderId, 'checked_in');
+    mutationFn: async ({ orderId, photos }: { orderId: string; photos: string[] }) => {
+      // Tạo Work Order = Check-in. BE tự chuyển đơn CONFIRMED → CHECKED_IN
+      // (và mark PAID nếu đơn tiền mặt), nên không cần gọi updateOrderStatus.
+      // Ảnh hiện trạng được gửi kèm vào checkinPhotos để lưu trên work order.
+      await adminCreateWorkOrder(orderId, photos);
     },
     onSuccess: () => {
       toast.success('Check-in khách hàng thành công! Đã tạo phiếu rửa xe.');
+      setCheckInTarget(null);
+      setCheckInPhotos([]);
       qc.invalidateQueries({ queryKey: ['manager-orders'] });
       qc.invalidateQueries({ queryKey: ['manager-dashboard-workorders'] });
     },
@@ -161,6 +194,7 @@ export default function ManagerOrdersPage() {
                       
                       const orderId = o._id ?? o.id ?? '';
                       const isConfirmed = o.status === 'confirmed';
+                      const isReceived = o.status === 'checked_in' || o.status === 'in_progress' || o.status === 'completed';
 
                       return (
                         <tr key={orderId} className='hover:bg-slate-50/20 transition-colors'>
@@ -198,14 +232,13 @@ export default function ManagerOrdersPage() {
                           <td className='px-5 py-4'>
                             {isConfirmed ? (
                               <button
-                                onClick={() => checkInMutation.mutate(orderId)}
-                                disabled={checkInMutation.isPending}
+                                onClick={() => openCheckIn(o)}
                                 className='flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-bold text-xs transition-all shadow-sm'
                               >
                                 <CheckCircle2 className='w-3.5 h-3.5' />
                                 Check-in xe
                               </button>
-                            ) : o.status === 'checked_in' || o.status === 'in_progress' || o.status === 'completed' ? (
+                            ) : isReceived ? (
                               <span className='text-xs font-bold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-100 flex items-center gap-1 w-fit'>
                                 <CheckCircle2 className='w-3.5 h-3.5' /> Đã nhận xe
                               </span>
@@ -246,6 +279,139 @@ export default function ManagerOrdersPage() {
           </div>
         </div>
       </main>
+
+      {/* ── MODAL: Check-in xe kèm ảnh hiện trạng ── */}
+      {checkInTarget && (() => {
+        const oid = checkInTarget._id ?? checkInTarget.id ?? '';
+        const plate = checkInTarget.vehicleId?.licensePlate ?? checkInTarget.licensePlate ?? '-';
+        return (
+          <div
+            className='fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4'
+            onClick={() => !checkInMutation.isPending && setCheckInTarget(null)}
+          >
+            <div
+              className='bg-white rounded-3xl border border-slate-100 shadow-2xl p-6 max-w-lg w-full animate-in fade-in zoom-in-95 duration-150'
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className='flex items-center justify-between mb-4'>
+                <div className='flex items-center gap-3 text-indigo-600'>
+                  <div className='w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center'>
+                    <Camera className='w-5 h-5' />
+                  </div>
+                  <div>
+                    <h3 className='font-heading font-black text-slate-800 text-base'>
+                      Check-in xe
+                    </h3>
+                    <p className='text-xs text-slate-500'>
+                      Xe <span className='font-mono font-bold'>{plate}</span> · chụp tình
+                      trạng trầy xước/móp méo khi nhận xe
+                    </p>
+                  </div>
+                </div>
+                <button onClick={() => !checkInMutation.isPending && setCheckInTarget(null)} aria-label='Đóng'>
+                  <X className='w-5 h-5 text-slate-400' />
+                </button>
+              </div>
+
+              <div className='grid grid-cols-4 gap-3'>
+                {checkInPhotos.map((photo, idx) => (
+                  <div
+                    key={idx}
+                    className='group relative aspect-square rounded-xl overflow-hidden border border-slate-200 shadow-sm bg-slate-50'
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={photo} alt='Hiện trạng xe' className='w-full h-full object-cover' />
+                    <div className='absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2'>
+                      <button
+                        type='button'
+                        onClick={() => setPreviewPhoto(photo)}
+                        className='w-7 h-7 bg-white/90 hover:bg-white text-slate-700 rounded-lg flex items-center justify-center'
+                      >
+                        <Eye className='w-4 h-4' />
+                      </button>
+                      <button
+                        type='button'
+                        onClick={() => setCheckInPhotos((prev) => prev.filter((_, i) => i !== idx))}
+                        className='w-7 h-7 bg-rose-500/90 hover:bg-rose-500 text-white rounded-lg flex items-center justify-center'
+                      >
+                        <Trash2 className='w-4 h-4' />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+                <label className='aspect-square rounded-xl border border-dashed border-slate-300 hover:border-indigo-500 bg-slate-50/50 hover:bg-indigo-50/30 cursor-pointer flex flex-col items-center justify-center gap-1 transition-all'>
+                  <Plus className='w-5 h-5 text-slate-400' />
+                  <span className='text-[10px] font-bold text-slate-500 uppercase tracking-wider'>
+                    Chụp/Thêm
+                  </span>
+                  <input
+                    type='file'
+                    multiple
+                    accept='image/*'
+                    capture='environment'
+                    className='hidden'
+                    disabled={isUploading || checkInMutation.isPending}
+                    onChange={(e) => handleUploadCheckIn(e.target.files)}
+                  />
+                </label>
+              </div>
+
+              {checkInPhotos.length === 0 && (
+                <p className='text-xs text-slate-500 italic mt-3 text-center'>
+                  Chưa có ảnh. Bấm ô “Chụp/Thêm” để chụp ảnh hiện trạng xe trước khi check-in.
+                </p>
+              )}
+
+              <div className='mt-5 flex items-center gap-2 text-[11px] text-slate-500 bg-slate-50 border border-slate-100 rounded-xl p-3'>
+                <AlertCircle className='w-3.5 h-3.5 shrink-0 text-indigo-500' />
+                Ảnh hiện trạng sẽ được lưu vào phiếu rửa và hiển thị lại khi QC. Ảnh sau khi
+                rửa do thợ rửa chụp lúc hoàn thành.
+              </div>
+
+              <div className='mt-5 flex justify-end gap-2'>
+                <button
+                  onClick={() => setCheckInTarget(null)}
+                  disabled={checkInMutation.isPending}
+                  className='px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-50 font-bold text-xs'
+                >
+                  Hủy
+                </button>
+                <button
+                  onClick={() => checkInMutation.mutate({ orderId: oid, photos: checkInPhotos })}
+                  disabled={checkInMutation.isPending || isUploading}
+                  className='flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-bold text-xs transition-all shadow-sm'
+                >
+                  <CheckCircle2 className='w-3.5 h-3.5' />
+                  {checkInMutation.isPending ? 'Đang check-in...' : 'Xác nhận check-in'}
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* Lightbox xem ảnh phóng to */}
+      {previewPhoto && (
+        <div
+          className='fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-[60] flex items-center justify-center p-4'
+          onClick={() => setPreviewPhoto(null)}
+        >
+          <div className='relative max-w-3xl w-full max-h-[85vh] flex items-center justify-center'>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={previewPhoto}
+              alt='Xem ảnh'
+              className='rounded-2xl max-w-full max-h-[80vh] object-contain shadow-2xl border border-white/10'
+            />
+            <button
+              onClick={() => setPreviewPhoto(null)}
+              className='absolute top-3 right-3 bg-black/50 hover:bg-black text-white text-xs font-bold px-3 py-1.5 rounded-xl'
+            >
+              Đóng (Esc)
+            </button>
+          </div>
+        </div>
+      )}
     </>
   );
 }

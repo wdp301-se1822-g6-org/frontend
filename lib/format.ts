@@ -47,6 +47,14 @@ export function formatDateTime(value: string | Date | null | undefined): string 
   });
 }
 
+/** True nếu ngày (theo lịch) nằm sau hôm nay. Bỏ qua phần giờ. */
+export function isFutureDay(value: string | Date | null | undefined): boolean {
+  if (!value) return false;
+  const d = value instanceof Date ? new Date(value) : new Date(value);
+  if (Number.isNaN(d.getTime())) return false;
+  return d.setHours(0, 0, 0, 0) > new Date().setHours(0, 0, 0, 0);
+}
+
 /**
  * Lấy chữ viết tắt từ tên (tối đa 2 chữ cái cuối).
  * Gom logic đang lặp ở `Navbar.tsx`, `ProfileSidebar.tsx`, `app/profile/page.tsx`.

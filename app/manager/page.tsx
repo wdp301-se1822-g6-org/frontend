@@ -44,8 +44,6 @@ interface ShiftRow {
   id?: string;
   startAt?: string;
   stationName?: string;
-  maxBookings?: number;
-  currentBookings?: number;
 }
 
 const STATUS_LABELS: Record<string, string> = {
@@ -118,11 +116,9 @@ export default function ManagerOverviewPage() {
   ).length;
 
   const todayStr = new Date().toDateString();
-  const fullSlots = shifts.filter((s) => {
-    if (!s.startAt || !s.maxBookings) return false;
-    if (new Date(s.startAt).toDateString() !== todayStr) return false;
-    return (s.currentBookings ?? 0) / s.maxBookings >= 0.8;
-  });
+  const todayShifts = shifts.filter(
+    (s) => s.startAt && new Date(s.startAt).toDateString() === todayStr,
+  );
 
   const activeWorkOrders = workOrders.filter((w) => w.status !== 'done');
   const qcDone = workOrders.filter((w) => w.qcPassed != null);
@@ -175,11 +171,11 @@ export default function ManagerOverviewPage() {
               />
               <AlertCard
                 icon={Clock}
-                count={fullSlots.length}
-                label='Ca sắp đầy hôm nay'
-                sub='Lấp đầy từ 80% trở lên'
+                count={todayShifts.length}
+                label='Ca làm việc hôm nay'
+                sub='Ca trực đã phân công'
                 href='/manager/shifts'
-                active={fullSlots.length > 0}
+                active={todayShifts.length > 0}
               />
             </div>
           </section>

@@ -75,9 +75,16 @@ export interface StaffShift {
   startAt: string;
   endAt: string;
   status: 'scheduled' | 'active' | 'completed' | 'cancelled';
-  maxBookings: number;
-  currentBookings: number;
   note?: string;
+}
+
+/** Giá & thời lượng của một dịch vụ cho MỘT loại xe cụ thể (BE: VehiclePricingResponseDto). */
+export interface VehiclePricing {
+  vehicleTypeId: string;
+  vehicleTypeName?: string;
+  price: string; // string representation of number from BE
+  estimatedMinutes: number;
+  isActive: boolean;
 }
 
 export interface ServiceType {
@@ -89,6 +96,8 @@ export interface ServiceType {
   pointsMultiplier: number;
   checklistTemplate: string[];
   isVoucherEligible?: boolean;
+  /** Danh sách loại xe mà dịch vụ này áp dụng (kèm giá/thời lượng riêng). */
+  vehiclePricing?: VehiclePricing[];
   isActive: boolean;
 }
 
@@ -113,6 +122,7 @@ export interface Voucher {
 /** Khớp `POST /me/orders/preview` → PreviewOrderResponseDto (BE). */
 export interface PreviewOrderResponse {
   originalAmount: number;
+  estimatedMinutes?: number;
   discountAmount: number;
   discountPercent: number;
   discountReason?: string;

@@ -105,8 +105,9 @@ export const adminCreateShift = (data: Record<string, unknown>) =>
 export const adminUpdateShift = (id: string, data: Record<string, unknown>) =>
   axiosInstance.patch(`/admin/shifts/${id}`, data);
 
-export const adminToggleShift = (id: string, isActive: boolean) =>
-  axiosInstance.patch(`/admin/shifts/${id}/status`, { isActive });
+// Cập nhật trạng thái ca trực. status ∈ scheduled | active | completed | cancelled
+export const adminToggleShift = (id: string, status: string) =>
+  axiosInstance.patch(`/admin/shifts/${id}/status`, { status });
 
 // ─── Vehicles ──────────────────────────────────────────
 export const adminGetVehicles = (params?: Record<string, unknown>) =>
@@ -116,8 +117,14 @@ export const adminGetVehicle = (id: string) =>
   axiosInstance.get(`/admin/vehicles/${id}`);
 
 // ─── Work Orders (Manager) ──────────────────────────────
-export const adminCreateWorkOrder = (orderId: string) =>
-  axiosInstance.post('/admin/work-orders', { orderId });
+// Check-in: tạo phiếu rửa từ đơn đã xác nhận. BE tự chuyển đơn
+// CONFIRMED → CHECKED_IN (và mark PAID nếu đơn tiền mặt), nên KHÔNG
+// cần gọi thêm updateOrderStatus. checkinPhotos là ảnh hiện trạng xe (tuỳ chọn).
+export const adminCreateWorkOrder = (orderId: string, checkinPhotos?: string[]) =>
+  axiosInstance.post('/admin/work-orders', {
+    orderId,
+    ...(checkinPhotos?.length ? { checkinPhotos } : {}),
+  });
 
 export const adminGetWorkOrders = (params?: Record<string, unknown>) =>
   axiosInstance.get('/admin/work-orders', { params });
