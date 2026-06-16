@@ -72,6 +72,7 @@ interface WorkOrder {
   serviceName?: string;
   scheduledAt?: string;
   checkinPhotos?: string[];
+  checkoutPhotos?: string[];
   vehicleSnapshot?: { plate?: string };
   priorityLevel?: number;
 }
@@ -231,7 +232,7 @@ export default function ManagerWorkOrdersPage() {
     queryFn: () => adminGetWorkOrder(detailId!),
     enabled: !!detailId,
   });
-  const detail: (WorkOrder & { checkoutPhotos?: string[] }) | null =
+  const detailRaw: (WorkOrder & { checkoutPhotos?: string[] }) | null =
     detailData?.data ?? null;
 
   const { data, isLoading, refetch, isRefetching } = useQuery({
@@ -240,6 +241,10 @@ export default function ManagerWorkOrdersPage() {
     refetchInterval: 30_000,
   });
   const all: WorkOrder[] = useMemo(() => data?.data?.data ?? data?.data ?? [], [data]);
+
+  const detail = detailRaw
+    ? { ...detailRaw, assignedWasherName: detailRaw.assignedWasherName ?? all.find((wo) => wo.id === detailId)?.assignedWasherName }
+    : null;
 
   // ── Derived ──
   const dateFiltered = useMemo(
@@ -676,6 +681,32 @@ export default function ManagerWorkOrdersPage() {
             </div>
           ) : null}
 
+          {qcTarget?.checkoutPhotos?.length ? (
+            <div className='space-y-2'>
+              <Label className='flex items-center gap-1 text-xs font-bold uppercase tracking-wider text-muted-foreground'>
+                <CheckCircle2 className='size-3.5' /> Ảnh sau khi rửa (
+                {qcTarget.checkoutPhotos.length})
+              </Label>
+              <div className='flex flex-wrap gap-2'>
+                {qcTarget.checkoutPhotos.map((u, i) => (
+                  <button
+                    key={i}
+                    type='button'
+                    onClick={() => setPreview(u)}
+                    className='size-16 overflow-hidden rounded-lg border hover:opacity-80 transition-opacity'
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={u}
+                      alt=''
+                      className='size-full object-cover'
+                    />
+                  </button>
+                ))}
+              </div>
+            </div>
+          ) : null}
+
           <div className='grid grid-cols-2 gap-3'>
             <Button
               type='button'
@@ -997,19 +1028,21 @@ function WOCard({
 
       {/* Row 4: actions */}
       <div className='flex gap-1.5'>
-        <Button
-          variant='outline'
-          size='sm'
-          onClick={onDetail}
-          className='flex-1 h-6 text-xs gap-1.5 px-2'
-        >
-          Chi tiết
-          {wo.checkinPhotos?.length ? (
-            <span className='inline-flex size-4 items-center justify-center rounded-full bg-amber-100 text-[9px] font-black text-amber-700'>
-              {wo.checkinPhotos.length}
-            </span>
-          ) : null}
-        </Button>
+        {wo.status !== 'quality_check' && (
+          <Button
+            variant='outline'
+            size='sm'
+            onClick={onDetail}
+            className='flex-1 h-6 text-xs gap-1.5 px-2'
+          >
+            Chi tiết
+            {wo.checkinPhotos?.length ? (
+              <span className='inline-flex size-4 items-center justify-center rounded-full bg-amber-100 text-[9px] font-black text-amber-700'>
+                {wo.checkinPhotos.length}
+              </span>
+            ) : null}
+          </Button>
+        )}
         {wo.status === 'quality_check' && (
           <Button
             size='sm'
