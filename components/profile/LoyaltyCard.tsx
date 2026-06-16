@@ -50,6 +50,9 @@ export const tierStyles: Record<
   },
 };
 
+const fallbackExpiryDate = new Date();
+fallbackExpiryDate.setFullYear(fallbackExpiryDate.getFullYear() + 1);
+
 export default function LoyaltyCard({
   loyalty,
 }: {
@@ -117,7 +120,7 @@ export default function LoyaltyCard({
             <Calendar className='w-3 h-3' /> Hạn Dùng Điểm
           </p>
           <p className='text-sm font-bold'>
-            {formatDate(loyalty?.pointsExpireAt)}
+            {formatDate(loyalty?.lastAnnualResetAt ?? fallbackExpiryDate)}
           </p>
         </div>
       </div>
