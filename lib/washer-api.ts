@@ -27,5 +27,5 @@ export const washerUpdateChecklist = (id: string, checklist: unknown) =>
 /**
  * Hoàn thành rửa xe, chuyển trạng thái cho Cashier/Manager đánh giá QC
  */
-export const washerFinishWorkOrder = (id: string) =>
-  axiosInstance.patch(`/me/work-orders/${id}/finish`);
+export const washerFinishWorkOrder = (id: string, checkoutPhotos: string[]) =>
+  axiosInstance.patch(`/me/work-orders/${id}/finish`, { checkoutPhotos });
