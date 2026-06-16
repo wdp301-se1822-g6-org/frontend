@@ -133,12 +133,9 @@ function VoucherCard({ v }: { v: Voucher }) {
 
 export default function MyVoucherPage() {
   const [filter, setFilter] = useState<FilterKey>('all');
-  const { data: vouchers = [], isLoading, error } = useVouchers();
-
-  const filtered =
-    filter === 'all'
-      ? vouchers
-      : vouchers.filter((v) => effectiveStatus(v) === filter);
+  const { data: vouchers = [], isLoading, error } = useVouchers(
+    filter === 'all' ? undefined : filter,
+  );
 
   return (
     <div className='space-y-6 animate-fade-in'>
@@ -186,7 +183,7 @@ export default function MyVoucherPage() {
             Không thể tải danh sách voucher. Vui lòng thử lại sau.
           </p>
         </div>
-      ) : filtered.length === 0 ? (
+      ) : vouchers.length === 0 ? (
         <EmptyState
           icon={Ticket}
           title='Chưa có voucher nào'
@@ -194,7 +191,7 @@ export default function MyVoucherPage() {
         />
       ) : (
         <div className='grid grid-cols-1 md:grid-cols-2 gap-5'>
-          {filtered.map((v) => (
+          {vouchers.map((v) => (
             <VoucherCard key={v.id} v={v} />
           ))}
         </div>

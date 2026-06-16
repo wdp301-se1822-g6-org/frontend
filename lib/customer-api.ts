@@ -45,7 +45,10 @@ export const getMyLoyaltyTransactions = () =>
   axiosInstance.get(ENDPOINTS.loyalty.transactions);
 
 // ─── Vouchers (Customer) ───────────────────────────────
-export const getMyVouchers = () => axiosInstance.get(ENDPOINTS.vouchers.mine);
+export const getMyVouchers = (status?: 'unused' | 'used' | 'expired') =>
+  axiosInstance.get(ENDPOINTS.vouchers.mine, {
+    params: status ? { status } : {},
+  });
 
 export const getMyVoucher = (id: string) =>
   axiosInstance.get(ENDPOINTS.vouchers.byId(id));

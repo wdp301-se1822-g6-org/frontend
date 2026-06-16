@@ -47,7 +47,7 @@ const menuItems = [
     title: 'Voucher của tôi',
     icon: Ticket,
     color: 'text-blue-500',
-    href: '/profile/vouchers',
+    href: '/profile/my-voucher',
   },
 ];
 
