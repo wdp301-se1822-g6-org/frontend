@@ -10,7 +10,6 @@ import {
 } from '@/lib/admin-api';
 import { getErrorMessage } from '@/lib/getErrorMessage';
 import { formatCurrency } from '@/lib/format';
-import type { Voucher } from '@/types/order';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMemo, useState } from 'react';
 import {
@@ -23,6 +22,7 @@ import {
   AlertCircle,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { Voucher } from '@/types/voucher';
 
 type VoucherMode = 'admin' | 'manager';
 
@@ -38,9 +38,18 @@ interface CustomerLite {
 }
 
 const statusConfig: Record<string, { label: string; cls: string }> = {
-  unused: { label: 'Chưa dùng', cls: 'bg-emerald-50 text-emerald-700 border border-emerald-100' },
-  used: { label: 'Đã dùng', cls: 'bg-slate-100 text-slate-600 border border-slate-200' },
-  expired: { label: 'Hết hạn', cls: 'bg-rose-50 text-rose-700 border border-rose-100' },
+  unused: {
+    label: 'Chưa dùng',
+    cls: 'bg-emerald-50 text-emerald-700 border border-emerald-100',
+  },
+  used: {
+    label: 'Đã dùng',
+    cls: 'bg-slate-100 text-slate-600 border border-slate-200',
+  },
+  expired: {
+    label: 'Hết hạn',
+    cls: 'bg-rose-50 text-rose-700 border border-rose-100',
+  },
 };
 
 const statusTabs: { value: string; label: string }[] = [
@@ -73,7 +82,8 @@ function GrantModal({
   const [discountCapVnd, setDiscountCapVnd] = useState(100000);
   const [expiresAt, setExpiresAt] = useState('');
 
-  const codeValid = code.trim() === '' || /^[A-Za-z0-9-]{3,30}$/.test(code.trim());
+  const codeValid =
+    code.trim() === '' || /^[A-Za-z0-9-]{3,30}$/.test(code.trim());
 
   const filteredCustomers = useMemo(() => {
     if (!search.trim()) return customers.slice(0, 8);
@@ -113,7 +123,10 @@ function GrantModal({
           <h3 className='font-heading font-black text-foreground text-lg flex items-center gap-2'>
             <Ticket className='w-5 h-5 text-primary' /> Cấp voucher rửa miễn phí
           </h3>
-          <button onClick={onClose} aria-label='Đóng'>
+          <button
+            onClick={onClose}
+            aria-label='Đóng'
+          >
             <X className='w-5 h-5 text-foreground/40' />
           </button>
         </div>
@@ -302,14 +315,17 @@ function RevokeModal({
           <h3 className='font-heading font-black text-foreground text-lg flex items-center gap-2'>
             <Ban className='w-5 h-5 text-rose-500' /> Thu hồi voucher
           </h3>
-          <button onClick={onClose} aria-label='Đóng'>
+          <button
+            onClick={onClose}
+            aria-label='Đóng'
+          >
             <X className='w-5 h-5 text-foreground/40' />
           </button>
         </div>
         <p className='text-sm text-muted-foreground mb-5'>
           Voucher{' '}
-          <span className='font-bold text-foreground'>{voucher.code}</span> sẽ bị
-          chuyển sang trạng thái hết hạn và không dùng được nữa.
+          <span className='font-bold text-foreground'>{voucher.code}</span> sẽ
+          bị chuyển sang trạng thái hết hạn và không dùng được nữa.
         </p>
 
         <label className='block text-xs font-black uppercase tracking-widest text-foreground/40 mb-1.5'>
@@ -493,7 +509,10 @@ export function VoucherManagement({ mode }: { mode: VoucherMode }) {
                 {isLoading ? (
                   Array.from({ length: 5 }).map((_, i) => (
                     <tr key={i}>
-                      <td colSpan={6} className='px-5 py-4'>
+                      <td
+                        colSpan={6}
+                        className='px-5 py-4'
+                      >
                         <div className='h-5 bg-slate-100 rounded animate-pulse' />
                       </td>
                     </tr>
@@ -515,7 +534,10 @@ export function VoucherManagement({ mode }: { mode: VoucherMode }) {
                       cls: 'bg-slate-100 text-slate-600',
                     };
                     return (
-                      <tr key={v.id} className='hover:bg-slate-50/60'>
+                      <tr
+                        key={v.id}
+                        className='hover:bg-slate-50/60'
+                      >
                         <td className='px-5 py-3.5 font-mono font-bold text-foreground'>
                           {v.code}
                         </td>
@@ -524,7 +546,8 @@ export function VoucherManagement({ mode }: { mode: VoucherMode }) {
                             // Ưu tiên tên kèm theo từ BE; nếu không có thì map
                             // từ danh sách khách đã tải (admin: từ users,
                             // manager: từ các đơn đặt lịch).
-                            const name = v.customerName ?? customerName(v.customerId);
+                            const name =
+                              v.customerName ?? customerName(v.customerId);
                             return name && name !== v.customerId ? (
                               <span title={v.customerId}>
                                 <span className='font-semibold text-foreground'>
@@ -565,7 +588,9 @@ export function VoucherManagement({ mode }: { mode: VoucherMode }) {
                               <Ban className='w-3.5 h-3.5' /> Thu hồi
                             </button>
                           ) : (
-                            <span className='text-xs text-foreground/30'>-</span>
+                            <span className='text-xs text-foreground/30'>
+                              -
+                            </span>
                           )}
                         </td>
                       </tr>
@@ -592,9 +617,7 @@ export function VoucherManagement({ mode }: { mode: VoucherMode }) {
                 Trước
               </button>
               <button
-                onClick={() =>
-                  setPage((p) => Math.min(meta.totalPages, p + 1))
-                }
+                onClick={() => setPage((p) => Math.min(meta.totalPages, p + 1))}
                 disabled={page >= meta.totalPages}
                 className='px-3 py-1.5 rounded-lg border border-border bg-white font-semibold disabled:opacity-40'
               >
@@ -607,7 +630,8 @@ export function VoucherManagement({ mode }: { mode: VoucherMode }) {
         {mode === 'manager' && (
           <p className='mt-4 flex items-center gap-2 text-xs text-muted-foreground'>
             <AlertCircle className='w-3.5 h-3.5 shrink-0' />
-            Danh sách khách để cấp voucher được lấy từ những khách đã có đơn đặt lịch.
+            Danh sách khách để cấp voucher được lấy từ những khách đã có đơn đặt
+            lịch.
           </p>
         )}
       </div>
@@ -626,9 +650,7 @@ export function VoucherManagement({ mode }: { mode: VoucherMode }) {
           voucher={revokeTarget}
           submitting={revoke.isPending}
           onClose={() => setRevokeTarget(null)}
-          onSubmit={(reason) =>
-            revoke.mutate({ id: revokeTarget.id, reason })
-          }
+          onSubmit={(reason) => revoke.mutate({ id: revokeTarget.id, reason })}
         />
       )}
     </main>
