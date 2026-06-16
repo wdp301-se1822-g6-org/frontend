@@ -38,7 +38,6 @@ import {
   useActiveServiceTypes,
   useAvailableSlots,
   useCreateOrder,
-  useMyVouchers,
   useMyLoyalty,
   usePreviewOrder,
 } from '@/hooks/orders/useOrders';
@@ -47,8 +46,9 @@ import { formatCurrency } from '@/lib/format';
 import type {
   ServiceType as ServiceTypeBase,
   AvailableSlot,
-  Voucher,
 } from '@/types/order';
+import { useVouchers } from '@/hooks/vouchers/useVouchers';
+import { Voucher } from '@/types/voucher';
 
 type ServiceTypeItem = ServiceTypeBase & { _id?: string };
 
@@ -277,7 +277,7 @@ function BookingFlow() {
   const washesToVoucher = Math.max(WASHES_PER_FREE_VOUCHER - towardVoucher, 0);
 
   // ─── Voucher & xem trước giá ───
-  const { data: myVouchers = [] } = useMyVouchers('unused');
+  const { data: myVouchers = [] } = useVouchers('unused');
   // BE đã lọc status=unused và cron tự đẩy voucher hết hạn sang EXPIRED.
   // Nếu vẫn lọt voucher hết hạn, preview/create sẽ trả voucherError để hiển thị.
   const validVouchers = useMemo(

@@ -88,6 +88,11 @@ export const ENDPOINTS = {
   },
   loyalty: {
     mine: '/me/loyalty',
+    transactions: '/me/loyalty/transactions',
+  },
+  vouchers: {
+    mine: '/me/vouchers',
+    byId: (id: string) => `/me/vouchers/${id}`,
   },
   tierConfigs: {
     list: '/tier-configs',

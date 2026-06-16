@@ -7,7 +7,6 @@ import {
   cancelOrder,
   getAvailableSlots,
   getActiveServiceTypes,
-  getMyVouchers,
   getMyLoyalty,
   previewOrder,
 } from '@/lib/customer-api';
@@ -15,7 +14,6 @@ import {
   CreateOrderDto,
   RescheduleOrderDto,
   CancelOrderDto,
-  Voucher,
   PreviewOrderResponse,
 } from '@/types/order';
 
@@ -57,7 +55,13 @@ export const useCreateOrder = () => {
 export const useRescheduleOrder = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: RescheduleOrderDto }) => {
+    mutationFn: async ({
+      id,
+      data,
+    }: {
+      id: string;
+      data: RescheduleOrderDto;
+    }) => {
       const res = await rescheduleOrder(id, data);
       return res.data;
     },
@@ -90,9 +94,21 @@ export const useAvailableSlots = (params: {
   enabled?: boolean;
 }) => {
   return useQuery({
-    queryKey: ['available-slots', params.serviceTypeId, params.vehicleTypeId, params.from, params.to],
+    queryKey: [
+      'available-slots',
+      params.serviceTypeId,
+      params.vehicleTypeId,
+      params.from,
+      params.to,
+    ],
     queryFn: async () => {
-      if (!params.serviceTypeId || !params.vehicleTypeId || !params.from || !params.to) return [];
+      if (
+        !params.serviceTypeId ||
+        !params.vehicleTypeId ||
+        !params.from ||
+        !params.to
+      )
+        return [];
       const res = await getAvailableSlots({
         serviceTypeId: params.serviceTypeId,
         vehicleTypeId: params.vehicleTypeId,
@@ -116,19 +132,6 @@ export const useActiveServiceTypes = () => {
     queryFn: async () => {
       const res = await getActiveServiceTypes();
       return res.data || [];
-    },
-  });
-};
-
-/** Voucher của khách (mặc định chỉ lấy voucher còn dùng được). */
-export const useMyVouchers = (
-  status: 'unused' | 'used' | 'expired' = 'unused',
-) => {
-  return useQuery({
-    queryKey: ['my-vouchers', status],
-    queryFn: async (): Promise<Voucher[]> => {
-      const res = await getMyVouchers(status);
-      return res.data?.data ?? res.data ?? [];
     },
   });
 };
@@ -171,7 +174,8 @@ export const usePreviewOrder = (params: {
       params.voucherId ?? null,
     ],
     queryFn: async (): Promise<PreviewOrderResponse | null> => {
-      if (!params.serviceTypeId || !params.vehicleTypeId || !params.scheduledAt) return null;
+      if (!params.serviceTypeId || !params.vehicleTypeId || !params.scheduledAt)
+        return null;
       const res = await previewOrder({
         serviceTypeId: params.serviceTypeId,
         vehicleTypeId: params.vehicleTypeId,

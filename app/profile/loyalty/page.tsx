@@ -67,7 +67,11 @@ export default function LoyaltyPage() {
   const authUser = useAuthStore((s) => s.authUser);
 
   // ─── React Query ─────────────────────────────────────────
-  const { data: loyaltyData, isLoading: isLoyaltyLoading, error: loyaltyError } = useQuery({
+  const {
+    data: loyaltyData,
+    isLoading: isLoyaltyLoading,
+    error: loyaltyError,
+  } = useQuery({
     queryKey: ['my-loyalty'],
     queryFn: getMyLoyalty,
   });
@@ -90,14 +94,16 @@ export default function LoyaltyPage() {
 
   // Find user's current tier config and the next tier config
   const currentTierConfig = tiers.find(
-    (t) => t.tierName.toLowerCase() === currentTierName
+    (t) => t.tierName.toLowerCase() === currentTierName,
   );
 
   // Sort tiers by priority level ascending
-  const sortedTiers = [...tiers].sort((a, b) => a.priorityLevel - b.priorityLevel);
+  const sortedTiers = [...tiers].sort(
+    (a, b) => a.priorityLevel - b.priorityLevel,
+  );
 
   const currentTierIndex = sortedTiers.findIndex(
-    (t) => t.tierName.toLowerCase() === currentTierName
+    (t) => t.tierName.toLowerCase() === currentTierName,
   );
 
   const nextTierConfig =
@@ -111,7 +117,7 @@ export default function LoyaltyPage() {
   const washesToVoucher = Math.max(WASHES_PER_FREE_VOUCHER - towardVoucher, 0);
   const voucherPct = Math.min(
     (towardVoucher / WASHES_PER_FREE_VOUCHER) * 100,
-    100
+    100,
   );
 
   // ─── Tiến độ thăng hạng (theo điểm tích lũy) ────────────────
@@ -128,7 +134,9 @@ export default function LoyaltyPage() {
     return (
       <div className='flex flex-col items-center justify-center min-h-[400px] gap-3'>
         <Loader2 className='w-8 h-8 text-primary animate-spin' />
-        <p className='text-sm text-muted-foreground font-semibold'>Đang tải dữ liệu thành viên...</p>
+        <p className='text-sm text-muted-foreground font-semibold'>
+          Đang tải dữ liệu thành viên...
+        </p>
       </div>
     );
   }
@@ -138,7 +146,10 @@ export default function LoyaltyPage() {
       <div className='bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900 rounded-2xl p-6 text-center text-red-600 dark:text-red-400 space-y-3 max-w-lg mx-auto mt-8'>
         <Info className='w-8 h-8 mx-auto' />
         <h3 className='font-heading font-bold text-lg'>Đã xảy ra lỗi</h3>
-        <p className='text-sm'>Không thể kết nối đến máy chủ để lấy thông tin Loyalty. Vui lòng thử lại sau.</p>
+        <p className='text-sm'>
+          Không thể kết nối đến máy chủ để lấy thông tin Loyalty. Vui lòng thử
+          lại sau.
+        </p>
       </div>
     );
   }
@@ -151,7 +162,9 @@ export default function LoyaltyPage() {
           <Award className='w-7 h-7 text-primary' /> Khách Hàng Thân Thiết
         </h1>
         <p className='text-sm text-muted-foreground'>
-          Tích điểm qua mỗi lần rửa để nâng hạng, và cứ {WASHES_PER_FREE_VOUCHER} lượt rửa hợp lệ nhận ngay voucher thưởng bằng ~5% chi tiêu của các lượt đó.
+          Tích điểm qua mỗi lần rửa để nâng hạng, và cứ{' '}
+          {WASHES_PER_FREE_VOUCHER} lượt rửa hợp lệ nhận ngay voucher thưởng
+          bằng ~5% chi tiêu của các lượt đó.
         </p>
       </div>
 
@@ -169,17 +182,26 @@ export default function LoyaltyPage() {
             {/* Card Header */}
             <div className='flex justify-between items-start z-10'>
               <div className='space-y-1'>
-                <p className='text-[10px] font-black uppercase tracking-widest text-white/60'>E-Membership Card</p>
-                <h3 className='font-heading font-black tracking-wider text-lg'>WASH AUTO</h3>
+                <p className='text-[10px] font-black uppercase tracking-widest text-white/60'>
+                  E-Membership Card
+                </p>
+                <h3 className='font-heading font-black tracking-wider text-lg'>
+                  WASH AUTO
+                </h3>
               </div>
-              <div className={`px-3 py-1 rounded-full text-xs font-black uppercase tracking-wide border flex items-center gap-1.5 backdrop-blur-md ${currentStyle.badgeBg}`}>
-                <Crown className='w-3.5 h-3.5' /> {loyalty?.tierName || 'Member'}
+              <div
+                className={`px-3 py-1 rounded-full text-xs font-black uppercase tracking-wide border flex items-center gap-1.5 backdrop-blur-md ${currentStyle.badgeBg}`}
+              >
+                <Crown className='w-3.5 h-3.5' />{' '}
+                {loyalty?.tierName || 'Member'}
               </div>
             </div>
 
             {/* Card Body with EMV Chip Design */}
             <div className='flex items-center gap-4 z-10 my-4'>
-              <div className={`w-11 h-9 rounded-md ${currentStyle.chipBg} border border-white/20 relative overflow-hidden flex flex-col justify-around p-1`}>
+              <div
+                className={`w-11 h-9 rounded-md ${currentStyle.chipBg} border border-white/20 relative overflow-hidden flex flex-col justify-around p-1`}
+              >
                 <div className='h-[1px] bg-white/20 w-full' />
                 <div className='h-[1px] bg-white/20 w-full' />
                 <div className='h-[1px] bg-white/20 w-full' />
@@ -199,7 +221,10 @@ export default function LoyaltyPage() {
                   <Coins className='w-3 h-3' /> Điểm Tích Lũy
                 </p>
                 <p className='text-lg font-black tracking-wide'>
-                  {(loyalty?.pointsBalance ?? 0).toLocaleString()} <span className='text-xs font-semibold text-white/70'>PTS</span>
+                  {(loyalty?.pointsBalance ?? 0).toLocaleString()}{' '}
+                  <span className='text-xs font-semibold text-white/70'>
+                    PTS
+                  </span>
                 </p>
               </div>
               <div className='text-right'>
@@ -208,7 +233,9 @@ export default function LoyaltyPage() {
                 </p>
                 <p className='text-lg font-black tracking-wide'>
                   {(loyalty?.totalSuccessfulWashes ?? 0).toLocaleString()}{' '}
-                  <span className='text-xs font-semibold text-white/70'>lần</span>
+                  <span className='text-xs font-semibold text-white/70'>
+                    lần
+                  </span>
                 </p>
               </div>
             </div>
@@ -222,10 +249,12 @@ export default function LoyaltyPage() {
                 <div className='flex items-center justify-between gap-3'>
                   <div>
                     <h3 className='font-heading font-bold text-foreground flex items-center gap-2'>
-                      <Ticket className='w-5 h-5 text-primary' /> Tiến Độ Voucher Thưởng
+                      <Ticket className='w-5 h-5 text-primary' /> Tiến Độ
+                      Voucher Thưởng
                     </h3>
                     <p className='text-xs text-muted-foreground'>
-                      Cứ {WASHES_PER_FREE_VOUCHER} lượt rửa hợp lệ, bạn nhận voucher thưởng bằng ~5% chi tiêu của các lượt đó.
+                      Cứ {WASHES_PER_FREE_VOUCHER} lượt rửa hợp lệ, bạn nhận
+                      voucher thưởng bằng ~5% chi tiêu của các lượt đó.
                     </p>
                   </div>
                   <span className='font-black text-primary text-base shrink-0'>
@@ -242,8 +271,10 @@ export default function LoyaltyPage() {
                   <Sparkles className='w-5 h-5 text-orange-400 shrink-0 mt-0.5' />
                   <p>
                     Còn{' '}
-                    <strong className='text-[#856404]'>{washesToVoucher}</strong> lượt
-                    rửa hợp lệ nữa để nhận <strong>voucher thưởng</strong>!
+                    <strong className='text-[#856404]'>
+                      {washesToVoucher}
+                    </strong>{' '}
+                    lượt rửa hợp lệ nữa để nhận <strong>voucher thưởng</strong>!
                   </p>
                 </div>
               </div>
@@ -252,11 +283,14 @@ export default function LoyaltyPage() {
               <div className='space-y-3 border-t border-border/50 pt-5'>
                 <div className='flex items-center justify-between gap-3'>
                   <h3 className='font-heading font-bold text-foreground flex items-center gap-2'>
-                    <TrendingUp className='w-5 h-5 text-primary' /> Tiến Độ Thăng Hạng
+                    <TrendingUp className='w-5 h-5 text-primary' /> Tiến Độ
+                    Thăng Hạng
                   </h3>
                   <span className='font-black text-primary text-base shrink-0'>
                     {pointsBalance.toLocaleString()}{' '}
-                    <span className='text-xs font-semibold text-muted-foreground'>PTS</span>
+                    <span className='text-xs font-semibold text-muted-foreground'>
+                      PTS
+                    </span>
                   </span>
                 </div>
                 <div className='h-3 bg-muted rounded-full overflow-hidden relative border border-border/20'>
@@ -281,14 +315,16 @@ export default function LoyaltyPage() {
                       <strong className='text-primary capitalize'>
                         {nextTierConfig.tierName}
                       </strong>{' '}
-                      (cần {nextTierConfig.minLoyaltyPoints.toLocaleString()} điểm).
+                      (cần {nextTierConfig.minLoyaltyPoints.toLocaleString()}{' '}
+                      điểm).
                     </p>
                   </div>
                 ) : (
                   <div className='bg-cyan-50/50 border border-cyan-100 rounded-2xl p-4 flex items-start gap-3 text-cyan-800 text-xs sm:text-sm shadow-sm'>
                     <Crown className='w-5 h-5 text-cyan-500 shrink-0 mt-0.5' />
                     <p>
-                      Bạn đang ở hạng cao nhất. Tiếp tục tích điểm để duy trì đặc quyền!
+                      Bạn đang ở hạng cao nhất. Tiếp tục tích điểm để duy trì
+                      đặc quyền!
                     </p>
                   </div>
                 )}
@@ -303,7 +339,8 @@ export default function LoyaltyPage() {
             <div>
               <CardHeader className='border-b border-border/50 pb-4'>
                 <CardTitle className='text-base font-bold flex items-center gap-2'>
-                  <Crown className='w-5 h-5 text-primary' /> Đặc Quyền Hiện Tại Của Bạn
+                  <Crown className='w-5 h-5 text-primary' /> Đặc Quyền Hiện Tại
+                  Của Bạn
                 </CardTitle>
               </CardHeader>
               <CardContent className='p-6 space-y-4'>
@@ -314,9 +351,12 @@ export default function LoyaltyPage() {
                         <Award className='w-5 h-5' />
                       </div>
                       <div>
-                        <p className='text-xs text-muted-foreground'>Ưu đãi giảm giá</p>
+                        <p className='text-xs text-muted-foreground'>
+                          Ưu đãi giảm giá
+                        </p>
                         <p className='text-sm font-bold text-foreground'>
-                          Giảm {currentTierConfig.discountPercent}% cho tất cả dịch vụ rửa xe
+                          Giảm {currentTierConfig.discountPercent}% cho tất cả
+                          dịch vụ rửa xe
                         </p>
                       </div>
                     </div>
@@ -326,9 +366,12 @@ export default function LoyaltyPage() {
                         <Calendar className='w-5 h-5' />
                       </div>
                       <div>
-                        <p className='text-xs text-muted-foreground'>Thời gian đặt lịch trước</p>
+                        <p className='text-xs text-muted-foreground'>
+                          Thời gian đặt lịch trước
+                        </p>
                         <p className='text-sm font-bold text-foreground'>
-                          Đặt lịch trước tối đa {currentTierConfig.bookingWindowDays} ngày
+                          Đặt lịch trước tối đa{' '}
+                          {currentTierConfig.bookingWindowDays} ngày
                         </p>
                       </div>
                     </div>
@@ -338,15 +381,20 @@ export default function LoyaltyPage() {
                         <Coins className='w-5 h-5' />
                       </div>
                       <div>
-                        <p className='text-xs text-muted-foreground'>Hệ số tích điểm</p>
+                        <p className='text-xs text-muted-foreground'>
+                          Hệ số tích điểm
+                        </p>
                         <p className='text-sm font-bold text-foreground'>
-                          Nhận {currentTierConfig.pointsPer1000Vnd} PTS cho mỗi 1.000đ thanh toán
+                          Nhận {currentTierConfig.pointsPer1000Vnd} PTS cho mỗi
+                          1.000đ thanh toán
                         </p>
                       </div>
                     </div>
                   </div>
                 ) : (
-                  <p className='text-sm text-muted-foreground text-center py-6'>Không có cấu hình đặc quyền hạng của bạn.</p>
+                  <p className='text-sm text-muted-foreground text-center py-6'>
+                    Không có cấu hình đặc quyền hạng của bạn.
+                  </p>
                 )}
               </CardContent>
             </div>
@@ -354,7 +402,10 @@ export default function LoyaltyPage() {
             <div className='p-6 border-t border-border/50 bg-muted/20'>
               <div className='flex gap-2 items-center text-xs text-muted-foreground'>
                 <Info className='w-4 h-4 shrink-0 text-muted-foreground' />
-                <p>Hạng hội viên được nâng tự động theo tổng điểm tích lũy. Điểm được cộng sau mỗi đơn rửa hoàn thành.</p>
+                <p>
+                  Hạng hội viên được nâng tự động theo tổng điểm tích lũy. Điểm
+                  được cộng sau mỗi đơn rửa hoàn thành.
+                </p>
               </div>
             </div>
           </Card>
@@ -365,15 +416,19 @@ export default function LoyaltyPage() {
       <div className='space-y-4'>
         <div>
           <h2 className='font-heading text-lg font-bold text-foreground flex items-center gap-2'>
-            <Crown className='w-5 h-5 text-yellow-500' /> Bảng So Sánh Quyền Lợi Các Hạng Thành Viên
+            <Crown className='w-5 h-5 text-yellow-500' /> Bảng So Sánh Quyền Lợi
+            Các Hạng Thành Viên
           </h2>
-          <p className='text-xs text-muted-foreground'>Khám phá lộ trình thăng hạng và các quyền lợi độc quyền kèm theo.</p>
+          <p className='text-xs text-muted-foreground'>
+            Khám phá lộ trình thăng hạng và các quyền lợi độc quyền kèm theo.
+          </p>
         </div>
 
         <div className='grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6'>
           {sortedTiers.map((t) => {
             const isMyTier = t.tierName.toLowerCase() === currentTierName;
-            const style = tierStyles[t.tierName.toLowerCase()] || tierStyles.member;
+            const style =
+              tierStyles[t.tierName.toLowerCase()] || tierStyles.member;
 
             return (
               <div
@@ -391,12 +446,17 @@ export default function LoyaltyPage() {
                 )}
 
                 {/* Header of Tier Config Card */}
-                <div className={`bg-gradient-to-br ${style.gradient} p-5 text-white relative overflow-hidden`}>
+                <div
+                  className={`bg-gradient-to-br ${style.gradient} p-5 text-white relative overflow-hidden`}
+                >
                   <div className='absolute top-0 right-0 w-16 h-16 bg-white/10 rounded-full blur-xl -mr-6 -mt-6' />
                   <Crown className='w-6 h-6 mb-2 relative z-10' />
-                  <h3 className='font-heading font-black text-lg capitalize tracking-wide relative z-10'>{t.tierName}</h3>
+                  <h3 className='font-heading font-black text-lg capitalize tracking-wide relative z-10'>
+                    {t.tierName}
+                  </h3>
                   <p className='text-[10px] text-white/70 mt-1 relative z-10 flex items-center gap-1 font-medium'>
-                    <TrendingUp className='w-3 h-3' /> Cần {t.minLoyaltyPoints.toLocaleString()} điểm
+                    <TrendingUp className='w-3 h-3' /> Cần{' '}
+                    {t.minLoyaltyPoints.toLocaleString()} điểm
                   </p>
                 </div>
 
@@ -404,23 +464,39 @@ export default function LoyaltyPage() {
                 <div className='p-5 flex flex-col gap-4 bg-white/80'>
                   <div className='space-y-3.5'>
                     <div className='flex justify-between items-center text-xs'>
-                      <span className='text-muted-foreground font-medium'>Ưu đãi giảm giá</span>
-                      <span className='font-black text-primary text-sm'>{t.discountPercent}%</span>
+                      <span className='text-muted-foreground font-medium'>
+                        Ưu đãi giảm giá
+                      </span>
+                      <span className='font-black text-primary text-sm'>
+                        {t.discountPercent}%
+                      </span>
                     </div>
                     <div className='flex justify-between items-center text-xs'>
-                      <span className='text-muted-foreground font-medium'>Đặt lịch trước</span>
-                      <span className='font-bold text-foreground'>{t.bookingWindowDays} ngày</span>
+                      <span className='text-muted-foreground font-medium'>
+                        Đặt lịch trước
+                      </span>
+                      <span className='font-bold text-foreground'>
+                        {t.bookingWindowDays} ngày
+                      </span>
                     </div>
                     <div className='flex justify-between items-center text-xs'>
-                      <span className='text-muted-foreground font-medium'>Tỉ lệ tích điểm</span>
-                      <span className='font-bold text-foreground'>{t.pointsPer1000Vnd} PTS / 1.000đ</span>
+                      <span className='text-muted-foreground font-medium'>
+                        Tỉ lệ tích điểm
+                      </span>
+                      <span className='font-bold text-foreground'>
+                        {t.pointsPer1000Vnd} PTS / 1.000đ
+                      </span>
                     </div>
                   </div>
 
                   <div className='pt-3 border-t border-border/40 text-center'>
-                    <span className={`inline-flex px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider ${
-                      t.isActive ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-                    }`}>
+                    <span
+                      className={`inline-flex px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider ${
+                        t.isActive
+                          ? 'bg-green-100 text-green-700'
+                          : 'bg-red-100 text-red-700'
+                      }`}
+                    >
                       {t.isActive ? 'Đang hoạt động' : 'Tạm khoá'}
                     </span>
                   </div>

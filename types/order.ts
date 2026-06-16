@@ -101,24 +101,6 @@ export interface ServiceType {
   isActive: boolean;
 }
 
-/** Khớp `GET /me/vouchers` → VoucherResponseDto (BE). */
-export interface Voucher {
-  id: string;
-  customerId: string;
-  customerName?: string;
-  customerEmail?: string;
-  code: string;
-  type: 'FREE_WASH' | string;
-  status: 'unused' | 'used' | 'expired' | string;
-  /** Số VND tối đa voucher trừ được trên một đơn. */
-  discountCapVnd: number;
-  expiresAt: string;
-  grantedReason?: string;
-  usedAt?: string;
-  usedOrderId?: string;
-  createdAt: string;
-}
-
 /** Khớp `POST /me/orders/preview` → PreviewOrderResponseDto (BE). */
 export interface PreviewOrderResponse {
   originalAmount: number;

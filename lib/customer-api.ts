@@ -1,12 +1,11 @@
 import { axiosInstance } from '@/lib/axios';
+import { ENDPOINTS } from '@/services/endpoints';
 
 // ─── Vehicle Types (Public) ────────────────────────────
-export const getActiveVehicleTypes = () =>
-  axiosInstance.get('/vehicle-types');
+export const getActiveVehicleTypes = () => axiosInstance.get('/vehicle-types');
 
 // ─── Vehicles (Customer) ──────────────────────────────
-export const getMyVehicles = () =>
-  axiosInstance.get('/me/vehicles');
+export const getMyVehicles = () => axiosInstance.get('/me/vehicles');
 
 export const getMyVehicle = (id: string) =>
   axiosInstance.get(`/me/vehicles/${id}`);
@@ -21,14 +20,17 @@ export const createVehicle = (data: {
   isDefault?: boolean;
 }) => axiosInstance.post('/me/vehicles', data);
 
-export const updateVehicle = (id: string, data: {
-  vehicleTypeId?: string;
-  licensePlate?: string;
-  nickname?: string;
-  brand?: string;
-  model?: string;
-  color?: string;
-}) => axiosInstance.patch(`/me/vehicles/${id}`, data);
+export const updateVehicle = (
+  id: string,
+  data: {
+    vehicleTypeId?: string;
+    licensePlate?: string;
+    nickname?: string;
+    brand?: string;
+    model?: string;
+    color?: string;
+  },
+) => axiosInstance.patch(`/me/vehicles/${id}`, data);
 
 export const deleteVehicle = (id: string) =>
   axiosInstance.delete(`/me/vehicles/${id}`);
@@ -37,11 +39,21 @@ export const setDefaultVehicle = (id: string) =>
   axiosInstance.patch(`/me/vehicles/${id}/set-default`);
 
 // ─── Loyalty & Tiers (Customer) ─────────────────────────
-export const getMyLoyalty = () =>
-  axiosInstance.get('/me/loyalty');
+export const getMyLoyalty = () => axiosInstance.get(ENDPOINTS.loyalty.mine);
 
-export const getTierConfigs = () =>
-  axiosInstance.get('/tier-configs');
+export const getMyLoyaltyTransactions = () =>
+  axiosInstance.get(ENDPOINTS.loyalty.transactions);
+
+// ─── Vouchers (Customer) ───────────────────────────────
+export const getMyVouchers = (status?: 'unused' | 'used' | 'expired') =>
+  axiosInstance.get(ENDPOINTS.vouchers.mine, {
+    params: status ? { status } : {},
+  });
+
+export const getMyVoucher = (id: string) =>
+  axiosInstance.get(ENDPOINTS.vouchers.byId(id));
+
+export const getTierConfigs = () => axiosInstance.get('/tier-configs');
 
 export const getTierConfig = (id: string) =>
   axiosInstance.get(`/tier-configs/${id}`);
@@ -54,18 +66,15 @@ export const verifyOtp = (data: { email: string; code: string }) =>
   axiosInstance.post('/auth/otp/verify', data);
 
 // ─── Service Types (Public) ────────────────────────────
-export const getActiveServiceTypes = () =>
-  axiosInstance.get('/service-types');
+export const getActiveServiceTypes = () => axiosInstance.get('/service-types');
 
 export const getServiceType = (id: string) =>
   axiosInstance.get(`/service-types/${id}`);
 
 // ─── Orders (Customer) ─────────────────────────────────
-export const getMyOrders = () =>
-  axiosInstance.get('/me/orders');
+export const getMyOrders = () => axiosInstance.get('/me/orders');
 
-export const getMyOrder = (id: string) =>
-  axiosInstance.get(`/me/orders/${id}`);
+export const getMyOrder = (id: string) => axiosInstance.get(`/me/orders/${id}`);
 
 export const createOrder = (data: {
   vehicleId?: string;
@@ -93,15 +102,9 @@ export const previewOrder = (data: {
   voucherId?: string;
 }) => axiosInstance.post('/me/orders/preview', data);
 
-// ─── Vouchers (Customer) ───────────────────────────────
-export const getMyVouchers = (status?: 'unused' | 'used' | 'expired') =>
-  axiosInstance.get('/me/vouchers', {
-    params: status ? { status } : undefined,
-  });
-
 export const rescheduleOrder = (
   id: string,
-  data: { staffShiftId: string; scheduledAt: string }
+  data: { staffShiftId: string; scheduledAt: string },
 ) => axiosInstance.patch(`/me/orders/${id}/reschedule`, data);
 
 export const cancelOrder = (id: string, data: { reason?: string }) =>
@@ -120,5 +123,3 @@ export const getAvailableShifts = (params: {
   to: string;
   shiftType?: 'cashier' | 'washer';
 }) => axiosInstance.get('/shifts/available', { params });
-
-
