@@ -14,6 +14,7 @@ import {
   CreditCard,
   Loader2,
   User2,
+  Sparkles,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Card, CardContent } from '@/components/ui/card';
@@ -683,6 +684,7 @@ export default function MyOrdersPage() {
                       {availableSlots.map((slot: AvailableSlot) => {
                         const isSelected = slot.scheduledAt === rescheduleSlot;
                         const isFull = slot.remainingCapacity <= 0;
+                        const isGolden = slot.isGoldenHour && !isFull;
                         const timeStr = new Date(
                           slot.scheduledAt,
                         ).toLocaleTimeString('vi-VN', {
@@ -698,18 +700,28 @@ export default function MyOrdersPage() {
                             disabled={isFull}
                             onClick={() => setRescheduleSlot(slot.scheduledAt)}
                             className={cn(
-                              'p-2.5 rounded-xl border-2 transition-all text-center cursor-pointer focus:outline-none flex flex-col items-center justify-center',
+                              'p-2.5 rounded-xl border-2 transition-all text-center cursor-pointer focus:outline-none flex flex-col items-center justify-center relative',
                               isSelected
                                 ? 'border-primary bg-primary/5 ring-1 ring-primary/20'
                                 : isFull
                                   ? 'border-border bg-slate-100 text-slate-400 cursor-not-allowed'
-                                  : 'border-border bg-card hover:bg-slate-50',
+                                  : isGolden
+                                    ? 'border-amber-300 bg-amber-50 hover:bg-amber-100'
+                                    : 'border-border bg-card hover:bg-slate-50',
                             )}
                           >
+                            {isGolden && (
+                              <span className='absolute -top-1.5 -right-1.5 flex items-center gap-0.5 rounded-full bg-amber-400 text-white text-[8px] font-black px-1.5 py-0.5 shadow-sm'>
+                                <Sparkles className='w-2 h-2' />
+                                {slot.discountPercent > 0
+                                  ? `-${slot.discountPercent}%`
+                                  : 'GV'}
+                              </span>
+                            )}
                             <span className='font-extrabold text-xs text-foreground'>
                               {timeStr}
                             </span>
-                            <span className='text-[8px] font-bold mt-0.5 text-emerald-500'>
+                            <span className={cn('text-[8px] font-bold mt-0.5', isGolden ? 'text-amber-600' : 'text-emerald-500')}>
                               Trống {slot.remainingCapacity}
                             </span>
                           </button>

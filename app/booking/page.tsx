@@ -1512,9 +1512,20 @@ function BookingFlow() {
                             selectedService.basePrice,
                         )
                       : 0;
+                    const selectedSlotData = availableSlots.find(
+                      (s: AvailableSlot) => s.scheduledAt === selectedSlot,
+                    );
+                    const localGoldenDiscount =
+                      !preview &&
+                      selectedSlotData?.isGoldenHour &&
+                      (selectedSlotData.discountPercent ?? 0) > 0
+                        ? Math.round(
+                            (base * selectedSlotData.discountPercent) / 100,
+                          )
+                        : 0;
                     const original = preview?.originalAmount ?? base;
-                    const discount = preview?.discountAmount ?? 0;
-                    const total = preview?.amount ?? base;
+                    const discount = preview?.discountAmount ?? localGoldenDiscount;
+                    const total = preview?.amount ?? (base - localGoldenDiscount);
                     return (
                       <>
                         <div className='flex justify-between items-center text-sm font-bold text-muted-foreground'>
@@ -1534,11 +1545,14 @@ function BookingFlow() {
                           </div>
                         )}
 
-                        {preview?.isGoldenHour &&
-                          preview.tierDiscountPercent > 0 && (
+                        {(preview?.isGoldenHour
+                          ? preview.tierDiscountPercent > 0
+                          : localGoldenDiscount > 0) && (
                             <p className='text-[10px] text-muted-foreground -mt-1.5'>
-                              Khung giờ vàng · hạng {preview.tierName} giảm{' '}
-                              {preview.tierDiscountPercent}%
+                              Khung giờ vàng
+                              {preview?.tierName
+                                ? ` · hạng ${preview.tierName} giảm ${preview.tierDiscountPercent}%`
+                                : ` · giảm ${selectedSlotData?.discountPercent}%`}
                             </p>
                           )}
 
