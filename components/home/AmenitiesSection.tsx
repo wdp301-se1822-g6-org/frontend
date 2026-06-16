@@ -22,7 +22,7 @@ const amenities = [
   {
     icon: Gift,
     title: 'Thẻ quà tặng',
-    desc: 'Mua thẻ quà tặng WAVE — lựa chọn hoàn hảo cho người thân và bạn bè.',
+    desc: 'Mua thẻ quà tặng WAVE - lựa chọn hoàn hảo cho người thân và bạn bè.',
     color: 'bg-rose-500',
   },
   {
@@ -56,7 +56,7 @@ export function AmenitiesSection() {
             Trải Nghiệm <span className='text-primary'>Toàn Diện</span>
           </h2>
           <p className='text-foreground/50 max-w-2xl mx-auto text-base sm:text-lg font-medium leading-relaxed'>
-            Chúng tôi không chỉ rửa xe — WAVE mang đến một không gian nghỉ ngơi
+            Chúng tôi không chỉ rửa xe - WAVE mang đến một không gian nghỉ ngơi
             đẳng cấp với các tiện ích hoàn toàn miễn phí.
           </p>
         </div>

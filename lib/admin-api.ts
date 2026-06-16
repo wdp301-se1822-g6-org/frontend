@@ -1,7 +1,15 @@
 import { axiosInstance } from '@/lib/axios';
+import { ENDPOINTS } from '@/services/endpoints';
+import type { DashboardQuery, DashboardReport } from '@/types/dashboard';
 
 // ─── Auth ──────────────────────────────────────────────
 export const adminGetMe = () => axiosInstance.get('/auth/me');
+
+// ─── Management Reporting Dashboard ─────────────────────
+export const adminGetDashboard = (params?: DashboardQuery) =>
+  axiosInstance.get<DashboardReport>(ENDPOINTS.adminDashboard.report, {
+    params,
+  });
 
 // ─── Users ─────────────────────────────────────────────
 export const adminGetUsers = (params?: Record<string, unknown>) =>
@@ -87,14 +95,19 @@ export const adminToggleTierConfig = (id: string, isActive: boolean) =>
 export const adminGetShifts = (params?: Record<string, unknown>) =>
   axiosInstance.get('/admin/shifts', { params });
 
+// Active washers + cashiers assignable to a shift (manager + admin allowed).
+export const adminGetShiftStaff = () =>
+  axiosInstance.get('/admin/shifts/staff');
+
 export const adminCreateShift = (data: Record<string, unknown>) =>
   axiosInstance.post('/admin/shifts', data);
 
 export const adminUpdateShift = (id: string, data: Record<string, unknown>) =>
   axiosInstance.patch(`/admin/shifts/${id}`, data);
 
-export const adminToggleShift = (id: string, isActive: boolean) =>
-  axiosInstance.patch(`/admin/shifts/${id}/status`, { isActive });
+// Cập nhật trạng thái ca trực. status ∈ scheduled | active | completed | cancelled
+export const adminToggleShift = (id: string, status: string) =>
+  axiosInstance.patch(`/admin/shifts/${id}/status`, { status });
 
 // ─── Vehicles ──────────────────────────────────────────
 export const adminGetVehicles = (params?: Record<string, unknown>) =>
@@ -104,8 +117,14 @@ export const adminGetVehicle = (id: string) =>
   axiosInstance.get(`/admin/vehicles/${id}`);
 
 // ─── Work Orders (Manager) ──────────────────────────────
-export const adminCreateWorkOrder = (orderId: string) =>
-  axiosInstance.post('/admin/work-orders', { orderId });
+// Check-in: tạo phiếu rửa từ đơn đã xác nhận. BE tự chuyển đơn
+// CONFIRMED → CHECKED_IN (và mark PAID nếu đơn tiền mặt), nên KHÔNG
+// cần gọi thêm updateOrderStatus. checkinPhotos là ảnh hiện trạng xe (tuỳ chọn).
+export const adminCreateWorkOrder = (orderId: string, checkinPhotos?: string[]) =>
+  axiosInstance.post('/admin/work-orders', {
+    orderId,
+    ...(checkinPhotos?.length ? { checkinPhotos } : {}),
+  });
 
 export const adminGetWorkOrders = (params?: Record<string, unknown>) =>
   axiosInstance.get('/admin/work-orders', { params });
@@ -118,3 +137,25 @@ export const adminAssignWasher = (id: string, washerId: string) =>
 
 export const adminQcWorkOrder = (id: string, passed: boolean, note?: string) =>
   axiosInstance.patch(`/admin/work-orders/${id}/qc`, { passed, note });
+
+// ─── Vouchers (Admin / Manager) ────────────────────────
+export interface GrantVoucherPayload {
+  customerId: string;
+  reason: string;
+  discountCapVnd?: number;
+  expiresAt?: string;
+  /** Mã tuỳ chỉnh (để trống = BE tự sinh). */
+  code?: string;
+}
+
+export const adminGetVouchers = (params?: Record<string, unknown>) =>
+  axiosInstance.get('/admin/vouchers', { params });
+
+export const adminGetVoucher = (id: string) =>
+  axiosInstance.get(`/admin/vouchers/${id}`);
+
+export const adminGrantVoucher = (data: GrantVoucherPayload) =>
+  axiosInstance.post('/admin/vouchers', data);
+
+export const adminRevokeVoucher = (id: string, reason: string) =>
+  axiosInstance.patch(`/admin/vouchers/${id}/revoke`, { reason });

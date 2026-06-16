@@ -71,7 +71,7 @@ export default function AdminBookingsPage() {
           {/* Filters */}
           <div className='flex flex-wrap items-center gap-3 mb-6'>
             <div className='relative flex-1 min-w-[200px] max-w-xs'>
-              <Search className='absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/30' />
+              <Search className='absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/55' />
               <input
                 type='text'
                 placeholder='Tìm kiếm booking...'
@@ -93,7 +93,7 @@ export default function AdminBookingsPage() {
                   </option>
                 ))}
               </select>
-              <ChevronDown className='absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/40 pointer-events-none' />
+              <ChevronDown className='absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/60 pointer-events-none' />
             </div>
 
             <button
@@ -104,7 +104,7 @@ export default function AdminBookingsPage() {
               Làm mới
             </button>
 
-            <span className='ml-auto text-xs font-semibold text-foreground/40'>
+            <span className='ml-auto text-xs font-semibold text-foreground/60'>
               Tổng: {total} booking
             </span>
           </div>
@@ -116,7 +116,7 @@ export default function AdminBookingsPage() {
                 <thead>
                   <tr className='bg-muted/50 border-b border-border/50'>
                     {['ID', 'Khách hàng', 'Xe', 'Dịch vụ', 'Ca / Ngày', 'Số tiền', 'Trạng thái', 'Thao tác'].map((h) => (
-                      <th key={h} className='text-left px-5 py-3.5 text-[11px] font-black uppercase tracking-widest text-foreground/40'>
+                      <th key={h} className='text-left px-5 py-3.5 text-[11px] font-black uppercase tracking-widest text-foreground/60'>
                         {h}
                       </th>
                     ))}
@@ -135,7 +135,7 @@ export default function AdminBookingsPage() {
                     ))
                   ) : filtered.length === 0 ? (
                     <tr>
-                      <td colSpan={8} className='px-5 py-16 text-center text-foreground/40 font-semibold'>
+                      <td colSpan={8} className='px-5 py-16 text-center text-foreground/60 font-semibold'>
                         Không có dữ liệu
                       </td>
                     </tr>
@@ -153,22 +153,22 @@ export default function AdminBookingsPage() {
                                 {(b.userId?.fullName ?? b.customerName ?? '?')[0]}
                               </div>
                               <span className='font-semibold text-foreground'>
-                                {b.userId?.fullName ?? b.customerName ?? '—'}
+                                {b.userId?.fullName ?? b.customerName ?? '-'}
                               </span>
                             </div>
                           </td>
                           <td className='px-5 py-4 text-foreground/60 font-mono text-xs'>
-                            {b.vehicleId?.licensePlate ?? b.licensePlate ?? '—'}
+                            {b.vehicleId?.licensePlate ?? b.licensePlate ?? '-'}
                           </td>
                           <td className='px-5 py-4 text-foreground/70'>
-                            {b.serviceTypeId?.name ?? b.serviceName ?? '—'}
+                            {b.serviceTypeId?.name ?? b.serviceName ?? '-'}
                           </td>
                           <td className='px-5 py-4 text-foreground/60 text-xs'>
-                            <div>{b.shiftId?.name ?? '—'}</div>
-                            <div className='text-foreground/40'>{(b.scheduledAt ?? b.bookingDate) ? new Date((b.scheduledAt ?? b.bookingDate) as string).toLocaleDateString('vi-VN') : '—'}</div>
+                            <div>{b.shiftId?.name ?? '-'}</div>
+                            <div className='text-foreground/60'>{(b.scheduledAt ?? b.bookingDate) ? new Date((b.scheduledAt ?? b.bookingDate) as string).toLocaleDateString('vi-VN') : '-'}</div>
                           </td>
                           <td className='px-5 py-4 font-black text-foreground'>
-                            {(b.amount ?? b.totalPrice) != null ? `${Number(b.amount ?? b.totalPrice).toLocaleString('vi-VN')}đ` : '—'}
+                            {(b.amount ?? b.totalPrice) != null ? `${Number(b.amount ?? b.totalPrice).toLocaleString('vi-VN')}đ` : '-'}
                           </td>
                           <td className='px-5 py-4'>
                             <span className={`inline-flex px-2.5 py-1 rounded-lg text-[11px] font-black uppercase tracking-wider ${s.cls}`}>
@@ -197,7 +197,7 @@ export default function AdminBookingsPage() {
             {/* Pagination */}
             {total > 10 && (
               <div className='flex items-center justify-between px-5 py-4 border-t border-border/50 bg-muted/20'>
-                <span className='text-xs font-semibold text-foreground/40'>
+                <span className='text-xs font-semibold text-foreground/60'>
                   Trang {page} / {Math.ceil(total / 10)}
                 </span>
                 <div className='flex gap-2'>

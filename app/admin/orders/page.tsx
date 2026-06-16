@@ -48,14 +48,14 @@ export default function AdminOrdersPage() {
         <div className='max-w-7xl mx-auto'>
           <div className='flex flex-wrap items-center gap-3 mb-6'>
             <div className='relative flex-1 min-w-[200px] max-w-xs'>
-              <Search className='absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/30' />
+              <Search className='absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/55' />
               <input type='text' placeholder='Tìm kiếm hóa đơn...' value={search} onChange={(e) => setSearch(e.target.value)}
                 className='w-full pl-9 pr-4 py-2.5 rounded-xl bg-white border border-border text-sm focus:outline-none focus:border-primary/50 transition-all' />
             </div>
             <button onClick={() => refetch()} className='flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-border text-sm font-semibold hover:border-primary/30'>
               <RefreshCw className='w-4 h-4 text-foreground/50' />Làm mới
             </button>
-            <span className='ml-auto text-xs font-semibold text-foreground/40'>Tổng: {total} hóa đơn</span>
+            <span className='ml-auto text-xs font-semibold text-foreground/60'>Tổng: {total} hóa đơn</span>
           </div>
 
           <div className='bg-white rounded-2xl border border-border/50 shadow-sm overflow-hidden'>
@@ -64,7 +64,7 @@ export default function AdminOrdersPage() {
                 <thead>
                   <tr className='bg-muted/50 border-b border-border/50'>
                     {['ID', 'Khách hàng', 'Booking', 'Số tiền', 'Phương thức', 'Trạng thái', 'Ngày tạo'].map((h) => (
-                      <th key={h} className='text-left px-5 py-3.5 text-[11px] font-black uppercase tracking-widest text-foreground/40'>{h}</th>
+                      <th key={h} className='text-left px-5 py-3.5 text-[11px] font-black uppercase tracking-widest text-foreground/60'>{h}</th>
                     ))}
                   </tr>
                 </thead>
@@ -74,22 +74,22 @@ export default function AdminOrdersPage() {
                       <td key={j} className='px-5 py-4'><div className='h-4 bg-muted animate-pulse rounded-lg' /></td>
                     ))}</tr>
                   )) : filtered.length === 0 ? (
-                    <tr><td colSpan={7} className='px-5 py-16 text-center text-foreground/40 font-semibold'>Không có dữ liệu</td></tr>
+                    <tr><td colSpan={7} className='px-5 py-16 text-center text-foreground/60 font-semibold'>Không có dữ liệu</td></tr>
                   ) : filtered.map((o: OrderData) => {
                     const id = o._id ?? o.id ?? '';
                     const ps = paymentStatusConfig[o.paymentStatus ?? 'unpaid'] ?? paymentStatusConfig.unpaid;
                     return (
                       <tr key={id} className='hover:bg-muted/20 transition-colors'>
                         <td className='px-5 py-4 font-mono text-xs text-foreground/50'>{id.slice(-6).toUpperCase()}</td>
-                        <td className='px-5 py-4 font-semibold text-foreground'>{o.userId?.fullName ?? o.customerName ?? '—'}</td>
-                        <td className='px-5 py-4 font-mono text-xs text-foreground/50'>{(typeof o.bookingId === 'object' ? o.bookingId?._id : o.bookingId)?.toString().slice(-6).toUpperCase() ?? '—'}</td>
-                        <td className='px-5 py-4 font-black text-foreground'>{o.amount != null ? `${Number(o.amount).toLocaleString('vi-VN')}đ` : '—'}</td>
-                        <td className='px-5 py-4 text-foreground/60 capitalize'>{o.paymentMethod ?? '—'}</td>
+                        <td className='px-5 py-4 font-semibold text-foreground'>{o.userId?.fullName ?? o.customerName ?? '-'}</td>
+                        <td className='px-5 py-4 font-mono text-xs text-foreground/50'>{(typeof o.bookingId === 'object' ? o.bookingId?._id : o.bookingId)?.toString().slice(-6).toUpperCase() ?? '-'}</td>
+                        <td className='px-5 py-4 font-black text-foreground'>{o.amount != null ? `${Number(o.amount).toLocaleString('vi-VN')}đ` : '-'}</td>
+                        <td className='px-5 py-4 text-foreground/60 capitalize'>{o.paymentMethod ?? '-'}</td>
                         <td className='px-5 py-4'>
                           <span className={`inline-flex px-2.5 py-1 rounded-lg text-[11px] font-black uppercase tracking-wider ${ps.cls}`}>{ps.label}</span>
                         </td>
                         <td className='px-5 py-4 text-foreground/50 text-xs'>
-                          {o.createdAt ? new Date(o.createdAt).toLocaleDateString('vi-VN') : '—'}
+                          {o.createdAt ? new Date(o.createdAt).toLocaleDateString('vi-VN') : '-'}
                         </td>
                       </tr>
                     );
@@ -99,7 +99,7 @@ export default function AdminOrdersPage() {
             </div>
             {total > 10 && (
               <div className='flex items-center justify-between px-5 py-4 border-t border-border/50 bg-muted/20'>
-                <span className='text-xs font-semibold text-foreground/40'>Trang {page} / {Math.ceil(total / 10)}</span>
+                <span className='text-xs font-semibold text-foreground/60'>Trang {page} / {Math.ceil(total / 10)}</span>
                 <div className='flex gap-2'>
                   <button onClick={() => setPage(Math.max(1, page - 1))} disabled={page === 1}
                     className='px-3 py-1.5 rounded-lg border border-border text-xs font-semibold disabled:opacity-40 hover:border-primary/30'>Trước</button>

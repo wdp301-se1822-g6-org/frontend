@@ -11,7 +11,7 @@ type SocialAuthSectionProps = {
 /**
  * Khối "Hoặc tiếp tục với" + nút đăng nhập Google.
  * Dùng chung cho cả LoginForm và RegisterForm.
- * Lưu ý: đăng nhập Google chưa được cấu hình — hiện chỉ thông báo.
+ * Lưu ý: đăng nhập Google chưa được cấu hình - hiện chỉ thông báo.
  */
 export function SocialAuthSection({ disabled }: SocialAuthSectionProps) {
   return (

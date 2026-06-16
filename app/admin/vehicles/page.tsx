@@ -12,10 +12,12 @@ interface VehicleData {
   licensePlate?: string;
   userId?: { fullName?: string };
   ownerName?: string;
+  ownerPhone?: string;
   brand?: string;
   make?: string;
   model?: string;
-  vehicleTypeId?: { name?: string };
+  vehicleTypeId?: { name?: string } | string;
+  vehicleTypeName?: string;
   vehicleType?: string;
   color?: string;
   year?: string | number;
@@ -32,24 +34,43 @@ export default function AdminVehiclesPage() {
   });
 
   const vehicles: VehicleData[] = data?.data?.data ?? data?.data ?? [];
-  const total: number = data?.data?.total ?? vehicles.length;
-  const filtered = search ? vehicles.filter((v: VehicleData) => JSON.stringify(v).toLowerCase().includes(search.toLowerCase())) : vehicles;
+  const total: number =
+    data?.data?.meta?.total ?? data?.data?.total ?? vehicles.length;
+  const filtered = search
+    ? vehicles.filter((v: VehicleData) =>
+        JSON.stringify(v).toLowerCase().includes(search.toLowerCase()),
+      )
+    : vehicles;
 
   return (
     <>
-      <AdminTopbar title='Quản lý phương tiện' subtitle='Danh sách xe của khách hàng' />
+      <AdminTopbar
+        title='Quản lý phương tiện'
+        subtitle='Danh sách xe của khách hàng'
+      />
       <main className='flex-1 p-8 overflow-y-auto'>
         <div className='max-w-7xl mx-auto'>
           <div className='flex flex-wrap items-center gap-3 mb-6'>
             <div className='relative flex-1 min-w-[200px] max-w-xs'>
-              <Search className='absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/30' />
-              <input type='text' placeholder='Tìm kiếm phương tiện...' value={search} onChange={(e) => setSearch(e.target.value)}
-                className='w-full pl-9 pr-4 py-2.5 rounded-xl bg-white border border-border text-sm focus:outline-none focus:border-primary/50 transition-all' />
+              <Search className='absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/55' />
+              <input
+                type='text'
+                placeholder='Tìm kiếm phương tiện...'
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className='w-full pl-9 pr-4 py-2.5 rounded-xl bg-white border border-border text-sm focus:outline-none focus:border-primary/50 transition-all'
+              />
             </div>
-            <button onClick={() => refetch()} className='flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-border text-sm font-semibold hover:border-primary/30'>
-              <RefreshCw className='w-4 h-4 text-foreground/50' />Làm mới
+            <button
+              onClick={() => refetch()}
+              className='flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-border text-sm font-semibold hover:border-primary/30'
+            >
+              <RefreshCw className='w-4 h-4 text-foreground/50' />
+              Làm mới
             </button>
-            <span className='ml-auto text-xs font-semibold text-foreground/40'>Tổng: {total} xe</span>
+            <span className='ml-auto text-xs font-semibold text-foreground/60'>
+              Tổng: {total} xe
+            </span>
           </div>
 
           <div className='bg-white rounded-2xl border border-border/50 shadow-sm overflow-hidden'>
@@ -57,48 +78,116 @@ export default function AdminVehiclesPage() {
               <table className='w-full text-sm'>
                 <thead>
                   <tr className='bg-muted/50 border-b border-border/50'>
-                    {['Biển số', 'Chủ xe', 'Hãng xe', 'Mẫu xe', 'Loại xe', 'Màu sắc', 'Năm SX'].map((h) => (
-                      <th key={h} className='text-left px-5 py-3.5 text-[11px] font-black uppercase tracking-widest text-foreground/40'>{h}</th>
+                    {[
+                      'Biển số',
+                      'Chủ xe',
+                      'Hãng xe',
+                      'Mẫu xe',
+                      'Loại xe',
+                      'Màu sắc',
+                    ].map((h) => (
+                      <th
+                        key={h}
+                        className='text-left px-5 py-3.5 text-[11px] font-black uppercase tracking-widest text-foreground/60'
+                      >
+                        {h}
+                      </th>
                     ))}
                   </tr>
                 </thead>
                 <tbody className='divide-y divide-border/30'>
-                  {isLoading ? Array.from({ length: 6 }).map((_, i) => (
-                    <tr key={i}>{Array.from({ length: 7 }).map((__, j) => (
-                      <td key={j} className='px-5 py-4'><div className='h-4 bg-muted animate-pulse rounded-lg' /></td>
-                    ))}</tr>
-                  )) : filtered.length === 0 ? (
-                    <tr><td colSpan={7} className='px-5 py-16 text-center text-foreground/40 font-semibold'>Không có dữ liệu</td></tr>
-                  ) : filtered.map((v: VehicleData) => {
-                    const id = v._id ?? v.id;
-                    return (
-                      <tr key={id} className='hover:bg-muted/20 transition-colors'>
-                        <td className='px-5 py-4'>
-                          <div className='flex items-center gap-2'>
-                            <div className='w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center'>
-                              <Car className='w-4 h-4 text-primary' />
-                            </div>
-                            <span className='font-black text-foreground font-mono'>{v.licensePlate ?? '—'}</span>
-                          </div>
-                        </td>
-                        <td className='px-5 py-4 font-semibold text-foreground'>{v.userId?.fullName ?? v.ownerName ?? '—'}</td>
-                        <td className='px-5 py-4 text-foreground/70'>{v.brand ?? v.make ?? '—'}</td>
-                        <td className='px-5 py-4 text-foreground/70'>{v.model ?? '—'}</td>
-                        <td className='px-5 py-4 text-foreground/60'>{v.vehicleTypeId?.name ?? v.vehicleType ?? '—'}</td>
-                        <td className='px-5 py-4 text-foreground/60'>{v.color ?? '—'}</td>
-                        <td className='px-5 py-4 text-foreground/50'>{v.year ?? '—'}</td>
+                  {isLoading ? (
+                    Array.from({ length: 6 }).map((_, i) => (
+                      <tr key={i}>
+                        {Array.from({ length: 7 }).map((__, j) => (
+                          <td
+                            key={j}
+                            className='px-5 py-4'
+                          >
+                            <div className='h-4 bg-muted animate-pulse rounded-lg' />
+                          </td>
+                        ))}
                       </tr>
-                    );
-                  })}
+                    ))
+                  ) : filtered.length === 0 ? (
+                    <tr>
+                      <td
+                        colSpan={7}
+                        className='px-5 py-16 text-center text-foreground/60 font-semibold'
+                      >
+                        Không có dữ liệu
+                      </td>
+                    </tr>
+                  ) : (
+                    filtered.map((v: VehicleData) => {
+                      const id = v._id ?? v.id;
+                      return (
+                        <tr
+                          key={id}
+                          className='hover:bg-muted/20 transition-colors'
+                        >
+                          <td className='px-5 py-4'>
+                            <div className='flex items-center gap-2'>
+                              <div className='w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center'>
+                                <Car className='w-4 h-4 text-primary' />
+                              </div>
+                              <span className='font-black text-foreground font-mono'>
+                                {v.licensePlate ?? '-'}
+                              </span>
+                            </div>
+                          </td>
+                          <td className='px-5 py-4 font-semibold text-foreground'>
+                            {v.ownerName ?? v.userId?.fullName ?? '-'}
+                            {v.ownerPhone && (
+                              <span className='block text-[11px] font-normal text-foreground/50'>
+                                {v.ownerPhone}
+                              </span>
+                            )}
+                          </td>
+                          <td className='px-5 py-4 text-foreground/70'>
+                            {v.brand ?? v.make ?? '-'}
+                          </td>
+                          <td className='px-5 py-4 text-foreground/70'>
+                            {v.model ?? '-'}
+                          </td>
+                          <td className='px-5 py-4 text-foreground/60'>
+                            {v.vehicleTypeName ??
+                              (typeof v.vehicleTypeId === 'object'
+                                ? v.vehicleTypeId?.name
+                                : undefined) ??
+                              v.vehicleType ??
+                              '-'}
+                          </td>
+                          <td className='px-5 py-4 text-foreground/60'>
+                            {v.color ?? '-'}
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
                 </tbody>
               </table>
             </div>
             {total > 10 && (
               <div className='flex items-center justify-between px-5 py-4 border-t border-border/50 bg-muted/20'>
-                <span className='text-xs font-semibold text-foreground/40'>Trang {page} / {Math.ceil(total / 10)}</span>
+                <span className='text-xs font-semibold text-foreground/60'>
+                  Trang {page} / {Math.ceil(total / 10)}
+                </span>
                 <div className='flex gap-2'>
-                  <button onClick={() => setPage(Math.max(1, page - 1))} disabled={page === 1} className='px-3 py-1.5 rounded-lg border border-border text-xs font-semibold disabled:opacity-40 hover:border-primary/30'>Trước</button>
-                  <button onClick={() => setPage(page + 1)} disabled={page >= Math.ceil(total / 10)} className='px-3 py-1.5 rounded-lg border border-border text-xs font-semibold disabled:opacity-40 hover:border-primary/30'>Sau</button>
+                  <button
+                    onClick={() => setPage(Math.max(1, page - 1))}
+                    disabled={page === 1}
+                    className='px-3 py-1.5 rounded-lg border border-border text-xs font-semibold disabled:opacity-40 hover:border-primary/30'
+                  >
+                    Trước
+                  </button>
+                  <button
+                    onClick={() => setPage(page + 1)}
+                    disabled={page >= Math.ceil(total / 10)}
+                    className='px-3 py-1.5 rounded-lg border border-border text-xs font-semibold disabled:opacity-40 hover:border-primary/30'
+                  >
+                    Sau
+                  </button>
                 </div>
               </div>
             )}

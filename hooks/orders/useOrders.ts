@@ -7,8 +7,17 @@ import {
   cancelOrder,
   getAvailableSlots,
   getActiveServiceTypes,
+  getMyVouchers,
+  getMyLoyalty,
+  previewOrder,
 } from '@/lib/customer-api';
-import { CreateOrderDto, RescheduleOrderDto, CancelOrderDto } from '@/types/order';
+import {
+  CreateOrderDto,
+  RescheduleOrderDto,
+  CancelOrderDto,
+  Voucher,
+  PreviewOrderResponse,
+} from '@/types/order';
 
 export const useMyOrders = () => {
   return useQuery({
@@ -75,22 +84,29 @@ export const useCancelOrder = () => {
 
 export const useAvailableSlots = (params: {
   serviceTypeId: string;
+  vehicleTypeId: string;
   from: string;
   to: string;
   enabled?: boolean;
 }) => {
   return useQuery({
-    queryKey: ['available-slots', params.serviceTypeId, params.from, params.to],
+    queryKey: ['available-slots', params.serviceTypeId, params.vehicleTypeId, params.from, params.to],
     queryFn: async () => {
-      if (!params.serviceTypeId || !params.from || !params.to) return [];
+      if (!params.serviceTypeId || !params.vehicleTypeId || !params.from || !params.to) return [];
       const res = await getAvailableSlots({
         serviceTypeId: params.serviceTypeId,
+        vehicleTypeId: params.vehicleTypeId,
         from: params.from,
         to: params.to,
       });
       return res.data || [];
     },
-    enabled: params.enabled !== false && !!params.serviceTypeId && !!params.from && !!params.to,
+    enabled:
+      params.enabled !== false &&
+      !!params.serviceTypeId &&
+      !!params.vehicleTypeId &&
+      !!params.from &&
+      !!params.to,
   });
 };
 
@@ -101,5 +117,73 @@ export const useActiveServiceTypes = () => {
       const res = await getActiveServiceTypes();
       return res.data || [];
     },
+  });
+};
+
+/** Voucher của khách (mặc định chỉ lấy voucher còn dùng được). */
+export const useMyVouchers = (
+  status: 'unused' | 'used' | 'expired' = 'unused',
+) => {
+  return useQuery({
+    queryKey: ['my-vouchers', status],
+    queryFn: async (): Promise<Voucher[]> => {
+      const res = await getMyVouchers(status);
+      return res.data?.data ?? res.data ?? [];
+    },
+  });
+};
+
+/** Tài khoản loyalty của khách (điểm + tiến độ voucher rửa miễn phí). */
+export interface MyLoyalty {
+  tierName: string;
+  pointsBalance: number;
+  successfulWashesTowardVoucher: number;
+  totalSuccessfulWashes: number;
+}
+
+export const useMyLoyalty = () => {
+  return useQuery({
+    queryKey: ['my-loyalty'],
+    queryFn: async (): Promise<MyLoyalty | null> => {
+      const res = await getMyLoyalty();
+      return res.data?.data ?? res.data ?? null;
+    },
+  });
+};
+
+/**
+ * Xem trước giá đơn (giảm theo hạng + golden hour + voucher) trước khi đặt.
+ * Không tiêu voucher. Tự chạy lại khi đổi service/giờ/voucher.
+ */
+export const usePreviewOrder = (params: {
+  serviceTypeId: string;
+  vehicleTypeId: string;
+  scheduledAt: string;
+  voucherId?: string;
+  enabled?: boolean;
+}) => {
+  return useQuery({
+    queryKey: [
+      'order-preview',
+      params.serviceTypeId,
+      params.vehicleTypeId,
+      params.scheduledAt,
+      params.voucherId ?? null,
+    ],
+    queryFn: async (): Promise<PreviewOrderResponse | null> => {
+      if (!params.serviceTypeId || !params.vehicleTypeId || !params.scheduledAt) return null;
+      const res = await previewOrder({
+        serviceTypeId: params.serviceTypeId,
+        vehicleTypeId: params.vehicleTypeId,
+        scheduledAt: params.scheduledAt,
+        voucherId: params.voucherId,
+      });
+      return res.data?.data ?? res.data ?? null;
+    },
+    enabled:
+      params.enabled !== false &&
+      !!params.serviceTypeId &&
+      !!params.vehicleTypeId &&
+      !!params.scheduledAt,
   });
 };

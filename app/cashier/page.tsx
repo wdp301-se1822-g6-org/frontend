@@ -1,7 +1,7 @@
 'use client';
 
 import { AdminTopbar } from '@/components/admin/AdminTopbar';
-import { adminGetOrders, adminMarkOrderPaid, adminUpdateOrderStatus } from '@/lib/admin-api';
+import { adminGetOrders, adminMarkOrderPaid, adminUpdateOrderStatus, adminCreateWorkOrder } from '@/lib/admin-api';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import {
@@ -15,6 +15,7 @@ interface OrderData {
   id?: string;
   userId?: { fullName?: string; email?: string };
   customerName?: string;
+  customerEmail?: string;
   vehicleId?: { licensePlate?: string };
   licensePlate?: string;
   serviceTypeId?: { name?: string };
@@ -37,24 +38,34 @@ export default function CashierPOSPage() {
   const [payTarget, setPayTarget] = useState<OrderData | null>(null);
   const [payMethod, setPayMethod] = useState<'cash' | 'qr'>('cash');
 
-  // Lấy các đơn hàng chưa thanh toán (pending_payment)
+  // Đơn tiền mặt chờ thu tại quầy: BE tạo đơn CASH ở trạng thái CONFIRMED +
+  // payment_status=unpaid (xem payment-method.enum). Đơn ONLINE chưa trả là
+  // pending_payment và do PayOS webhook xử lý, không thuộc quầy thu ngân.
   const { data: ordersRes, isLoading, refetch, isRefetching } = useQuery({
     queryKey: ['cashier-pending-orders'],
-    queryFn: () => adminGetOrders({ status: 'pending_payment', limit: 100 }),
+    queryFn: () =>
+      adminGetOrders({
+        status: 'confirmed',
+        paymentMethod: 'cash',
+        paymentStatus: 'unpaid',
+        limit: 100,
+      }),
   });
 
   const orders: OrderData[] = ordersRes?.data?.data ?? ordersRes?.data ?? [];
 
-  // Mutation xử lý thanh toán
+  // Mutation xử lý thanh toán + check-in luôn (thu tiền là nhận xe vào bãi)
   const payMutation = useMutation({
     mutationFn: async (orderId: string) => {
       // 1. Đánh dấu đã thanh toán
       await adminMarkOrderPaid(orderId);
-      // 2. Chuyển trạng thái đơn hàng sang confirmed
-      await adminUpdateOrderStatus(orderId, 'confirmed');
+      // 2. Tạo phiếu rửa xe (check-in)
+      await adminCreateWorkOrder(orderId);
+      // 3. Chuyển trạng thái đơn hàng sang checked_in (đã nhận xe)
+      await adminUpdateOrderStatus(orderId, 'checked_in');
     },
     onSuccess: () => {
-      toast.success('Hóa đơn đã được thanh toán thành công!');
+      toast.success('Đã thu tiền & check-in! Phiếu rửa xe đã được tạo, xe vào bãi.');
       setIsPayOpen(false);
       setPayTarget(null);
       qc.invalidateQueries({ queryKey: ['cashier-pending-orders'] });
@@ -87,7 +98,7 @@ export default function CashierPOSPage() {
           {/* Filter Bar */}
           <div className='flex gap-3 items-center'>
             <div className='relative flex-1 max-w-md'>
-              <Search className='absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400' />
+              <Search className='absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500' />
               <input
                 type='text'
                 placeholder='Tìm khách hàng hoặc biển số xe để thanh toán...'
@@ -101,7 +112,7 @@ export default function CashierPOSPage() {
               onClick={() => refetch()}
               className='flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-slate-200 text-sm font-bold bg-white text-slate-600 hover:border-slate-300 transition-all shadow-sm'
             >
-              <RefreshCw className={`w-4 h-4 text-slate-400 ${isRefetching ? 'animate-spin' : ''}`} />
+              <RefreshCw className={`w-4 h-4 text-slate-500 ${isRefetching ? 'animate-spin' : ''}`} />
               Làm mới
             </button>
           </div>
@@ -113,7 +124,7 @@ export default function CashierPOSPage() {
                 <thead className='sticky top-0 bg-slate-50 border-b border-slate-100 z-10'>
                   <tr>
                     {['Mã đơn', 'Khách hàng', 'Biển số xe', 'Gói dịch vụ', 'Số tiền cần thu', 'Trạng thái', 'Hành động'].map((h) => (
-                      <th key={h} className='text-left px-5 py-4 text-[11px] font-black uppercase tracking-widest text-slate-400'>
+                      <th key={h} className='text-left px-5 py-4 text-[11px] font-black uppercase tracking-widest text-slate-500'>
                         {h}
                       </th>
                     ))}
@@ -132,7 +143,7 @@ export default function CashierPOSPage() {
                     ))
                   ) : filtered.length === 0 ? (
                     <tr>
-                      <td colSpan={7} className='px-5 py-24 text-center text-slate-400 font-semibold'>
+                      <td colSpan={7} className='px-5 py-24 text-center text-slate-500 font-semibold'>
                         <div className='w-12 h-12 rounded-xl bg-slate-50 flex items-center justify-center mx-auto mb-4 text-slate-300'>
                           <ShoppingBag className='w-6 h-6' />
                         </div>
@@ -145,20 +156,20 @@ export default function CashierPOSPage() {
                       const amount = o.amount ?? o.totalPrice ?? 0;
                       return (
                         <tr key={orderId} className='hover:bg-slate-50/20 transition-colors'>
-                          <td className='px-5 py-4.5 font-mono text-xs text-slate-400'>
+                          <td className='px-5 py-4.5 font-mono text-xs text-slate-500'>
                             {orderId.slice(-6).toUpperCase()}
                           </td>
                           <td className='px-5 py-4.5'>
-                            <div className='font-bold text-slate-800'>{o.userId?.fullName ?? o.customerName ?? '—'}</div>
-                            <div className='text-slate-400 text-xs'>{o.userId?.email ?? '—'}</div>
+                            <div className='font-bold text-slate-800'>{o.userId?.fullName ?? o.customerName ?? '-'}</div>
+                            <div className='text-slate-500 text-xs'>{o.userId?.email ?? o.customerEmail ?? '-'}</div>
                           </td>
                           <td className='px-5 py-4.5'>
                             <span className='font-mono font-black text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded text-xs'>
-                              {o.vehicleId?.licensePlate ?? o.licensePlate ?? '—'}
+                              {o.vehicleId?.licensePlate ?? o.licensePlate ?? '-'}
                             </span>
                           </td>
                           <td className='px-5 py-4.5 text-slate-600 font-medium'>
-                            {o.serviceTypeId?.name ?? o.serviceName ?? '—'}
+                            {o.serviceTypeId?.name ?? o.serviceName ?? '-'}
                           </td>
                           <td className='px-5 py-4.5 font-black text-slate-900 text-base'>
                             {Number(amount).toLocaleString('vi-VN')}đ
@@ -229,18 +240,18 @@ export default function CashierPOSPage() {
               </div>
               <div>
                 <h3 className='font-heading font-black text-slate-800 text-base'>Thu tiền hóa đơn</h3>
-                <p className='text-xs text-slate-400'>Xác nhận thanh toán cho khách hàng {payTarget.userId?.fullName ?? payTarget.customerName}</p>
+                <p className='text-xs text-slate-500'>Xác nhận thanh toán cho khách hàng {payTarget.userId?.fullName ?? payTarget.customerName}</p>
               </div>
             </div>
 
             {/* Bill Summary */}
             <div className='bg-slate-50 border border-slate-100 rounded-2xl p-4 mb-5 flex flex-col gap-2.5 text-sm'>
               <div className='flex justify-between'>
-                <span className='text-slate-400'>Biển số xe:</span>
+                <span className='text-slate-500'>Biển số xe:</span>
                 <span className='font-mono font-bold text-slate-800'>{payTarget.vehicleId?.licensePlate ?? payTarget.licensePlate}</span>
               </div>
               <div className='flex justify-between'>
-                <span className='text-slate-400'>Dịch vụ rửa xe:</span>
+                <span className='text-slate-500'>Dịch vụ rửa xe:</span>
                 <span className='font-semibold text-slate-800'>{payTarget.serviceTypeId?.name ?? payTarget.serviceName}</span>
               </div>
               <div className='border-t border-slate-200/60 my-1' />
@@ -254,7 +265,7 @@ export default function CashierPOSPage() {
 
             {/* Payment Method Option */}
             <div className='mb-6'>
-              <label className='block text-xs font-bold text-slate-400 uppercase mb-3 tracking-wider'>Phương thức thanh toán trực tiếp</label>
+              <label className='block text-xs font-bold text-slate-500 uppercase mb-3 tracking-wider'>Phương thức thanh toán trực tiếp</label>
               <div className='grid grid-cols-2 gap-3'>
                 <button
                   type='button'
@@ -293,11 +304,11 @@ export default function CashierPOSPage() {
               </button>
               <button
                 disabled={payMutation.isPending}
-                onClick={() => payMutation.mutate(payTarget._id)}
+                onClick={() => payMutation.mutate(payTarget._id ?? payTarget.id ?? '')}
                 className='px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-bold text-xs transition-all shadow-md shadow-emerald-600/10 flex items-center gap-1.5'
               >
                 <CheckCircle2 className='w-4 h-4' />
-                Xác nhận đã thu tiền
+                Xác nhận thu tiền & check-in
               </button>
             </div>
           </div>

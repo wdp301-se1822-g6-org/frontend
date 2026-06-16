@@ -1,229 +1,562 @@
 'use client';
 
+/**
+ * Management Reporting / Operational Analytics Dashboard.
+ *
+ * Renders real aggregated data from GET /admin/dashboard - no mock data.
+ * Report groups: Overview KPI, Revenue Analytics, Booking Analytics,
+ * Washer Performance, Customer Analytics, Vehicle Analytics,
+ * Voucher & Loyalty Analytics, Service Analytics, Refund & Dispute,
+ * Schedule & Capacity. Every list falls back to an honest empty state.
+ */
+
+import { useState } from 'react';
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
+import {
+  AlertTriangle,
+  CalendarCheck,
+  CircleDollarSign,
+  Clock,
+  CreditCard,
+  Layers,
+  Sparkles,
+  TrendingDown,
+  Users,
+  Wrench,
+} from 'lucide-react';
 import { AdminTopbar } from '@/components/admin/AdminTopbar';
 import {
-  CalendarCheck, Users, CreditCard, Star,
-  TrendingUp, TrendingDown, ArrowRight,
-  Clock, Car, Layers, Crown,
-} from 'lucide-react';
-import Link from 'next/link';
+  DateRangeFilter,
+  type DateFilterValue,
+} from '@/components/admin/dashboard/DateRangeFilter';
+import { DonutChart } from '@/components/admin/dashboard/DonutChart';
+import {
+  BarList,
+  DashboardSection,
+  EmptyBlock,
+  HourStrip,
+  KpiCard,
+  Panel,
+  RankBadge,
+  RankingTable,
+} from '@/components/admin/dashboard/parts';
+import { QueryBoundary } from '@/components/shared/QueryBoundary';
+import { adminGetDashboard } from '@/lib/admin-api';
+import { DEFAULT_PERIOD, getRangeForPeriod } from '@/lib/date-range';
+import { formatCurrency, formatNumber, formatPercent } from '@/lib/format';
+import type { DashboardReport } from '@/types/dashboard';
 
-// ─── Stat Card ─────────────────────────────────────────
-function StatCard({
-  label, value, sub, trend, trendUp, icon: Icon, iconBg,
-}: {
-  label: string; value: string; sub: string;
-  trend?: string; trendUp?: boolean;
-  icon: React.ElementType; iconBg: string;
-}) {
+/* ─── Labels ──────────────────────────────────────────────────────────── */
+
+const STATUS_LABELS: Record<string, string> = {
+  pending_payment: 'Chờ thanh toán',
+  confirmed: 'Đã xác nhận',
+  checked_in: 'Đã check-in',
+  in_progress: 'Đang rửa',
+  completed: 'Hoàn thành',
+  cancelled: 'Đã huỷ',
+  no_show: 'Không đến',
+};
+
+const PAYMENT_LABELS: Record<string, string> = {
+  online: 'Chuyển khoản (PayOS)',
+  cash: 'Tiền mặt',
+};
+
+/* ─── Page ────────────────────────────────────────────────────────────── */
+
+export default function AdminDashboardPage() {
+  const [filter, setFilter] = useState<DateFilterValue>(() => ({
+    period: DEFAULT_PERIOD,
+    range: getRangeForPeriod(DEFAULT_PERIOD),
+  }));
+
+  const { data, isLoading, isError, isFetching, refetch } = useQuery({
+    queryKey: [
+      'admin-dashboard',
+      filter.period,
+      filter.range.from,
+      filter.range.to,
+    ],
+    queryFn: async () => {
+      const res = await adminGetDashboard({
+        fromDate: filter.range.from,
+        toDate: filter.range.to,
+        period: filter.period,
+        topN: 5,
+      });
+      return res.data as DashboardReport;
+    },
+    // Keep the previous window's data on screen while the new one loads so the
+    // layout never collapses - we dim it with a light overlay instead.
+    placeholderData: keepPreviousData,
+  });
+
+  const isRefetching = isFetching && !isLoading;
+
   return (
-    <div className='bg-white rounded-2xl p-6 border border-border/50 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200'>
-      <div className='flex items-start justify-between mb-4'>
-        <div className={`w-11 h-11 rounded-xl ${iconBg} flex items-center justify-center`}>
-          <Icon className='w-5 h-5 text-white' />
+    <>
+      <AdminTopbar
+        title='Báo cáo quản trị & Phân tích vận hành'
+        subtitle='Toàn bộ số liệu được tổng hợp trực tiếp từ dữ liệu thật của hệ thống.'
+      />
+      <main className='flex-1 overflow-y-auto p-6 lg:p-8'>
+        <div className='mx-auto flex max-w-7xl flex-col gap-8'>
+          <DateRangeFilter
+            value={filter}
+            onChange={setFilter}
+            isFetching={isRefetching}
+          />
+
+          <QueryBoundary
+            isLoading={isLoading}
+            isError={isError}
+            onRetry={() => refetch()}
+            loading={<DashboardSkeleton />}
+          >
+            {data && (
+              <div className='relative'>
+                {isRefetching && (
+                  <div className='pointer-events-none absolute inset-0 z-10 rounded-xl bg-background/50' />
+                )}
+                {data.overview.totalBookings === 0 && (
+                  <div className='mb-6 rounded-xl border border-dashed border-border bg-muted/30 px-4 py-3 text-sm text-muted-foreground'>
+                    Không có booking nào trong khoảng thời gian đã chọn - các
+                    chỉ số doanh thu và đặt lịch sẽ hiển thị 0.
+                  </div>
+                )}
+                <DashboardBody report={data} />
+              </div>
+            )}
+          </QueryBoundary>
         </div>
-        {trend && (
-          <span className={`flex items-center gap-1 text-xs font-black px-2 py-1 rounded-lg ${trendUp ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'}`}>
-            {trendUp ? <TrendingUp className='w-3 h-3' /> : <TrendingDown className='w-3 h-3' />}
-            {trend}
-          </span>
-        )}
-      </div>
-      <p className='text-2xl font-black text-foreground tracking-tight mb-1'>{value}</p>
-      <p className='text-xs font-black text-foreground uppercase tracking-widest mb-1'>{label}</p>
-      <p className='text-foreground/40 text-xs font-medium'>{sub}</p>
+      </main>
+    </>
+  );
+}
+
+/* ─── Body ────────────────────────────────────────────────────────────── */
+
+function DashboardBody({ report }: { report: DashboardReport }) {
+  const { overview, revenue, bookings, washers } = report;
+  const inProgressBookings = bookings.statusSummary['in_progress'] ?? 0;
+  // "Đang chờ xử lý" không gồm số đang rửa để tránh đếm trùng trong biểu đồ.
+  const waitingBookings = Math.max(
+    overview.pendingBookings - inProgressBookings,
+    0,
+  );
+
+  return (
+    <div className='flex flex-col gap-10'>
+      {/* 1 ─ OVERVIEW KPI */}
+      <DashboardSection
+        title='Tổng quan (Overview KPI)'
+        subtitle='Các chỉ số vận hành chính trong kỳ đã chọn.'
+        icon={Sparkles}
+      >
+        <div className='grid grid-cols-2 gap-3 lg:grid-cols-4'>
+          <KpiCard
+            label='Doanh thu thực nhận'
+            value={formatCurrency(overview.netRevenue)}
+            hint='Sau giảm giá & hoàn tiền'
+            icon={CircleDollarSign}
+            tone='success'
+          />
+          <KpiCard
+            label='Tổng đặt lịch'
+            value={formatNumber(overview.totalBookings)}
+            hint={`${formatNumber(overview.completedBookings)} hoàn thành`}
+            icon={CalendarCheck}
+          />
+          <KpiCard
+            label='Đang rửa'
+            value={formatNumber(inProgressBookings)}
+            hint='Xe đang được xử lý'
+            icon={Sparkles}
+            tone='primary'
+          />
+          <KpiCard
+            label='Đang chờ xử lý'
+            value={formatNumber(waitingBookings)}
+            hint='Chưa vào rửa'
+            icon={Clock}
+          />
+          <KpiCard
+            label='Huỷ / Không đến'
+            value={`${formatNumber(overview.cancelledBookings)} / ${formatNumber(overview.noShowBookings)}`}
+            hint='Không tính doanh thu'
+            icon={TrendingDown}
+            tone='destructive'
+          />
+          <KpiCard
+            label='Giá trị đơn TB'
+            value={formatCurrency(overview.averageOrderValue)}
+            hint='Trên đơn hoàn thành'
+            icon={CreditCard}
+          />
+          <KpiCard
+            label='Thợ đang hoạt động'
+            value={formatNumber(overview.activeWashers)}
+            icon={Wrench}
+          />
+          <KpiCard
+            label='Khách hàng'
+            value={formatNumber(overview.totalCustomers)}
+            icon={Users}
+          />
+        </div>
+
+        {/* Tỷ trọng tổng hợp cho các card KPI ở trên */}
+        <div className='grid gap-4 lg:grid-cols-2'>
+          <Panel
+            title='Cơ cấu doanh thu'
+            hint='Doanh thu gộp được chia thành thực nhận, giảm giá và hoàn tiền'
+          >
+            <DonutChart
+              data={[
+                { label: 'Thực nhận', value: overview.netRevenue },
+                { label: 'Giảm giá', value: overview.discountAmount },
+                { label: 'Hoàn tiền', value: overview.refundAmount },
+              ]}
+              formatValue={formatCurrency}
+              centerCaption='doanh thu gộp'
+              emptyMessage='Chưa có doanh thu trong khoảng thời gian này'
+            />
+          </Panel>
+          <Panel
+            title='Cơ cấu đặt lịch'
+            hint='Tổng đặt lịch chia theo trạng thái xử lý'
+          >
+            <DonutChart
+              data={[
+                { label: 'Hoàn thành', value: overview.completedBookings },
+                { label: 'Đang rửa', value: inProgressBookings },
+                { label: 'Đang chờ xử lý', value: waitingBookings },
+                { label: 'Đã huỷ', value: overview.cancelledBookings },
+                { label: 'Không đến', value: overview.noShowBookings },
+              ]}
+              centerCaption='đơn'
+              emptyMessage='Chưa có booking nào trong khoảng thời gian này'
+            />
+          </Panel>
+        </div>
+      </DashboardSection>
+
+      {/* 2 ─ REVENUE ANALYTICS */}
+      <DashboardSection
+        title='Phân tích doanh thu (Revenue Analytics)'
+        subtitle='Doanh thu chỉ tính từ đơn Hoàn thành & Đã thanh toán.'
+        icon={CircleDollarSign}
+      >
+        <div className='grid gap-4 lg:grid-cols-3'>
+          <Panel
+            title='Cơ cấu doanh thu'
+            hint='Net = Gộp − Giảm giá − Hoàn tiền'
+          >
+            <dl className='flex flex-col gap-3 text-sm'>
+              <RevenueRow label='Doanh thu gộp' value={revenue.gross} />
+              <RevenueRow
+                label='Giảm giá'
+                value={-revenue.discount}
+                tone='warning'
+              />
+              <RevenueRow
+                label='Hoàn tiền'
+                value={-revenue.refund}
+                tone='destructive'
+              />
+              <div className='mt-1 flex items-center justify-between border-t border-border pt-3'>
+                <dt className='font-semibold text-foreground'>
+                  Doanh thu thực nhận
+                </dt>
+                <dd className='font-heading text-lg font-bold text-success'>
+                  {formatCurrency(revenue.net)}
+                </dd>
+              </div>
+              <div className='flex items-center justify-between text-muted-foreground'>
+                <dt>Giá trị đơn trung bình</dt>
+                <dd className='tabular-nums'>
+                  {formatCurrency(revenue.averageOrderValue)}
+                </dd>
+              </div>
+            </dl>
+          </Panel>
+
+          <Panel title='Tỷ trọng doanh thu theo dịch vụ'>
+            <DonutChart
+              data={revenue.byService.map((s) => ({
+                label: s.name,
+                value: s.revenue,
+              }))}
+              formatValue={formatCurrency}
+              centerCaption='doanh thu'
+              emptyMessage='Chưa có doanh thu theo dịch vụ trong khoảng thời gian này'
+            />
+          </Panel>
+
+          <Panel title='Tỷ trọng theo phương thức thanh toán'>
+            <DonutChart
+              data={revenue.byPaymentMethod.map((r) => ({
+                label: PAYMENT_LABELS[r.name] ?? r.name,
+                value: r.revenue,
+              }))}
+              formatValue={formatCurrency}
+              centerCaption='doanh thu'
+              emptyMessage='Chưa có doanh thu trong khoảng thời gian này'
+            />
+          </Panel>
+        </div>
+
+        <Panel title='Doanh thu theo ngày' hint='Theo ngày rửa (scheduled_at)'>
+          {revenue.byDay.length === 0 ? (
+            <EmptyBlock message='Chưa có doanh thu trong kỳ này' />
+          ) : (
+            <DayRevenueChart data={revenue.byDay} />
+          )}
+        </Panel>
+      </DashboardSection>
+
+      {/* 3 ─ BOOKING ANALYTICS */}
+      <DashboardSection
+        title='Phân tích đặt lịch (Booking Analytics)'
+        subtitle='Phân rã trạng thái, tỷ lệ hoàn thành/huỷ và khung giờ.'
+        icon={CalendarCheck}
+      >
+        <div className='grid grid-cols-2 gap-3 lg:grid-cols-4'>
+          <KpiCard
+            label='Tỷ lệ hoàn thành'
+            value={formatPercent(bookings.completionRate)}
+            icon={CalendarCheck}
+            tone='success'
+          />
+          <KpiCard
+            label='Tỷ lệ huỷ'
+            value={formatPercent(bookings.cancellationRate)}
+            icon={TrendingDown}
+            tone='destructive'
+          />
+          <KpiCard
+            label='Tỷ lệ không đến'
+            value={formatPercent(bookings.noShowRate)}
+            icon={AlertTriangle}
+            tone='warning'
+          />
+          <KpiCard
+            label='Tổng đặt lịch'
+            value={formatNumber(overview.totalBookings)}
+            icon={Layers}
+          />
+        </div>
+        <div className='grid gap-4 lg:grid-cols-3'>
+          <Panel
+            title='Tỷ trọng trạng thái đặt lịch'
+            className='lg:col-span-1'
+          >
+            <DonutChart
+              data={Object.entries(bookings.statusSummary).map(
+                ([key, count]) => ({
+                  label: STATUS_LABELS[key] ?? key,
+                  value: count,
+                }),
+              )}
+              centerCaption='đơn'
+              emptyMessage='Chưa có booking nào trong khoảng thời gian này'
+            />
+          </Panel>
+          <Panel
+            title='Khung giờ đông khách'
+            hint='Số đơn theo giờ trong ngày - cột đậm là giờ cao điểm'
+            className='lg:col-span-2'
+          >
+            <HourStrip
+              data={bookings.byHour}
+              emptyMessage='Chưa có đặt lịch trong kỳ này'
+            />
+          </Panel>
+        </div>
+        <Panel title='Đặt lịch theo dịch vụ'>
+          <BarList
+            items={bookings.byService.map((s) => ({
+              label: s.name,
+              value: s.count,
+            }))}
+            format={(v) => `${formatNumber(v)} đơn`}
+            emptyMessage='Chưa có đặt lịch trong kỳ này'
+          />
+        </Panel>
+      </DashboardSection>
+
+      {/* 4 ─ WASHER PERFORMANCE */}
+      <DashboardSection
+        title='Hiệu suất thợ rửa (Washer Performance)'
+        subtitle='“Ai là người rửa nhiều nhất?” - xếp hạng theo số lượt rửa hoàn thành.'
+        icon={Wrench}
+      >
+        <Panel title='Top thợ rửa theo số việc hoàn thành'>
+          <RankingTable
+            rows={washers}
+            rowKey={(w) => w.id}
+            emptyMessage='Chưa có thợ nào hoàn thành lượt rửa trong kỳ này'
+            columns={[
+              {
+                header: '#',
+                cell: (_w, i) => <RankBadge index={i} />,
+              },
+              {
+                header: 'Thợ rửa',
+                cell: (w) => (
+                  <span className='font-medium text-foreground'>{w.name}</span>
+                ),
+              },
+              {
+                header: 'Hoàn thành',
+                align: 'right',
+                cell: (w) => (
+                  <span className='font-semibold tabular-nums'>
+                    {formatNumber(w.completedJobs)}
+                  </span>
+                ),
+              },
+              {
+                header: 'Được giao',
+                align: 'right',
+                cell: (w) => (
+                  <span className='tabular-nums text-muted-foreground'>
+                    {formatNumber(w.assignedJobs)}
+                  </span>
+                ),
+              },
+              {
+                header: 'Thời gian TB',
+                align: 'right',
+                cell: (w) => (
+                  <span className='tabular-nums text-muted-foreground'>
+                    {w.averageServiceMinutes > 0
+                      ? `${formatNumber(w.averageServiceMinutes)} phút`
+                      : '-'}
+                  </span>
+                ),
+              },
+              {
+                header: 'Đúng giờ',
+                align: 'right',
+                cell: (w) => (
+                  <span className='tabular-nums'>
+                    {formatPercent(w.onTimeRate)}
+                  </span>
+                ),
+              },
+              {
+                header: 'QC trả về',
+                align: 'right',
+                cell: (w) => (
+                  <span
+                    className={`tabular-nums ${w.reworkCount > 0 ? 'text-warning' : 'text-muted-foreground'}`}
+                  >
+                    {formatNumber(w.reworkCount)}
+                  </span>
+                ),
+              },
+              {
+                header: 'Doanh thu xử lý',
+                align: 'right',
+                cell: (w) => (
+                  <span className='font-medium tabular-nums'>
+                    {formatCurrency(w.revenueHandled)}
+                  </span>
+                ),
+              },
+            ]}
+          />
+        </Panel>
+      </DashboardSection>
+
     </div>
   );
 }
 
-// ─── Recent bookings mock ───────────────────────────────
-const recentBookings = [
-  { id: 'BK001', customer: 'Nguyễn Văn A', plate: 'ABC-1234', service: 'Rửa cao cấp', time: '09:30', amount: '350.000đ', status: 'completed' },
-  { id: 'BK002', customer: 'Trần Thị B', plate: 'XYZ-5678', service: 'Rửa tiêu chuẩn', time: '10:15', amount: '150.000đ', status: 'in_progress' },
-  { id: 'BK003', customer: 'Lê Văn C', plate: 'DEF-9012', service: 'Vệ sinh nội thất', time: '10:45', amount: '250.000đ', status: 'confirmed' },
-  { id: 'BK004', customer: 'Phạm Thị D', plate: 'GHI-3456', service: 'Rửa nhanh', time: '11:00', amount: '80.000đ', status: 'pending' },
-  { id: 'BK005', customer: 'Hoàng Văn E', plate: 'JKL-7890', service: 'Rửa tiêu chuẩn', time: '11:30', amount: '150.000đ', status: 'confirmed' },
-];
+/* ─── Small helpers ───────────────────────────────────────────────────── */
 
-const statusConfig: Record<string, { label: string; cls: string }> = {
-  completed:   { label: 'Hoàn thành',    cls: 'bg-emerald-50 text-emerald-700' },
-  in_progress: { label: 'Đang xử lý',   cls: 'bg-blue-50 text-blue-700' },
-  confirmed:   { label: 'Xác nhận',      cls: 'bg-primary/10 text-primary' },
-  pending:     { label: 'Chờ xử lý',     cls: 'bg-yellow-50 text-yellow-700' },
-  cancelled:   { label: 'Đã huỷ',        cls: 'bg-rose-50 text-rose-700' },
-};
-
-// ─── Quick actions ──────────────────────────────────────
-const quickActions = [
-  { label: 'Tạo đặt lịch', sub: 'Thêm booking mới', href: '/admin/bookings', icon: CalendarCheck, bg: 'bg-primary' },
-  { label: 'Thêm người dùng', sub: 'Tạo tài khoản mới', href: '/admin/users', icon: Users, bg: 'bg-secondary' },
-  { label: 'Quản lý dịch vụ', sub: 'Sửa gói dịch vụ', href: '/admin/services', icon: Layers, bg: 'bg-emerald-500' },
-  { label: 'Xem báo cáo', sub: 'Phân tích & thống kê', href: '/admin/orders', icon: CreditCard, bg: 'bg-purple-500' },
-];
-
-export default function AdminDashboardPage() {
+function RevenueRow({
+  label,
+  value,
+  tone,
+}: {
+  label: string;
+  value: number;
+  tone?: 'warning' | 'destructive';
+}) {
+  // Normalise -0 so a zero deduction never renders as "-0 ₫".
+  const display = value === 0 ? 0 : value;
   return (
-    <>
-      <AdminTopbar
-        title='Tổng quan Dashboard'
-        subtitle='Xin chào, Admin! Đây là những gì đang diễn ra hôm nay.'
-      />
-      <main className='flex-1 p-8 overflow-y-auto'>
-        <div className='max-w-7xl mx-auto flex flex-col gap-8'>
+    <div className='flex items-center justify-between'>
+      <dt className='text-muted-foreground'>{label}</dt>
+      <dd
+        className={`tabular-nums ${
+          tone === 'warning'
+            ? 'text-warning'
+            : tone === 'destructive'
+              ? 'text-destructive'
+              : 'text-foreground'
+        }`}
+      >
+        {formatCurrency(display)}
+      </dd>
+    </div>
+  );
+}
 
-          {/* Stat Cards */}
-          <div className='grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5'>
-            <StatCard label='Đặt lịch hôm nay' value='128' sub='So với hôm qua' trend='+18%' trendUp icon={CalendarCheck} iconBg='bg-primary' />
-            <StatCard label='Khách hàng' value='1.245' sub='Tổng người dùng' trend='+15%' trendUp icon={Users} iconBg='bg-secondary' />
-            <StatCard label='Doanh thu hôm nay' value='4.320.000đ' sub='So với hôm qua' trend='+22%' trendUp icon={CreditCard} iconBg='bg-emerald-500' />
-            <StatCard label='Đánh giá trung bình' value='4.8 ⭐' sub='Dựa trên 152 đánh giá' icon={Star} iconBg='bg-yellow-500' />
+function DayRevenueChart({
+  data,
+}: {
+  data: { key: string; revenue: number; orders: number }[];
+}) {
+  const max = Math.max(...data.map((d) => d.revenue), 1);
+  return (
+    <div className='flex items-end gap-1.5 overflow-x-auto' style={{ height: 160 }}>
+      {data.map((d) => {
+        const height = Math.max((d.revenue / max) * 100, 3);
+        const label = d.key.slice(5); // MM-DD
+        return (
+          <div
+            key={d.key}
+            className='group flex min-w-4.5 max-w-16 flex-1 flex-col items-center justify-end'
+            style={{ height: '100%' }}
+            title={`${d.key}: ${formatCurrency(d.revenue)} (${d.orders} đơn)`}
+          >
+            <div
+              className='w-full rounded-t-sm bg-primary/70 transition-colors group-hover:bg-primary'
+              style={{ height: `${height}%` }}
+            />
+            <span className='mt-1 rotate-0 whitespace-nowrap text-[9px] text-muted-foreground'>
+              {label}
+            </span>
           </div>
+        );
+      })}
+    </div>
+  );
+}
 
-          {/* Quick Actions */}
-          <div>
-            <h2 className='font-heading text-sm font-black uppercase tracking-widest text-foreground/40 mb-4'>Thao tác nhanh</h2>
-            <div className='grid grid-cols-2 lg:grid-cols-4 gap-4'>
-              {quickActions.map(({ label, sub, href, icon: Icon, bg }) => (
-                <Link
-                  key={href}
-                  href={href}
-                  className={`${bg} rounded-2xl p-5 text-white flex flex-col gap-3 hover:-translate-y-1 hover:shadow-xl transition-all duration-200 shadow-lg group`}
-                >
-                  <div className='w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center group-hover:scale-110 transition-transform'>
-                    <Icon className='w-5 h-5' />
-                  </div>
-                  <div>
-                    <p className='font-black text-sm'>{label}</p>
-                    <p className='text-white/60 text-xs mt-0.5'>{sub}</p>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </div>
-
-          {/* Two columns: recent bookings + stats */}
-          <div className='grid grid-cols-1 xl:grid-cols-3 gap-6'>
-
-            {/* Recent Bookings Table */}
-            <div className='xl:col-span-2 bg-white rounded-2xl border border-border/50 shadow-sm overflow-hidden'>
-              <div className='flex items-center justify-between px-6 py-5 border-b border-border/50'>
-                <h2 className='font-heading font-black text-foreground text-base'>Đặt lịch gần đây</h2>
-                <Link href='/admin/bookings' className='text-xs font-black text-primary hover:underline flex items-center gap-1'>
-                  Xem tất cả <ArrowRight className='w-3 h-3' />
-                </Link>
-              </div>
-              <div className='overflow-x-auto'>
-                <table className='w-full text-sm'>
-                  <thead>
-                    <tr className='bg-muted/50'>
-                      <th className='text-left px-6 py-3 text-[11px] font-black uppercase tracking-widest text-foreground/40'>Khách hàng</th>
-                      <th className='text-left px-4 py-3 text-[11px] font-black uppercase tracking-widest text-foreground/40'>Biển số</th>
-                      <th className='text-left px-4 py-3 text-[11px] font-black uppercase tracking-widest text-foreground/40'>Dịch vụ</th>
-                      <th className='text-left px-4 py-3 text-[11px] font-black uppercase tracking-widest text-foreground/40'>Giờ</th>
-                      <th className='text-right px-4 py-3 text-[11px] font-black uppercase tracking-widest text-foreground/40'>Số tiền</th>
-                      <th className='text-center px-4 py-3 text-[11px] font-black uppercase tracking-widest text-foreground/40'>Trạng thái</th>
-                    </tr>
-                  </thead>
-                  <tbody className='divide-y divide-border/30'>
-                    {recentBookings.map((b) => {
-                      const s = statusConfig[b.status];
-                      return (
-                        <tr key={b.id} className='hover:bg-muted/20 transition-colors'>
-                          <td className='px-6 py-4'>
-                            <div className='flex items-center gap-3'>
-                              <div className='w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-black text-xs'>
-                                {b.customer[0]}
-                              </div>
-                              <span className='font-semibold text-foreground text-sm'>{b.customer}</span>
-                            </div>
-                          </td>
-                          <td className='px-4 py-4 text-foreground/60 font-mono text-xs'>{b.plate}</td>
-                          <td className='px-4 py-4 text-foreground/70 text-sm'>{b.service}</td>
-                          <td className='px-4 py-4 text-foreground/60 text-sm'>{b.time}</td>
-                          <td className='px-4 py-4 text-right font-black text-foreground text-sm'>{b.amount}</td>
-                          <td className='px-4 py-4 text-center'>
-                            <span className={`inline-flex px-2.5 py-1 rounded-lg text-[11px] font-black uppercase tracking-wider ${s.cls}`}>
-                              {s.label}
-                            </span>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            {/* Right column stats */}
-            <div className='flex flex-col gap-5'>
-              {/* Loyalty summary */}
-              <div className='bg-white rounded-2xl border border-border/50 shadow-sm p-6'>
-                <h2 className='font-heading font-black text-foreground text-base mb-5'>Thống kê thành viên</h2>
-                <div className='flex flex-col gap-4'>
-                  {[
-                    { label: 'Tổng khách hàng', value: '1.245', icon: Users, color: 'text-primary bg-primary/10' },
-                    { label: 'Thành viên Loyalty', value: '672', icon: Crown, color: 'text-yellow-600 bg-yellow-50' },
-                    { label: 'Tỷ lệ quay lại', value: '54%', icon: TrendingUp, color: 'text-emerald-600 bg-emerald-50' },
-                  ].map(({ label, value, icon: Icon, color }) => (
-                    <div key={label} className='flex items-center justify-between'>
-                      <div className='flex items-center gap-3'>
-                        <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${color}`}>
-                          <Icon className='w-4 h-4' />
-                        </div>
-                        <span className='text-sm font-semibold text-foreground/70'>{label}</span>
-                      </div>
-                      <span className='font-black text-foreground'>{value}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Service breakdown */}
-              <div className='bg-white rounded-2xl border border-border/50 shadow-sm p-6'>
-                <h2 className='font-heading font-black text-foreground text-base mb-5'>Dịch vụ phổ biến</h2>
-                {[
-                  { name: 'Rửa cao cấp', pct: 42, color: 'bg-primary' },
-                  { name: 'Rửa tiêu chuẩn', pct: 28, color: 'bg-secondary' },
-                  { name: 'Vệ sinh nội thất', pct: 18, color: 'bg-emerald-500' },
-                  { name: 'Rửa nhanh', pct: 12, color: 'bg-yellow-500' },
-                ].map(({ name, pct, color }) => (
-                  <div key={name} className='mb-4 last:mb-0'>
-                    <div className='flex justify-between mb-1.5'>
-                      <span className='text-sm font-semibold text-foreground/70'>{name}</span>
-                      <span className='text-sm font-black text-foreground'>{pct}%</span>
-                    </div>
-                    <div className='h-2 bg-muted rounded-full overflow-hidden'>
-                      <div className={`h-full ${color} rounded-full transition-all duration-1000`} style={{ width: `${pct}%` }} />
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {/* Nav shortcuts */}
-              <div className='bg-foreground rounded-2xl p-5 text-white'>
-                <p className='font-black text-sm mb-4 text-white/70 uppercase tracking-widest'>Quản lý nhanh</p>
-                <div className='grid grid-cols-2 gap-2'>
-                  {[
-                    { href: '/admin/vehicles', icon: Car, label: 'Xe' },
-                    { href: '/admin/shifts', icon: Clock, label: 'Ca làm' },
-                    { href: '/admin/services', icon: Layers, label: 'Dịch vụ' },
-                    { href: '/admin/tiers', icon: Crown, label: 'Hạng' },
-                  ].map(({ href, icon: Icon, label }) => (
-                    <Link
-                      key={href}
-                      href={href}
-                      className='flex items-center gap-2 bg-white/5 hover:bg-white/10 rounded-xl px-3 py-2.5 transition-colors'
-                    >
-                      <Icon className='w-4 h-4 text-primary' />
-                      <span className='text-sm font-semibold text-white/70'>{label}</span>
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </main>
-    </>
+function DashboardSkeleton() {
+  return (
+    <div className='flex flex-col gap-6'>
+      <div className='grid grid-cols-2 gap-3 lg:grid-cols-4'>
+        {Array.from({ length: 8 }).map((_, i) => (
+          <div
+            key={i}
+            className='h-24 animate-pulse rounded-xl border border-border bg-muted/40'
+          />
+        ))}
+      </div>
+      <div className='grid gap-4 lg:grid-cols-3'>
+        {Array.from({ length: 3 }).map((_, i) => (
+          <div
+            key={i}
+            className='h-64 animate-pulse rounded-xl border border-border bg-muted/40'
+          />
+        ))}
+      </div>
+    </div>
   );
 }

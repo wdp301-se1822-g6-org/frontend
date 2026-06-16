@@ -1,5 +1,5 @@
 /**
- * Vai trò người dùng — mirror BE `src/features/auth/types/role.enum.ts`.
+ * Vai trò người dùng - mirror BE `src/features/auth/types/role.enum.ts`.
  * KHÔNG đổi giá trị string nếu BE chưa đổi.
  */
 export const ROLES = {

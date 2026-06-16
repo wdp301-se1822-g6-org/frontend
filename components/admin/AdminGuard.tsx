@@ -6,7 +6,7 @@ import { useEffect } from 'react';
 import { ShieldAlert } from 'lucide-react';
 
 /**
- * AdminGuard — bọc bất kỳ nội dung admin nào.
+ * AdminGuard - bọc bất kỳ nội dung admin nào.
  * - Chưa đăng nhập → redirect /login
  * - Đã đăng nhập nhưng không phải admin → trang lỗi 403
  */

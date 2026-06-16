@@ -90,7 +90,7 @@ export default function AdminUsersPage() {
           {/* Filters */}
           <div className='flex flex-wrap items-center gap-3 mb-6'>
             <div className='relative flex-1 min-w-[200px] max-w-xs'>
-              <Search className='absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/30' />
+              <Search className='absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/55' />
               <input type='text' placeholder='Tìm kiếm người dùng...'
                 value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }}
                 className='w-full pl-9 pr-4 py-2.5 rounded-xl bg-white border border-border text-sm focus:outline-none focus:border-primary/50 transition-all' />
@@ -105,13 +105,13 @@ export default function AdminUsersPage() {
                 <option value='washer'>Thợ rửa xe</option>
                 <option value='customer'>Khách hàng</option>
               </select>
-              <ChevronDown className='absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/40 pointer-events-none' />
+              <ChevronDown className='absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/60 pointer-events-none' />
             </div>
             <button onClick={() => refetch()}
               className='flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-border text-sm font-semibold hover:border-primary/30 transition-all'>
               <RefreshCw className='w-4 h-4 text-foreground/50' />Làm mới
             </button>
-            <span className='ml-auto text-xs font-semibold text-foreground/40'>Tổng: {totalItems} tài khoản</span>
+            <span className='ml-auto text-xs font-semibold text-foreground/60'>Tổng: {totalItems} tài khoản</span>
           </div>
 
           {/* Table */}
@@ -121,7 +121,7 @@ export default function AdminUsersPage() {
                 <thead>
                   <tr className='bg-muted/50 border-b border-border/50'>
                     {['Người dùng', 'Email', 'Vai trò', 'Trạng thái', 'Ngày tạo', 'Thao tác'].map((h) => (
-                      <th key={h} className='text-left px-5 py-3.5 text-[11px] font-black uppercase tracking-widest text-foreground/40'>{h}</th>
+                      <th key={h} className='text-left px-5 py-3.5 text-[11px] font-black uppercase tracking-widest text-foreground/60'>{h}</th>
                     ))}
                   </tr>
                 </thead>
@@ -133,7 +133,7 @@ export default function AdminUsersPage() {
                       ))}</tr>
                     ))
                   ) : paginatedUsers.length === 0 ? (
-                    <tr><td colSpan={6} className='px-5 py-16 text-center text-foreground/40 font-semibold'>Không có dữ liệu</td></tr>
+                    <tr><td colSpan={6} className='px-5 py-16 text-center text-foreground/60 font-semibold'>Không có dữ liệu</td></tr>
                   ) : (
                     paginatedUsers.map((u: UserData) => {
                       const role = roleConfig[u.role ?? ''] ?? { label: u.role, cls: 'bg-muted text-foreground/60' };
@@ -146,10 +146,10 @@ export default function AdminUsersPage() {
                               <div className='w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center text-primary font-black text-sm'>
                                 {(u.fullName ?? u.name ?? '?')[0]?.toUpperCase()}
                               </div>
-                              <span className='font-semibold text-foreground'>{u.fullName ?? u.name ?? '—'}</span>
+                              <span className='font-semibold text-foreground'>{u.fullName ?? u.name ?? '-'}</span>
                             </div>
                           </td>
-                          <td className='px-5 py-4 text-foreground/60 text-sm'>{u.email ?? '—'}</td>
+                          <td className='px-5 py-4 text-foreground/60 text-sm'>{u.email ?? '-'}</td>
                           <td className='px-5 py-4'>
                             <span className={`inline-flex px-2.5 py-1 rounded-lg text-[11px] font-black uppercase tracking-wider ${role.cls}`}>{role.label}</span>
                           </td>
@@ -157,7 +157,7 @@ export default function AdminUsersPage() {
                             <span className={`inline-flex px-2.5 py-1 rounded-lg text-[11px] font-black uppercase tracking-wider ${status.cls}`}>{status.label}</span>
                           </td>
                           <td className='px-5 py-4 text-foreground/50 text-xs'>
-                            {u.createdAt ? new Date(u.createdAt).toLocaleDateString('vi-VN') : '—'}
+                            {u.createdAt ? new Date(u.createdAt).toLocaleDateString('vi-VN') : '-'}
                           </td>
                           <td className='px-5 py-4'>
                             <div className='flex items-center gap-2'>
@@ -195,7 +195,7 @@ export default function AdminUsersPage() {
             {/* Pagination */}
             {totalItems > itemsPerPage && (
               <div className='flex items-center justify-between px-5 py-4 border-t border-border/50 bg-muted/20'>
-                <span className='text-xs font-semibold text-foreground/40'>Trang {page} / {totalPages}</span>
+                <span className='text-xs font-semibold text-foreground/60'>Trang {page} / {totalPages}</span>
                 <div className='flex gap-2'>
                   <button onClick={() => setPage(Math.max(1, page - 1))} disabled={page === 1}
                     className='px-3 py-1.5 rounded-lg border border-border text-xs font-semibold disabled:opacity-40 hover:border-primary/30'>Trước</button>
@@ -218,7 +218,7 @@ export default function AdminUsersPage() {
               </div>
               <div>
                 <h3 className='font-heading font-black text-foreground'>Đặt lại mật khẩu</h3>
-                <p className='text-xs text-foreground/40'>Nhập mật khẩu mới cho người dùng</p>
+                <p className='text-xs text-foreground/60'>Nhập mật khẩu mới cho người dùng</p>
               </div>
             </div>
             <input type='password' placeholder='Mật khẩu mới (tối thiểu 8 ký tự)'

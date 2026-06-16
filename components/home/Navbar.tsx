@@ -27,6 +27,12 @@ import { axiosInstance } from '@/lib/axios';
 import { cn } from '@/lib/utils';
 import { getTierMeta } from '@/constants';
 import { getInitials } from '@/lib/format';
+import { useQuery } from '@tanstack/react-query';
+import { getMyLoyalty } from '@/lib/customer-api';
+import type { LoyaltyAccount } from '@/types/loyalty';
+
+/** Số lượt rửa hợp lệ cho 1 voucher thưởng - khớp BE. */
+const WASHES_PER_FREE_VOUCHER = 10;
 
 const navLinks = [
   { label: 'Đặt lịch', href: '/booking' },
@@ -54,8 +60,25 @@ export function Navbar() {
     }
   };
 
-  const tierMeta = getTierMeta(authUser?.tier);
-  const points = authUser?.loyaltyPoints ?? 0;
+  // Lấy dữ liệu loyalty thật (cùng query key với trang loyalty -> dùng chung
+  // cache, không gọi API thừa). Điểm và tiến độ rửa lấy từ đây thay vì
+  // authUser (vốn chỉ set lúc đăng nhập nên hay lệch / bằng 0).
+  const { data: loyaltyData } = useQuery({
+    queryKey: ['my-loyalty'],
+    queryFn: getMyLoyalty,
+    enabled: !!authUser,
+  });
+  const loyalty: LoyaltyAccount | null =
+    loyaltyData?.data?.data ?? loyaltyData?.data ?? null;
+
+  const tierName = loyalty?.tierName ?? authUser?.tier ?? 'Member';
+  const tierMeta = getTierMeta(tierName);
+  const points = loyalty?.pointsBalance ?? authUser?.loyaltyPoints ?? 0;
+  const towardVoucher = loyalty?.successfulWashesTowardVoucher ?? 0;
+  const voucherPct = Math.min(
+    (towardVoucher / WASHES_PER_FREE_VOUCHER) * 100,
+    100,
+  );
   const initials = getInitials(authUser?.name);
 
   return (
@@ -154,7 +177,7 @@ export function Navbar() {
                         </div>
                       </div>
 
-                      <div className='space-y-3'>
+                      <div className='space-y-2'>
                         <div className='flex items-center justify-between'>
                           <span
                             className={cn(
@@ -162,7 +185,7 @@ export function Navbar() {
                               tierMeta.badgeClass,
                             )}
                           >
-                            {tierMeta.label}
+                            {tierName}
                           </span>
                           <span className='text-primary font-black text-xs'>
                             {points.toLocaleString()}{' '}
@@ -171,14 +194,17 @@ export function Navbar() {
                             </span>
                           </span>
                         </div>
+                        {/* Tiến độ rửa tới voucher thưởng (dữ liệu thật) */}
                         <div className='h-1.5 w-full bg-primary/10 rounded-full overflow-hidden'>
                           <div
                             className='h-full bg-linear-to-r from-primary to-secondary transition-all duration-1000 ease-out'
-                            style={{
-                              width: `${Math.min((points / 5000) * 100, 100)}%`,
-                            }}
+                            style={{ width: `${voucherPct}%` }}
                           />
                         </div>
+                        <p className='text-[10px] font-medium text-foreground/50'>
+                          {towardVoucher}/{WASHES_PER_FREE_VOUCHER} lượt rửa tới
+                          voucher thưởng
+                        </p>
                       </div>
                     </div>
 
@@ -274,7 +300,7 @@ export function Navbar() {
                       tierMeta.badgeClass,
                     )}
                   >
-                    {tierMeta.label}
+                    {tierName}
                   </span>
                   <span className='text-foreground/45 text-xs'>
                     {points.toLocaleString()} pts

@@ -1,5 +1,5 @@
 /**
- * Phương thức & trạng thái thanh toán — mirror BE
+ * Phương thức & trạng thái thanh toán - mirror BE
  * `src/features/order/types/payment-method.enum.ts` và `payment-status.enum.ts`.
  */
 import type { StatusTone } from './order-status';

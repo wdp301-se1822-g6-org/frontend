@@ -6,7 +6,7 @@ import { useEffect } from 'react';
 import { ShieldAlert } from 'lucide-react';
 
 /**
- * WasherGuard — bọc bất kỳ nội dung washer nào.
+ * WasherGuard - bọc bất kỳ nội dung washer nào.
  * - Chưa đăng nhập → redirect /login
  * - Đã đăng nhập nhưng không phải washer → trang lỗi 403
  */

@@ -3,15 +3,7 @@
 import { useAuthStore } from '@/store/useAuthStore';
 import { cn } from '@/lib/utils';
 import { getInitials } from '@/lib/format';
-import {
-  User,
-  Bell,
-  Ticket,
-  Pencil,
-  Star,
-  Car,
-  History,
-} from 'lucide-react';
+import { User, Bell, Ticket, Pencil, Star, Car, History } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
@@ -55,7 +47,7 @@ const menuItems = [
     title: 'Voucher của tôi',
     icon: Ticket,
     color: 'text-blue-500',
-    href: '/profile/my-voucher',
+    href: '/profile/vouchers',
   },
 ];
 
@@ -101,22 +93,38 @@ export default function ProfileSidebar() {
       <nav className='space-y-1'>
         {menuItems.map((item, idx) => {
           const Icon = item.icon;
-          const isActive = item.href === pathname || item.subItems?.some(si => si.href === pathname);
+          const isActive =
+            item.href === pathname ||
+            item.subItems?.some((si) => si.href === pathname);
 
           return (
-            <div key={idx} className='space-y-1'>
+            <div
+              key={idx}
+              className='space-y-1'
+            >
               <div
                 className={cn(
                   'flex items-center gap-3 px-3 py-2 rounded-lg transition-all',
                   item.subItems && isActive && 'bg-primary/5 text-primary',
-                  !item.subItems && (pathname === item.href ? 'bg-primary/5 text-primary' : 'hover:bg-accent/50')
+                  !item.subItems &&
+                    (pathname === item.href
+                      ? 'bg-primary/5 text-primary'
+                      : 'hover:bg-accent/50'),
                 )}
               >
-                <div className={cn('p-1.5 rounded-md bg-card shadow-sm', item.color)}>
+                <div
+                  className={cn(
+                    'p-1.5 rounded-md bg-card shadow-sm',
+                    item.color,
+                  )}
+                >
                   <Icon className='w-4 h-4' />
                 </div>
                 {item.href ? (
-                  <Link href={item.href} className='text-sm font-semibold flex-1'>
+                  <Link
+                    href={item.href}
+                    className='text-sm font-semibold flex-1'
+                  >
                     {item.title}
                   </Link>
                 ) : (
@@ -138,7 +146,7 @@ export default function ProfileSidebar() {
                           'text-sm py-1 transition-colors',
                           isSubActive
                             ? 'text-primary font-bold'
-                            : 'text-muted-foreground hover:text-primary'
+                            : 'text-muted-foreground hover:text-primary',
                         )}
                       >
                         {sub.label}

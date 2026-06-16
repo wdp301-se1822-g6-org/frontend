@@ -23,13 +23,13 @@ export default function AdminSettingsPage() {
             </div>
             <div className='grid grid-cols-1 md:grid-cols-2 gap-5'>
               {[
-                { label: 'Họ và tên', value: authUser?.name ?? '—' },
-                { label: 'Email', value: authUser?.email ?? '—' },
-                { label: 'Vai trò', value: authUser?.role ?? '—' },
+                { label: 'Họ và tên', value: authUser?.name ?? '-' },
+                { label: 'Email', value: authUser?.email ?? '-' },
+                { label: 'Vai trò', value: authUser?.role ?? '-' },
                 { label: 'Trạng thái', value: authUser?.isActive ? 'Hoạt động' : 'Vô hiệu' },
               ].map(({ label, value }) => (
                 <div key={label}>
-                  <label className='block text-xs font-black uppercase tracking-widest text-foreground/40 mb-1.5'>{label}</label>
+                  <label className='block text-xs font-black uppercase tracking-widest text-foreground/60 mb-1.5'>{label}</label>
                   <div className='px-4 py-3 bg-muted rounded-xl text-sm font-semibold text-foreground'>{value}</div>
                 </div>
               ))}
@@ -47,7 +47,7 @@ export default function AdminSettingsPage() {
             <div className='flex flex-col gap-4'>
               {[
                 { label: 'Tên hệ thống', value: 'WAVE Car Wash' },
-                { label: 'API Endpoint', value: process.env.NEXT_PUBLIC_API_URL ?? '—' },
+                { label: 'API Endpoint', value: process.env.NEXT_PUBLIC_API_URL ?? '-' },
                 { label: 'Phiên bản', value: 'v1.0.0' },
                 { label: 'Môi trường', value: process.env.NODE_ENV ?? 'production' },
               ].map(({ label, value }) => (
@@ -71,14 +71,14 @@ export default function AdminSettingsPage() {
               <div className='flex items-center justify-between p-4 rounded-xl bg-muted/50 border border-border/50'>
                 <div>
                   <p className='font-semibold text-foreground text-sm'>Xác thực hai bước</p>
-                  <p className='text-xs text-foreground/40 mt-0.5'>Bảo vệ tài khoản bằng OTP</p>
+                  <p className='text-xs text-foreground/60 mt-0.5'>Bảo vệ tài khoản bằng OTP</p>
                 </div>
                 <span className='px-3 py-1 rounded-full bg-yellow-50 text-yellow-700 text-[11px] font-black uppercase'>Sắp có</span>
               </div>
               <div className='flex items-center justify-between p-4 rounded-xl bg-muted/50 border border-border/50'>
                 <div>
                   <p className='font-semibold text-foreground text-sm'>Nhật ký truy cập</p>
-                  <p className='text-xs text-foreground/40 mt-0.5'>Theo dõi lịch sử đăng nhập</p>
+                  <p className='text-xs text-foreground/60 mt-0.5'>Theo dõi lịch sử đăng nhập</p>
                 </div>
                 <span className='px-3 py-1 rounded-full bg-yellow-50 text-yellow-700 text-[11px] font-black uppercase'>Sắp có</span>
               </div>

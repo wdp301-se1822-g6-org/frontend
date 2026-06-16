@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 
 /**
- * AuthGuard — Bảo vệ các trang yêu cầu đăng nhập như Profile, Xe Của Tôi.
+ * AuthGuard - Bảo vệ các trang yêu cầu đăng nhập như Profile, Xe Của Tôi.
  * - Chưa đăng nhập → redirect /login
  */
 export function AuthGuard({ children }: { children: React.ReactNode }) {

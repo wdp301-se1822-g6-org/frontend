@@ -36,7 +36,7 @@ type DataTableProps<T> = {
 };
 
 /**
- * Bảng dữ liệu dùng chung — gom phần render table + loading + empty
+ * Bảng dữ liệu dùng chung - gom phần render table + loading + empty
  * để các trang admin/cashier không copy/paste markup bảng.
  */
 export function DataTable<T,>({
