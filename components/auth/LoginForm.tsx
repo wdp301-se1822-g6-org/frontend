@@ -39,7 +39,7 @@ export function LoginForm({
     >
       <Card className='border-primary/10 bg-white/80 shadow-2xl shadow-primary/5 backdrop-blur-xl px-4 py-10'>
         <CardHeader className='space-y-1 pb-6 text-center'>
-          <CardTitle className='font-heading text-3xl font-bold tracking-tight text-primary'>
+          <CardTitle className='font-sans text-3xl font-bold tracking-tight text-primary'>
             Chào mừng trở lại
           </CardTitle>
           <p className='text-sm font-medium text-muted-foreground'>

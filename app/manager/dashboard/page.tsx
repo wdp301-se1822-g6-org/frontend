@@ -14,7 +14,6 @@ import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import {
   AlertTriangle,
   CalendarCheck,
-  Car,
   CircleDollarSign,
   Clock,
   CreditCard,
@@ -175,13 +174,6 @@ function ManagerBody({ report }: { report: DashboardReport }) {
             icon={Wrench}
           />
           <KpiCard
-            label='Tỷ lệ lấp đầy slot'
-            value={formatPercent(schedule.utilizationRate)}
-            hint={`${formatNumber(schedule.bookedSlots)}/${formatNumber(schedule.totalCapacity)} slot`}
-            icon={Clock}
-            tone='primary'
-          />
-          <KpiCard
             label='Voucher đã dùng'
             value={formatNumber(overview.usedVouchers)}
             icon={Gift}
@@ -221,13 +213,7 @@ function ManagerBody({ report }: { report: DashboardReport }) {
         subtitle='Tỷ lệ hoàn thành/huỷ/không đến và khung giờ đông khách.'
         icon={CalendarCheck}
       >
-        <div className='grid grid-cols-2 gap-3 lg:grid-cols-4'>
-          <KpiCard
-            label='Tỷ lệ hoàn thành'
-            value={formatPercent(bookings.completionRate)}
-            icon={CalendarCheck}
-            tone='success'
-          />
+        <div className='grid grid-cols-1 sm:grid-cols-3 gap-3'>
           <KpiCard
             label='Tỷ lệ huỷ'
             value={formatPercent(bookings.cancellationRate)}
@@ -450,7 +436,7 @@ function ManagerBody({ report }: { report: DashboardReport }) {
         subtitle='Tỷ lệ lấp đầy slot và khung giờ cao điểm.'
         icon={Clock}
       >
-        <div className='grid grid-cols-2 gap-3 lg:grid-cols-4'>
+        <div className='grid grid-cols-1 sm:grid-cols-3 gap-3'>
           <KpiCard
             label='Tổng ca làm'
             value={formatNumber(schedule.totalShifts)}
@@ -466,12 +452,6 @@ function ManagerBody({ report }: { report: DashboardReport }) {
             label='Slot đã đặt / trống'
             value={`${formatNumber(schedule.bookedSlots)} / ${formatNumber(schedule.availableSlots)}`}
             icon={CalendarCheck}
-          />
-          <KpiCard
-            label='Tỷ lệ lấp đầy'
-            value={formatPercent(schedule.utilizationRate)}
-            icon={Car}
-            tone='primary'
           />
         </div>
         <Panel title='Khung giờ cao điểm (Top 3)'>

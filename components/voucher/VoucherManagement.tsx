@@ -73,7 +73,7 @@ function GrantModal({
   mode: VoucherMode;
   customers: CustomerLite[];
   onClose: () => void;
-  onSubmit: (payload: GrantVoucherPayload) => void;
+  onSubmit: (payloads: GrantVoucherPayload[]) => void;
   submitting: boolean;
 }) {
   const [customerId, setCustomerId] = useState('');
@@ -81,6 +81,8 @@ function GrantModal({
   const [code, setCode] = useState('');
   const [discountCapVnd, setDiscountCapVnd] = useState(100000);
   const [expiresAt, setExpiresAt] = useState('');
+  const [quantity, setQuantity] = useState(1);
+  const [assignType, setAssignType] = useState<'single' | 'multi'>('single');
 
   const codeValid =
     code.trim() === '' || /^[A-Za-z0-9-]{3,30}$/.test(code.trim());
@@ -93,21 +95,39 @@ function GrantModal({
       .slice(0, 8);
   }, [customers, search]);
 
-  const selectedCustomer = customers.find((c) => c.id === customerId);
-
   const capValid = discountCapVnd >= 1 && discountCapVnd <= 200000;
-  const canSubmit = customerId.trim().length > 0 && capValid && codeValid;
+  const quantityValid = quantity >= 1 && quantity <= 50;
+
+  const canSubmit = (assignType === 'multi' || customerId.trim().length > 0) && capValid && quantityValid && codeValid && (code.trim() === '' || quantity === 1);
 
   const submit = () => {
     if (!canSubmit) return;
-    onSubmit({
-      customerId: customerId.trim(),
-      // BE vẫn yêu cầu trường reason - gửi mặc định khi cấp thủ công.
-      reason: 'Cấp voucher thủ công',
-      discountCapVnd,
-      ...(expiresAt ? { expiresAt: new Date(expiresAt).toISOString() } : {}),
-      ...(code.trim() ? { code: code.trim().toUpperCase() } : {}),
-    });
+    const payloads: GrantVoucherPayload[] = [];
+    
+    if (assignType === 'single') {
+      for (let i = 0; i < quantity; i++) {
+        payloads.push({
+          customerId: customerId.trim(),
+          reason: 'Cấp voucher thủ công số lượng lớn',
+          discountCapVnd,
+          ...(expiresAt ? { expiresAt: new Date(expiresAt).toISOString() } : {}),
+          ...(code.trim() && i === 0 ? { code: code.trim().toUpperCase() } : {}),
+        });
+      }
+    } else {
+      const activeCustomers = customers.length > 0 ? customers : [{ id: 'mock-customer-id', name: 'Mock Customer', email: '' }];
+      for (let i = 0; i < quantity; i++) {
+        const randCust = activeCustomers[i % activeCustomers.length];
+        payloads.push({
+          customerId: randCust.id,
+          reason: 'Cấp voucher phân bổ tự động số lượng lớn',
+          discountCapVnd,
+          ...(expiresAt ? { expiresAt: new Date(expiresAt).toISOString() } : {}),
+        });
+      }
+    }
+
+    onSubmit(payloads);
   };
 
   return (
@@ -132,101 +152,161 @@ function GrantModal({
         </div>
 
         <div className='flex flex-col gap-4'>
-          {/* Customer */}
+          {/* Kiểu cấp voucher */}
           <div>
             <label className='block text-xs font-black uppercase tracking-widest text-foreground/40 mb-1.5'>
-              Khách hàng
+              Phương thức phân bổ
             </label>
-            {selectedCustomer ? (
-              <div className='flex items-center justify-between gap-2 rounded-xl border border-primary/40 bg-primary/5 px-4 py-2.5'>
-                <div className='min-w-0'>
-                  <p className='text-sm font-bold text-foreground truncate'>
-                    {selectedCustomer.name}
-                  </p>
-                  <p className='text-[11px] text-muted-foreground truncate'>
-                    {selectedCustomer.email}
-                  </p>
-                </div>
-                <button
-                  onClick={() => {
-                    setCustomerId('');
-                    setSearch('');
-                  }}
-                  className='text-xs font-bold text-primary shrink-0 cursor-pointer'
-                >
-                  Đổi
-                </button>
-              </div>
-            ) : (
-              <>
-                <div className='relative'>
-                  <Search className='w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-foreground/30' />
-                  <input
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    placeholder='Tìm theo tên hoặc email…'
-                    className='w-full border border-border rounded-xl pl-9 pr-4 py-2.5 text-sm focus:outline-none focus:border-primary/50'
-                  />
-                </div>
-                {filteredCustomers.length > 0 && (
-                  <div className='mt-2 border border-border rounded-xl divide-y divide-border max-h-52 overflow-y-auto'>
-                    {filteredCustomers.map((c) => (
-                      <button
-                        key={c.id}
-                        onClick={() => setCustomerId(c.id)}
-                        className='w-full text-left px-4 py-2.5 hover:bg-slate-50 cursor-pointer'
-                      >
-                        <p className='text-sm font-semibold text-foreground truncate'>
-                          {c.name}
-                        </p>
-                        <p className='text-[11px] text-muted-foreground truncate'>
-                          {c.email}
-                        </p>
-                      </button>
-                    ))}
-                  </div>
-                )}
-                {customers.length === 0 && (
-                  <p className='mt-2 text-xs text-muted-foreground'>
-                    Chưa có khách hàng để chọn
-                    {mode === 'manager'
-                      ? ' (danh sách lấy từ các đơn đặt lịch).'
-                      : '.'}
-                  </p>
-                )}
-                {search.trim() &&
-                  customers.length > 0 &&
-                  filteredCustomers.length === 0 && (
-                    <p className='mt-2 text-xs text-muted-foreground'>
-                      Không tìm thấy khách hàng phù hợp.
-                    </p>
-                  )}
-              </>
-            )}
+            <div className='grid grid-cols-2 gap-2'>
+              <button
+                type='button'
+                onClick={() => setAssignType('single')}
+                className={`py-2 rounded-xl border text-xs font-bold transition-all ${
+                  assignType === 'single'
+                    ? 'border-primary bg-primary/5 text-primary'
+                    : 'border-slate-200 text-slate-500 hover:bg-slate-50'
+                }`}
+              >
+                Cấp cho 1 khách hàng
+              </button>
+              <button
+                type='button'
+                onClick={() => setAssignType('multi')}
+                className={`py-2 rounded-xl border text-xs font-bold transition-all ${
+                  assignType === 'multi'
+                    ? 'border-primary bg-primary/5 text-primary'
+                    : 'border-slate-200 text-slate-500 hover:bg-slate-50'
+                }`}
+              >
+                Phân bổ ngẫu nhiên
+              </button>
+            </div>
           </div>
 
+          {/* Customer Selection */}
+          {assignType === 'single' && (
+            <div>
+              <label className='block text-xs font-black uppercase tracking-widest text-foreground/40 mb-1.5'>
+                Khách hàng
+              </label>
+              {customers.find((c) => c.id === customerId) ? (
+                <div className='flex items-center justify-between gap-2 rounded-xl border border-primary/40 bg-primary/5 px-4 py-2.5'>
+                  <div className='min-w-0'>
+                    <p className='text-sm font-bold text-foreground truncate'>
+                      {customers.find((c) => c.id === customerId)?.name}
+                    </p>
+                    <p className='text-[11px] text-muted-foreground truncate'>
+                      {customers.find((c) => c.id === customerId)?.email}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setCustomerId('');
+                      setSearch('');
+                    }}
+                    className='text-xs font-bold text-primary shrink-0 cursor-pointer'
+                  >
+                    Đổi
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <div className='relative'>
+                    <Search className='w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-foreground/30' />
+                    <input
+                      value={search}
+                      onChange={(e) => setSearch(e.target.value)}
+                      placeholder='Tìm theo tên hoặc email…'
+                      className='w-full border border-border rounded-xl pl-9 pr-4 py-2.5 text-sm focus:outline-none focus:border-primary/50'
+                    />
+                  </div>
+                  {filteredCustomers.length > 0 && (
+                    <div className='mt-2 border border-border rounded-xl divide-y divide-border max-h-52 overflow-y-auto'>
+                      {filteredCustomers.map((c) => (
+                        <button
+                          key={c.id}
+                          onClick={() => setCustomerId(c.id)}
+                          className='w-full text-left px-4 py-2.5 hover:bg-slate-50 cursor-pointer'
+                        >
+                          <p className='text-sm font-semibold text-foreground truncate'>
+                            {c.name}
+                          </p>
+                          <p className='text-[11px] text-muted-foreground truncate'>
+                            {c.email}
+                          </p>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  {customers.length === 0 && (
+                    <p className='mt-2 text-xs text-muted-foreground'>
+                      Chưa có khách hàng để chọn
+                      {mode === 'manager'
+                        ? ' (danh sách lấy từ các đơn đặt lịch).'
+                        : '.'}
+                    </p>
+                  )}
+                  {search.trim() &&
+                    customers.length > 0 &&
+                    filteredCustomers.length === 0 && (
+                      <p className='mt-2 text-xs text-muted-foreground'>
+                        Không tìm thấy khách hàng phù hợp.
+                      </p>
+                    )}
+                </>
+              )}
+            </div>
+          )}
+
           {/* Custom code */}
+          {quantity === 1 && (
+            <div>
+              <label className='block text-xs font-black uppercase tracking-widest text-foreground/60 mb-1.5'>
+                Mã voucher{' '}
+                <span className='font-semibold normal-case text-foreground/40'>
+                  (bỏ trống = tự sinh)
+                </span>
+              </label>
+              <input
+                value={code}
+                onChange={(e) => setCode(e.target.value.toUpperCase())}
+                placeholder='VD: FREEWASH-KHOI'
+                className='w-full border border-border rounded-xl px-4 py-2.5 text-sm font-mono uppercase focus:outline-none focus:border-primary/50'
+              />
+              {!codeValid && (
+                <p className='mt-1.5 text-[11px] text-rose-600'>
+                  Mã chỉ gồm 3-30 ký tự A-Z, 0-9 hoặc dấu gạch ngang.
+                </p>
+              )}
+              <p className='mt-1.5 text-[11px] text-muted-foreground'>
+                Mã để đọc cho khách nhập khi đặt lịch. Phải là duy nhất.
+              </p>
+            </div>
+          )}
+
+          {/* Quantity */}
           <div>
             <label className='block text-xs font-black uppercase tracking-widest text-foreground/60 mb-1.5'>
-              Mã voucher{' '}
-              <span className='font-semibold normal-case text-foreground/40'>
-                (bỏ trống = tự sinh)
-              </span>
+              Số lượng voucher cần tạo
             </label>
             <input
-              value={code}
-              onChange={(e) => setCode(e.target.value.toUpperCase())}
-              placeholder='VD: FREEWASH-KHOI'
-              className='w-full border border-border rounded-xl px-4 py-2.5 text-sm font-mono uppercase focus:outline-none focus:border-primary/50'
+              type='number'
+              min={1}
+              max={50}
+              value={quantity}
+              onChange={(e) => setQuantity(Number(e.target.value))}
+              className='w-full border border-border rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-primary/50'
             />
-            {!codeValid && (
+            {!quantityValid && (
               <p className='mt-1.5 text-[11px] text-rose-600'>
-                Mã chỉ gồm 3-30 ký tự A-Z, 0-9 hoặc dấu gạch ngang.
+                Số lượng phải từ 1 đến 50.
               </p>
             )}
-            <p className='mt-1.5 text-[11px] text-muted-foreground'>
-              Mã để đọc cho khách nhập khi đặt lịch. Phải là duy nhất.
-            </p>
+            {quantity > 1 && (
+              <p className='mt-1.5 text-[11px] text-amber-600 font-semibold'>
+                * Tạo số lượng lớn sẽ tự động sinh mã voucher ngẫu nhiên.
+              </p>
+            )}
           </div>
 
           {/* Discount cap */}
@@ -279,7 +359,7 @@ function GrantModal({
             disabled={!canSubmit || submitting}
             className='flex-1 py-2.5 rounded-xl bg-primary text-white text-sm font-black hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed'
           >
-            {submitting ? 'Đang cấp…' : 'Cấp voucher'}
+            {submitting ? 'Đang tạo…' : 'Tạo voucher'}
           </button>
         </div>
       </div>
@@ -428,9 +508,12 @@ export function VoucherManagement({ mode }: { mode: VoucherMode }) {
   const meta = data?.meta;
 
   const grant = useMutation({
-    mutationFn: (payload: GrantVoucherPayload) => adminGrantVoucher(payload),
+    mutationFn: async (payloads: GrantVoucherPayload[]) => {
+      const promises = payloads.map((p) => adminGrantVoucher(p));
+      await Promise.all(promises);
+    },
     onSuccess: () => {
-      toast.success('Đã cấp voucher cho khách hàng');
+      toast.success('Đã tạo và cấp số lượng voucher thành công!');
       qc.invalidateQueries({ queryKey: ['admin-vouchers'] });
       setShowGrant(false);
     },

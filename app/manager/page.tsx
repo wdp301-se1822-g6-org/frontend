@@ -4,28 +4,29 @@ import { AdminTopbar } from '@/components/admin/AdminTopbar';
 import { DonutChart } from '@/components/admin/dashboard/DonutChart';
 import {
   adminGetDashboard,
-  adminGetShifts,
   adminGetWorkOrders,
 } from '@/lib/admin-api';
-import { getThisMonthRange, getTodayRange } from '@/lib/date-range';
-import { formatCurrency, formatNumber, formatPercent } from '@/lib/format';
+import { getThisMonthRange } from '@/lib/date-range';
+import { formatCurrency, formatNumber } from '@/lib/format';
 import type { DashboardReport } from '@/types/dashboard';
 import { useQuery } from '@tanstack/react-query';
 import {
   ArrowRight,
-  CalendarCheck,
   CheckCircle2,
   ClipboardCheck,
   Clock,
   CreditCard,
-  PieChart,
   RotateCcw,
-  ShieldCheck,
   UserPlus,
-  Wrench,
 } from 'lucide-react';
 import type { ElementType } from 'react';
 import Link from 'next/link';
+import { useState } from 'react';
+import {
+  DateRangeFilter,
+  type DateFilterValue,
+} from '@/components/admin/dashboard/DateRangeFilter';
+import { DEFAULT_PERIOD, getRangeForPeriod } from '@/lib/date-range';
 
 /* Real work-order shape (BE WorkOrderResponseDto). */
 interface WorkOrderRow {
@@ -39,12 +40,7 @@ interface WorkOrderRow {
   vehicleSnapshot?: { plate?: string };
 }
 
-/* Real staff-shift shape (BE StaffShiftResponseDto). */
-interface ShiftRow {
-  id?: string;
-  startAt?: string;
-  stationName?: string;
-}
+
 
 const STATUS_LABELS: Record<string, string> = {
   pending_payment: 'Chờ thanh toán',
@@ -66,14 +62,18 @@ const WO_STATUS: Record<string, { label: string; cls: string }> = {
 };
 
 export default function ManagerOverviewPage() {
+  const [filter, setFilter] = useState<DateFilterValue>(() => ({
+    period: DEFAULT_PERIOD,
+    range: getRangeForPeriod(DEFAULT_PERIOD),
+  }));
+
   const { data: todayReport } = useQuery({
-    queryKey: ['manager-today-report'],
+    queryKey: ['manager-today-report', filter.period, filter.range.from, filter.range.to],
     queryFn: async () => {
-      const r = getTodayRange();
       const res = await adminGetDashboard({
-        fromDate: r.from,
-        toDate: r.to,
-        period: 'today',
+        fromDate: filter.range.from,
+        toDate: filter.range.to,
+        period: filter.period,
       });
       return res.data as DashboardReport;
     },
@@ -97,14 +97,8 @@ export default function ManagerOverviewPage() {
     queryFn: () => adminGetWorkOrders({ limit: 100 }),
   });
 
-  const { data: shiftsData } = useQuery({
-    queryKey: ['manager-overview-shifts'],
-    queryFn: () => adminGetShifts({ limit: 100 }),
-  });
-
   const workOrders: WorkOrderRow[] =
     workOrdersData?.data?.data ?? workOrdersData?.data ?? [];
-  const shifts: ShiftRow[] = shiftsData?.data?.data ?? shiftsData?.data ?? [];
 
   // ── Operational alerts (real-time, not date-bound) ──────────────────────
   const waitingCount = workOrders.filter((w) => w.status === 'waiting').length;
@@ -115,18 +109,7 @@ export default function ManagerOverviewPage() {
     (w) => w.status === 'returned',
   ).length;
 
-  const todayStr = new Date().toDateString();
-  const todayShifts = shifts.filter(
-    (s) => s.startAt && new Date(s.startAt).toDateString() === todayStr,
-  );
-
   const activeWorkOrders = workOrders.filter((w) => w.status !== 'done');
-  const qcDone = workOrders.filter((w) => w.qcPassed != null);
-  const qcPassed = workOrders.filter((w) => w.qcPassed === true);
-  const qcRate =
-    qcDone.length > 0
-      ? Math.round((qcPassed.length / qcDone.length) * 100)
-      : null;
 
   const ov = todayReport?.overview;
 
@@ -138,6 +121,15 @@ export default function ManagerOverviewPage() {
       />
       <main className='flex-1 p-6 lg:p-8 overflow-y-auto bg-slate-50/50'>
         <div className='max-w-7xl mx-auto flex flex-col gap-8'>
+          {/* Bộ lọc ngày tháng năm */}
+          <div className='bg-white rounded-2xl border border-slate-100 p-4 shadow-sm'>
+            <DateRangeFilter
+              value={filter}
+              onChange={setFilter}
+              isFetching={false}
+            />
+          </div>
+
           {/* ── Cần xử lý ngay ── */}
           <section className='flex flex-col gap-4'>
             <h2 className='font-heading text-sm font-black uppercase tracking-widest text-slate-500'>
@@ -170,74 +162,33 @@ export default function ManagerOverviewPage() {
                 danger
               />
               <AlertCard
-                icon={Clock}
-                count={todayShifts.length}
-                label='Ca làm việc hôm nay'
-                sub='Ca trực đã phân công'
-                href='/manager/shifts'
-                active={todayShifts.length > 0}
+                icon={CheckCircle2}
+                count={ov ? ov.completedBookings : 0}
+                label='Số xe đã rửa'
+                sub='Đã rửa hoàn tất'
+                href='/manager/work-orders'
+                active={(ov ? ov.completedBookings : 0) > 0}
               />
             </div>
           </section>
 
-          {/* ── KPI hôm nay ── */}
-          <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5'>
+          {/* ── KPI ── */}
+          <div className='grid grid-cols-1 sm:grid-cols-2 gap-5'>
             <SlateKpi
               icon={CreditCard}
               iconBg='bg-indigo-600'
               value={ov ? formatCurrency(ov.netRevenue) : '...'}
-              label='Doanh thu hôm nay'
+              label='Doanh thu thực nhận'
               sub={ov ? `${formatNumber(ov.completedBookings)} đơn hoàn thành` : 'Đang tải'}
-              badge='Hôm nay'
+              badge='Thời kỳ chọn'
             />
             <SlateKpi
               icon={CheckCircle2}
               iconBg='bg-emerald-600'
-              value={ov ? `${formatNumber(ov.completedBookings)} / ${formatNumber(ov.totalBookings)}` : '...'}
-              label='Rửa hoàn thành'
-              sub='Đã rửa xong / tổng đơn trong ngày'
+              value={ov ? `${formatNumber(ov.completedBookings)} xe` : '...'}
+              label='Số xe đã rửa'
+              sub='Đã hoàn thành toàn bộ'
             />
-            <SlateKpi
-              icon={Wrench}
-              iconBg='bg-amber-500'
-              value={`${formatNumber(activeWorkOrders.length)} đơn`}
-              label='Đang xử lý tại quầy'
-              sub='Chưa hoàn tất (gán thợ / rửa / QC)'
-            />
-            <SlateKpi
-              icon={ShieldCheck}
-              iconBg='bg-purple-600'
-              value={qcRate == null ? 'Chưa có' : `${qcRate}%`}
-              label='Tỉ lệ QC đạt chuẩn'
-              sub={`Tổng số lần QC: ${formatNumber(qcDone.length)}`}
-            />
-          </div>
-
-          {/* ── Thao tác nhanh ── */}
-          <div className='bg-white rounded-2xl border border-slate-100 p-6 shadow-sm'>
-            <h2 className='font-heading text-sm font-black uppercase tracking-widest text-slate-500 mb-4'>
-              Thao tác vận hành nhanh
-            </h2>
-            <div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
-              <QuickAction
-                icon={CalendarCheck}
-                title='Check-in khách mới'
-                sub='Xem đặt lịch và tạo Work Order'
-                href='/manager/orders'
-              />
-              <QuickAction
-                icon={Wrench}
-                title='Phân công & Kiểm định QC'
-                sub='Giao xe cho thợ, duyệt chất lượng'
-                href='/manager/work-orders'
-              />
-              <QuickAction
-                icon={PieChart}
-                title='Báo cáo vận hành đầy đủ'
-                sub='Doanh thu, dịch vụ, thợ, biểu đồ'
-                href='/manager/dashboard'
-              />
-            </div>
           </div>
 
           {/* ── Phân tích nhanh — Tháng này ── */}
@@ -260,7 +211,7 @@ export default function ManagerOverviewPage() {
               </Link>
             </div>
 
-            <div className='grid grid-cols-2 lg:grid-cols-4 gap-4'>
+            <div className='grid grid-cols-2 gap-4'>
               <MiniStat
                 label='Doanh thu thực nhận'
                 value={monthReport ? formatCurrency(monthReport.revenue.net) : '...'}
@@ -268,14 +219,6 @@ export default function ManagerOverviewPage() {
               <MiniStat
                 label='Tổng đặt lịch'
                 value={monthReport ? formatNumber(monthReport.overview.totalBookings) : '...'}
-              />
-              <MiniStat
-                label='Tỷ lệ hoàn thành'
-                value={monthReport ? formatPercent(monthReport.bookings.completionRate) : '...'}
-              />
-              <MiniStat
-                label='Tỷ lệ lấp đầy slot'
-                value={monthReport ? formatPercent(monthReport.schedule.utilizationRate) : '...'}
               />
             </div>
 
@@ -504,35 +447,7 @@ function SlateKpi({
   );
 }
 
-function QuickAction({
-  icon: Icon,
-  title,
-  sub,
-  href,
-}: {
-  icon: ElementType;
-  title: string;
-  sub: string;
-  href: string;
-}) {
-  return (
-    <Link
-      href={href}
-      className='flex items-center justify-between p-5 rounded-2xl border border-slate-100 hover:border-indigo-200 bg-slate-50/50 hover:bg-indigo-50/10 hover:-translate-y-0.5 transition-all duration-200 group'
-    >
-      <div className='flex items-center gap-4 min-w-0'>
-        <div className='w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600 group-hover:scale-110 transition-transform shrink-0'>
-          <Icon className='w-5 h-5' />
-        </div>
-        <div className='min-w-0'>
-          <h3 className='font-heading font-bold text-slate-800 text-sm truncate'>{title}</h3>
-          <p className='text-xs text-slate-500 mt-0.5 truncate'>{sub}</p>
-        </div>
-      </div>
-      <ArrowRight className='w-5 h-5 text-slate-300 group-hover:text-indigo-600 transition-colors shrink-0' />
-    </Link>
-  );
-}
+
 
 function MiniStat({ label, value }: { label: string; value: string }) {
   return (
