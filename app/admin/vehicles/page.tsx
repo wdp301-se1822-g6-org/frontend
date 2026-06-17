@@ -76,12 +76,12 @@ export default function AdminVehiclesPage() {
       bVal = Number(b.year ?? 0);
     }
 
-    if (typeof aVal === 'string') {
+    if (typeof aVal === 'string' && typeof bVal === 'string') {
       return sortOrder === 'asc'
         ? aVal.localeCompare(bVal, 'vi')
         : bVal.localeCompare(aVal, 'vi');
     } else {
-      return sortOrder === 'asc' ? aVal - bVal : bVal - aVal;
+      return sortOrder === 'asc' ? (aVal as number) - (bVal as number) : (bVal as number) - (aVal as number);
     }
   });
 

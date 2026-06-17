@@ -276,7 +276,7 @@ export default function MyOrdersPage() {
     const shifts = res.data || [];
     
     const targetDate = new Date(targetTime).getTime();
-    return shifts.filter((s: StaffShift) => {
+    return shifts.filter((s: { startAt: string; endAt: string; currentBookings?: number; maxBookings?: number }) => {
       const start = new Date(s.startAt).getTime();
       const end = new Date(s.endAt).getTime();
       return targetDate >= start && targetDate < end && ((s.currentBookings ?? 0) < (s.maxBookings ?? 0));
