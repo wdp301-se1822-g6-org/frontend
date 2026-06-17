@@ -12,6 +12,7 @@ export type PaymentStatus = 'unpaid' | 'paid' | 'refunded';
 
 export interface Order {
   id: string;
+  _id?: string;
   customerId: string;
   vehicleId: string;
   serviceTypeId: string;

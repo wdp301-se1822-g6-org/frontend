@@ -23,7 +23,7 @@ export function HeroSection() {
             <div className='inline-flex items-center gap-2.5 bg-card shadow-sm border border-border px-4 py-1.5 rounded-full mb-5 animate-fade-in-up'>
               <div className='w-2 h-2 bg-primary rounded-full animate-pulse' />
               <span className='text-[10px] font-bold uppercase tracking-[0.25em] text-foreground/50'>
-                The Future of Car Care
+                Tương Lai Của Việc Chăm Sóc Xe Hơi
               </span>
             </div>
 

@@ -1,633 +1,450 @@
 'use client';
 
-import { useState, useMemo } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import {
-  ShieldCheck,
-  CheckCircle2,
-  XCircle,
-  Clock,
-  Car,
-  Search,
-  RefreshCw,
-  Camera,
-  Star,
-  AlertTriangle,
-  Users,
-  RotateCcw,
-  Zap,
-  ChevronLeft,
-  ChevronRight,
-  CalendarDays,
-} from 'lucide-react';
-import { toast } from 'sonner';
 import { AdminTopbar } from '@/components/admin/AdminTopbar';
 import {
   adminGetWorkOrders,
-  adminGetWorkOrder,
+  adminGetUsers,
+  adminAssignWasher,
   adminQcWorkOrder,
+  adminUpdateOrderStatus
 } from '@/lib/admin-api';
-import { formatDateTime } from '@/lib/format';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Spinner } from '@/components/ui/spinner';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useState } from 'react';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-  DialogClose,
-} from '@/components/ui/dialog';
+  Wrench, Users, ShieldCheck, CheckCircle2,
+  XCircle, Clock, MessageSquare, ChevronDown, RefreshCw,
+  Camera, Eye
+} from 'lucide-react';
+import { toast } from 'sonner';
 
-// ── Types ─────────────────────────────────────────────────────────────────────
-type WoStatus =
-  | 'waiting'
-  | 'assigned'
-  | 'in_progress'
-  | 'quality_check'
-  | 'returned'
-  | 'done';
+interface UserData {
+  _id: string;
+  id?: string;
+  fullName?: string;
+  name?: string;
+  email?: string;
+  role?: string;
+}
 
-interface WorkOrder {
+interface WorkOrderData {
   id: string;
-  code?: string;
-  orderId: string | { _id?: string; id?: string };
+  orderId: string | {
+    _id: string;
+    customerName?: string;
+    userId?: { fullName?: string };
+    vehicleId?: { licensePlate?: string };
+    licensePlate?: string;
+    serviceTypeId?: { name?: string };
+    serviceName?: string;
+    amount?: number;
+    totalPrice?: number;
+    status?: string;
+  };
+  assignedWasherId?: string;
   assignedWasherName?: string;
-  status: WoStatus;
+  washerId?: {
+    _id: string;
+    fullName?: string;
+    name?: string;
+  };
+  status: 'waiting' | 'assigned' | 'in_progress' | 'quality_check' | 'returned' | 'done';
   qcPassed?: boolean | null;
   qcNote?: string;
+  createdAt?: string;
+  vehicleSnapshot?: {
+    plate?: string;
+    vehicleTypeName?: string;
+    color?: string;
+  };
   serviceName?: string;
-  scheduledAt?: string;
-  checkinPhotos?: string[];
-  checkoutPhotos?: string[];
-  vehicleSnapshot?: { plate?: string };
-  priorityLevel?: number;
+  [key: string]: unknown;
 }
 
-// ── Status config ─────────────────────────────────────────────────────────────
-type BadgeVariant = 'warning' | 'info' | 'destructive' | 'success' | 'muted';
 
-const STATUS_CFG: Record<
-  WoStatus,
-  { label: string; short: string; variant: BadgeVariant; extraCls?: string }
-> = {
-  waiting: { label: 'Chờ giao thợ', short: 'Chờ thợ', variant: 'warning' },
-  assigned: { label: 'Đã giao thợ', short: 'Đã giao', variant: 'info' },
-  in_progress: { label: 'Đang rửa xe', short: 'Đang rửa', variant: 'info' },
-  returned: {
-    label: 'Rửa lại (QC trả về)',
-    short: 'Rửa lại',
-    variant: 'destructive',
-  },
-  quality_check: {
-    label: 'Chờ QC',
-    short: 'Chờ QC',
-    variant: 'muted',
-    extraCls: 'bg-purple-100 text-purple-700 border-purple-200',
-  },
-  done: { label: 'Hoàn thành', short: 'Xong', variant: 'success' },
-};
 
-// ── Kanban columns ────────────────────────────────────────────────────────────
-const COLUMNS = [
-  {
-    id: 'waiting' as const,
-    label: 'Chờ giao thợ',
-    statuses: ['waiting'] as WoStatus[],
-    headerBg: 'bg-amber-50',
-    headerBorder: 'border-amber-200',
-    dot: 'bg-amber-500',
-    titleCls: 'text-amber-900',
-    countCls: 'bg-amber-100 text-amber-800',
-    leftBorder: 'border-l-amber-400',
-  },
-  {
-    id: 'washing' as const,
-    label: 'Đang rửa',
-    statuses: ['assigned', 'in_progress', 'returned'] as WoStatus[],
-    headerBg: 'bg-blue-50',
-    headerBorder: 'border-blue-200',
-    dot: 'bg-blue-500',
-    titleCls: 'text-blue-900',
-    countCls: 'bg-blue-100 text-blue-800',
-    leftBorder: 'border-l-blue-400',
-  },
-  {
-    id: 'qc' as const,
-    label: 'Chờ QC',
-    statuses: ['quality_check'] as WoStatus[],
-    headerBg: 'bg-purple-50',
-    headerBorder: 'border-purple-200',
-    dot: 'bg-purple-500',
-    titleCls: 'text-purple-900',
-    countCls: 'bg-purple-100 text-purple-800',
-    leftBorder: 'border-l-purple-400',
-  },
-  {
-    id: 'done' as const,
-    label: 'Hoàn thành',
-    statuses: ['done'] as WoStatus[],
-    headerBg: 'bg-emerald-50',
-    headerBorder: 'border-emerald-200',
-    dot: 'bg-emerald-500',
-    titleCls: 'text-emerald-900',
-    countCls: 'bg-emerald-100 text-emerald-800',
-    leftBorder: 'border-l-emerald-400',
-  },
-] as const;
-
-type ColId = (typeof COLUMNS)[number]['id'];
-
-// ── Helpers ───────────────────────────────────────────────────────────────────
-type Urgency = 'overdue' | 'soon' | null;
-
-function getUrgency(scheduledAt?: string, status?: WoStatus): Urgency {
-  if (!scheduledAt || status === 'done') return null;
-  const diffMin = (new Date(scheduledAt).getTime() - Date.now()) / 60000;
-  if (isNaN(diffMin)) return null;
-  if (diffMin < -1) return 'overdue';
-  if (diffMin <= 30) return 'soon';
-  return null;
-}
-
-function toHHmm(iso?: string): string | null {
-  if (!iso) return null;
-  const d = new Date(iso);
-  if (isNaN(d.getTime())) return null;
-  return d.toLocaleTimeString('vi-VN', {
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-  });
-}
-
-const ALL_SVC = '__all__';
-
-// ── Date helpers ──────────────────────────────────────────────────────────────
-function toLocalDateStr(d: Date): string {
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  return `${y}-${m}-${day}`;
-}
-
-function shiftDate(dateStr: string, days: number): string {
-  const d = new Date(`${dateStr}T00:00:00`);
-  d.setDate(d.getDate() + days);
-  return toLocalDateStr(d);
-}
-
-function getDateLabel(dateStr: string): string {
-  const today = toLocalDateStr(new Date());
-  if (dateStr === today) return 'Hôm nay';
-  if (dateStr === shiftDate(today, -1)) return 'Hôm qua';
-  if (dateStr === shiftDate(today, 1)) return 'Ngày mai';
-  const d = new Date(`${dateStr}T00:00:00`);
-  return d.toLocaleDateString('vi-VN', {
-    weekday: 'short',
-    day: '2-digit',
-    month: '2-digit',
-  });
-}
-
-function matchesLocalDate(iso?: string, dateStr?: string | null): boolean {
-  if (!dateStr) return true;
-  if (!iso) return false;
-  return toLocalDateStr(new Date(iso)) === dateStr;
-}
-
-// ── Page ──────────────────────────────────────────────────────────────────────
 export default function ManagerWorkOrdersPage() {
   const qc = useQueryClient();
-
-  const [preview, setPreview] = useState<string | null>(null);
-  const [expandedCols, setExpandedCols] = useState<Set<string>>(new Set());
-  const [qcTarget, setQcTarget] = useState<WorkOrder | null>(null);
-  const [qcPassed, setQcPassed] = useState(true);
-  const [qcNote, setQcNote] = useState('');
-  const [detailId, setDetailId] = useState<string | null>(null);
-  const [search, setSearch] = useState('');
-  const [svcFilter, setSvcFilter] = useState(ALL_SVC);
-  const [colFocus, setColFocus] = useState<ColId | 'all'>('all');
-  const [selectedDate, setSelectedDate] = useState<string | null>(
-    toLocalDateStr(new Date()),
-  );
-
-  // ── Data ──
-  const { data: detailData, isLoading: isDetailLoading } = useQuery({
-    queryKey: ['work-order-detail', detailId],
-    queryFn: () => adminGetWorkOrder(detailId!),
-    enabled: !!detailId,
+  const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'in_progress' | 'completed'>('all');
+  // Ảnh kiểm định chỉ để XEM ở trang Vận hành (thu ngân chụp ảnh trước khi rửa
+  // ở trang Lịch hẹn, thợ chụp ảnh sau khi rửa). Lưu chung localStorage theo orderId.
+  const [inspectionPhotos] = useState<Record<string, { preWash: string[]; postWash: string[] }>>(() => {
+    const stored = localStorage.getItem('wave_inspection_photos');
+    if (stored) {
+      try {
+        return JSON.parse(stored);
+      } catch {
+        return {};
+      }
+    }
+    return {};
   });
-  const detailRaw: (WorkOrder & { checkoutPhotos?: string[] }) | null =
-    detailData?.data ?? null;
+  const [previewPhoto, setPreviewPhoto] = useState<string | null>(null);
 
-  const { data, isLoading, refetch, isRefetching } = useQuery({
+  // States cho Dialog giao việc
+  const [isAssignOpen, setIsAssignOpen] = useState(false);
+  const [assignTarget, setAssignTarget] = useState<WorkOrderData | null>(null);
+  const [selectedWasherId, setSelectedWasherId] = useState('');
+
+  // States cho Dialog QC
+  const [isQcOpen, setIsQcOpen] = useState(false);
+  const [qcTarget, setQcTarget] = useState<WorkOrderData | null>(null);
+  const [qcPassed, setQcPassed] = useState<boolean>(true);
+  const [qcNote, setQcNote] = useState('');
+
+  // Lấy danh sách Work Orders
+  const { data: workOrdersRes, isLoading: isLoadingWO, refetch } = useQuery({
     queryKey: ['manager-work-orders'],
     queryFn: () => adminGetWorkOrders(),
-    refetchInterval: 30_000,
   });
-  const all: WorkOrder[] = useMemo(() => data?.data?.data ?? data?.data ?? [], [data]);
 
-  const detail = detailRaw
-    ? { ...detailRaw, assignedWasherName: detailRaw.assignedWasherName ?? all.find((wo) => wo.id === detailId)?.assignedWasherName }
-    : null;
+  // Lấy danh sách thợ rửa xe
+  const { data: washersRes } = useQuery({
+    queryKey: ['admin-washers'],
+    queryFn: () => adminGetUsers({ role: 'washer' }),
+  });
 
-  // ── Derived ──
-  const dateFiltered = useMemo(
-    () => all.filter((w) => matchesLocalDate(w.scheduledAt, selectedDate)),
-    [all, selectedDate],
-  );
-
-  const base = selectedDate ? dateFiltered : all;
-
-  const stats = useMemo(
-    () => ({
-      total: base.length,
-      waiting: base.filter((w) => w.status === 'waiting').length,
-      washing: base.filter((w) =>
-        ['assigned', 'in_progress', 'returned'].includes(w.status),
-      ).length,
-      qc: base.filter((w) => w.status === 'quality_check').length,
-      done: base.filter((w) => w.status === 'done').length,
-    }),
-    [base],
-  );
-
-  const services = useMemo(() => {
-    const s = new Set(
-      base.map((w) => w.serviceName).filter(Boolean) as string[],
-    );
-    return Array.from(s).sort();
-  }, [base]);
-
-  const filtered = useMemo(() => {
-    let list = base;
-    const q = search.trim().toUpperCase();
-    if (q) {
-      list = list.filter(
-        (w) =>
-          (w.vehicleSnapshot?.plate ?? '').toUpperCase().includes(q) ||
-          (w.code ?? '').toUpperCase().includes(q),
-      );
+  const FALLBACK_WASHERS: UserData[] = [
+    {
+      _id: "6a069f4666ba32cfd229da66",
+      id: "6a069f4666ba32cfd229da66",
+      fullName: "Default Washer",
+      name: "Default Washer",
+      email: "washer@washauto.local",
+      role: "washer"
+    },
+    {
+      _id: "6a070891165edfd36ae6e89b",
+      id: "6a070891165edfd36ae6e89b",
+      fullName: "Test Staff 1778845840",
+      name: "Test Staff 1778845840",
+      email: "staff1778845840@test.local",
+      role: "washer"
     }
-    if (svcFilter !== ALL_SVC)
-      list = list.filter((w) => w.serviceName === svcFilter);
-    return list;
-  }, [base, search, svcFilter]);
+  ];
 
-  // ── QC mutation ──
-  const qcMutation = useMutation({
-    mutationFn: (v: { id: string; passed: boolean; note: string }) =>
-      adminQcWorkOrder(v.id, v.passed, v.note),
+  const allWorkOrders: WorkOrderData[] = workOrdersRes?.data?.data ?? workOrdersRes?.data ?? [];
+  const fetchedWashers: UserData[] = washersRes?.data?.data ?? washersRes?.data ?? [];
+  const washers = fetchedWashers.length > 0 ? fetchedWashers : FALLBACK_WASHERS;
+
+  // Thợ đang bận = đang được giao việc hoặc đang rửa (kể cả rửa lại sau QC).
+  // Những thợ này không hiện trong danh sách để gán tiếp.
+  const busyWasherIds = new Set(
+    allWorkOrders
+      .filter(
+        (wo) =>
+          wo.status === 'assigned' ||
+          wo.status === 'in_progress' ||
+          wo.status === 'returned',
+      )
+      .map((wo) => wo.assignedWasherId)
+      .filter((id): id is string => Boolean(id)),
+  );
+  const availableWashers = washers.filter(
+    (w) => !busyWasherIds.has(w._id) && !busyWasherIds.has(w.id ?? ''),
+  );
+
+  // Lọc phiếu rửa xe theo trạng thái ở frontend để khớp tab
+  const workOrders = allWorkOrders.filter((wo) => {
+    if (statusFilter === 'all') {
+      return wo.status !== 'done'; // Chỉ hiện những phiếu đang hoạt động
+    }
+    if (statusFilter === 'pending') {
+      return wo.status === 'waiting' || wo.status === 'assigned';
+    }
+    if (statusFilter === 'in_progress') {
+      return wo.status === 'in_progress' || wo.status === 'returned';
+    }
+    if (statusFilter === 'completed') {
+      return wo.status === 'quality_check';
+    }
+    return true;
+  });
+
+  // Mutation giao việc cho thợ
+  const assignWasherMutation = useMutation({
+    mutationFn: async ({ woId, washerId }: { woId: string; washerId: string }) => {
+      await adminAssignWasher(woId, washerId);
+    },
     onSuccess: () => {
-      toast.success('Đã hoàn tất đánh giá chất lượng (QC).');
-      setQcTarget(null);
-      setQcNote('');
-      [
-        'manager-work-orders',
-        'manager-dashboard-workorders',
-        'manager-orders',
-      ].forEach((k) => qc.invalidateQueries({ queryKey: [k] }));
+      toast.success('Đã phân công thợ phụ trách rửa xe thành công!');
+      setIsAssignOpen(false);
+      setAssignTarget(null);
+      setSelectedWasherId('');
+      qc.invalidateQueries({ queryKey: ['manager-work-orders'] });
+      qc.invalidateQueries({ queryKey: ['manager-dashboard-workorders'] });
     },
     onError: (err) => {
-      const msg =
-        (err as { response?: { data?: { message?: string } } })?.response?.data
-          ?.message ?? 'Không thể lưu đánh giá QC.';
-      toast.error(`Lỗi: ${msg}`);
-    },
+      const errMsg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message ?? 'Không thể gán thợ.';
+      toast.error(`Lỗi: ${errMsg}`);
+    }
   });
 
-  const visibleColumns = COLUMNS.filter(
-    (c) => colFocus === 'all' || colFocus === c.id,
-  );
-  const hasActiveFilter = search || svcFilter !== ALL_SVC;
+  // Mutation hoàn thành đơn (hoàn thành trực tiếp, không qua QC phức tạp)
+  const qcMutation = useMutation({
+    mutationFn: async ({ woId, passed, note, targetWo }: { woId: string; passed: boolean; note: string; targetWo: WorkOrderData }) => {
+      // Gọi trực tiếp kết quả QC Đạt để đóng Work Order
+      await adminQcWorkOrder(woId, true, 'Hoàn thành bởi Quản lý');
+      
+      const oId = typeof targetWo.orderId === 'string'
+        ? targetWo.orderId
+        : (targetWo.orderId as { _id?: string; id?: string })?._id || (targetWo.orderId as { _id?: string; id?: string })?.id;
+      if (oId) {
+        await adminUpdateOrderStatus(oId, 'completed');
+      }
+    },
+    onSuccess: () => {
+      toast.success('Đã hoàn thành và đóng đơn hàng rửa xe thành công!');
+      setIsQcOpen(false);
+      setQcTarget(null);
+      setQcNote('');
+      qc.invalidateQueries({ queryKey: ['manager-work-orders'] });
+      qc.invalidateQueries({ queryKey: ['manager-dashboard-workorders'] });
+      qc.invalidateQueries({ queryKey: ['manager-orders'] });
+    },
+    onError: (err) => {
+      const errMsg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message ?? 'Không thể hoàn tất đơn hàng.';
+      toast.error(`Lỗi: ${errMsg}`);
+    }
+  });
+
+  const handleOpenAssign = (wo: WorkOrderData) => {
+    setAssignTarget(wo);
+    setIsAssignOpen(true);
+  };
+
+  const handleConfirmComplete = (wo: WorkOrderData) => {
+    if (confirm('Xác nhận xe đã rửa sạch đẹp và hoàn thành đơn hàng này?')) {
+      qcMutation.mutate({ woId: wo.id, passed: true, note: 'Hoàn thành bởi Quản lý', targetWo: wo });
+    }
+  };
 
   return (
     <>
-      <AdminTopbar
-        title='Vận hành Rửa xe'
-        subtitle='Trung tâm điều phối — theo dõi tiến độ hàng đợi và đánh giá QC theo thời gian thực.'
-      />
+      <AdminTopbar title='Vận hành Rửa xe' subtitle='Giao việc cho nhân viên và đánh giá chất lượng xe sau khi rửa (QC)' />
+      <main className='flex-1 p-8 overflow-y-auto bg-slate-50/50'>
+        <div className='max-w-7xl mx-auto'>
 
-      <main className='flex-1 overflow-y-auto flex flex-col bg-slate-50'>
-        {/* ── Stats bar ──────────────────────────────────────────────────── */}
-        <div className='shrink-0 bg-white border-b border-slate-100 px-8 py-3'>
-          <div className='flex items-center gap-2 flex-wrap max-w-7xl mx-auto'>
-            <StatChip
-              label='Tổng phiếu'
-              value={stats.total}
-              cls='text-slate-700 bg-slate-100'
-            />
-            <div className='w-px h-6 bg-slate-200 mx-1' />
-            <StatChip
-              label='Chờ thợ'
-              value={stats.waiting}
-              cls='text-amber-800 bg-amber-50'
-              dot='bg-amber-500'
-            />
-            <StatChip
-              label='Đang rửa'
-              value={stats.washing}
-              cls='text-blue-800 bg-blue-50'
-              dot='bg-blue-500'
-            />
-            <StatChip
-              label='Chờ QC'
-              value={stats.qc}
-              cls='text-purple-800 bg-purple-50'
-              dot='bg-purple-500'
-            />
-            <StatChip
-              label='Hoàn thành'
-              value={stats.done}
-              cls='text-emerald-800 bg-emerald-50'
-              dot='bg-emerald-500'
-            />
-            <div className='ml-auto'>
-              <Button
-                variant='outline'
-                size='sm'
-                onClick={() => refetch()}
-                disabled={isRefetching}
-                className='h-7 text-xs gap-1.5'
-              >
-                <RefreshCw
-                  className={`size-3.5 ${isRefetching ? 'animate-spin' : ''}`}
-                />
-                Làm mới
-              </Button>
-            </div>
-          </div>
-        </div>
-
-        {/* ── Date nav ───────────────────────────────────────────────────── */}
-        <div className='shrink-0 bg-white border-b border-slate-100 px-8 py-2'>
-          <div className='grid grid-cols-3 items-center max-w-7xl mx-auto'>
-            {/* Left: "Về hôm nay" khi đang ở ngày khác */}
-            <div className='flex items-center gap-2'>
-              <CalendarDays className='size-4 text-muted-foreground shrink-0' />
-              {selectedDate !== null &&
-                selectedDate !== toLocalDateStr(new Date()) && (
-                  <Button
-                    variant='outline'
-                    size='sm'
-                    className='h-7 text-xs'
-                    onClick={() => setSelectedDate(toLocalDateStr(new Date()))}
-                  >
-                    Về hôm nay
-                  </Button>
-                )}
-            </div>
-
-            {/* Center: điều hướng ngày — luôn ở giữa */}
-            <div className='flex items-center justify-center gap-1'>
-              <Button
-                variant='ghost'
-                size='icon'
-                className='size-7'
-                disabled={selectedDate === null}
-                onClick={() =>
-                  setSelectedDate((d) =>
-                    d ? shiftDate(d, -1) : toLocalDateStr(new Date()),
-                  )
-                }
-              >
-                <ChevronLeft className='size-4' />
-              </Button>
-
-              <span className='min-w-45 text-center text-sm font-bold text-slate-800 select-none'>
-                {selectedDate ? getDateLabel(selectedDate) : 'Tất cả ngày'}
-                {selectedDate && (
-                  <span className='ml-1.5 text-xs font-normal text-slate-400'>
-                    {new Date(`${selectedDate}T00:00:00`).toLocaleDateString(
-                      'vi-VN',
-                      {
-                        day: '2-digit',
-                        month: '2-digit',
-                        year: 'numeric',
-                      },
-                    )}
-                  </span>
-                )}
-              </span>
-
-              <Button
-                variant='ghost'
-                size='icon'
-                className='size-7'
-                disabled={selectedDate === null}
-                onClick={() =>
-                  setSelectedDate((d) =>
-                    d ? shiftDate(d, 1) : toLocalDateStr(new Date()),
-                  )
-                }
-              >
-                <ChevronRight className='size-4' />
-              </Button>
-            </div>
-
-            {/* Right: toggle xem tất cả */}
-            <div className='flex justify-end'>
-              <Button
-                variant={selectedDate === null ? 'default' : 'outline'}
-                size='sm'
-                className='h-7 text-xs'
-                onClick={() =>
-                  setSelectedDate((d) =>
-                    d === null ? toLocalDateStr(new Date()) : null,
-                  )
-                }
-              >
-                {selectedDate === null ? 'Đang xem tất cả' : 'Xem tất cả ngày'}
-              </Button>
-            </div>
-          </div>
-        </div>
-
-        {/* ── Filter bar ─────────────────────────────────────────────────── */}
-        <div className='shrink-0 bg-white border-b border-slate-100 px-8 py-2.5'>
-          <div className='flex items-center gap-3 flex-wrap max-w-7xl mx-auto'>
-            {/* Search */}
-            <div className='relative'>
-              <Search className='absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground pointer-events-none' />
-              <Input
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder='Biển số, mã phiếu...'
-                className='h-8 pl-8 text-sm w-48'
-              />
-            </div>
-
-            {/* Service filter */}
-            <Select
-              value={svcFilter}
-              onValueChange={setSvcFilter}
-            >
-              <SelectTrigger className='h-8 text-sm w-40'>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value={ALL_SVC}>Tất cả dịch vụ</SelectItem>
-                {services.map((s) => (
-                  <SelectItem
-                    key={s}
-                    value={s}
-                  >
-                    {s}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            {/* Column focus pills */}
-            <div className='flex items-center gap-0.5 rounded-lg border border-slate-200 bg-slate-50 p-0.5'>
-              {(
-                [{ id: 'all', label: 'Tất cả' }, ...COLUMNS] as {
-                  id: string;
-                  label: string;
-                }[]
-              ).map((c) => (
-                <Button
-                  key={c.id}
-                  variant='ghost'
-                  size='sm'
-                  onClick={() => setColFocus(c.id as ColId | 'all')}
-                  className={[
-                    'h-7 px-3 text-xs font-semibold rounded-md transition-all',
-                    colFocus === c.id
-                      ? 'bg-white shadow-sm text-slate-800 hover:bg-white ring-1 ring-slate-200/80'
-                      : 'text-slate-500 hover:text-slate-700 hover:bg-transparent',
-                  ].join(' ')}
+          {/* Status Tabs Filter */}
+          <div className='flex items-center justify-between mb-8 border-b border-slate-200 pb-2'>
+            <div className='flex gap-6'>
+              {(['all', 'pending', 'in_progress', 'completed'] as const).map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => setStatusFilter(tab)}
+                  className={`pb-3 text-sm font-bold transition-all relative ${
+                    statusFilter === tab ? 'text-indigo-600' : 'text-slate-500 hover:text-slate-600'
+                  }`}
                 >
-                  {c.label}
-                </Button>
+                  {tab === 'all' && 'Tất cả phiếu'}
+                  {tab === 'pending' && 'Chờ giao thợ'}
+                  {tab === 'in_progress' && 'Đang rửa xe'}
+                  {tab === 'completed' && 'Đã rửa xong (Chờ QC)'}
+                  
+                  {statusFilter === tab && (
+                    <div className='absolute bottom-0 left-0 right-0 h-0.5 bg-indigo-600 rounded-full' />
+                  )}
+                </button>
               ))}
             </div>
-
-            {hasActiveFilter && (
-              <Button
-                variant='ghost'
-                size='sm'
-                onClick={() => {
-                  setSearch('');
-                  setSvcFilter(ALL_SVC);
-                }}
-                className='h-7 text-xs text-muted-foreground gap-1'
-              >
-                <XCircle className='size-3.5' /> Xóa lọc
-              </Button>
-            )}
+            
+            <button
+              onClick={() => refetch()}
+              className='flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-500 bg-white hover:border-slate-300 transition-all shadow-sm'
+            >
+              <RefreshCw className='w-3.5 h-3.5' /> Làm mới
+            </button>
           </div>
-        </div>
 
-        {/* ── Kanban board ───────────────────────────────────────────────── */}
-        <div className='px-8 py-5 max-w-7xl mx-auto w-full'>
-          {isLoading ? (
-            <div className='flex gap-4'>
-              {COLUMNS.map((col) => (
-                <div key={col.id} className='flex-1 min-w-52 space-y-2'>
-                  <Skeleton className='h-9 rounded-xl w-full' />
-                  {[0, 1, 2].map((i) => (
-                    <Skeleton key={i} className='h-28 rounded-xl w-full' />
-                  ))}
-                </div>
+          {/* Cards Grid */}
+          {isLoadingWO ? (
+            <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
+              {Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className='bg-white rounded-2xl p-6 border border-slate-100 shadow-sm animate-pulse h-48' />
               ))}
+            </div>
+          ) : workOrders.length === 0 ? (
+            <div className='bg-white rounded-3xl p-16 text-center border border-slate-100 shadow-sm max-w-lg mx-auto mt-12'>
+              <div className='w-16 h-16 rounded-2xl bg-indigo-50 flex items-center justify-center mx-auto mb-6 text-indigo-600'>
+                <Wrench className='w-8 h-8' />
+              </div>
+              <h3 className='font-heading text-lg font-black text-slate-800 mb-2'>Không tìm thấy phiếu rửa xe nào</h3>
+              <p className='text-slate-500 text-sm leading-relaxed'>
+                Hiện tại không có xe nào ở trạng thái này. Vui lòng kiểm tra mục &quot;Đơn đặt lịch&quot; để tiến hành Check-in nhận xe mới.
+              </p>
             </div>
           ) : (
-            <div className='flex gap-4 items-start'>
-              {visibleColumns.map((col) => {
-                const cards = filtered.filter((wo) =>
-                  col.statuses.includes(wo.status),
-                );
-                const sorted = [...cards].sort((a, b) => {
-                  const score = (u: Urgency) =>
-                    u === 'overdue' ? 0 : u === 'soon' ? 1 : 2;
-                  const diff =
-                    score(getUrgency(a.scheduledAt, a.status)) -
-                    score(getUrgency(b.scheduledAt, b.status));
-                  if (diff !== 0) return diff;
-                  return (a.scheduledAt ?? '').localeCompare(b.scheduledAt ?? '');
-                });
+            <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
+              {workOrders.map((wo) => {
+                const customer = `Mã phiếu: ${wo.code || wo.id.slice(-6).toUpperCase()}`;
+                const plate = wo.vehicleSnapshot?.plate ?? '-';
+                const service = wo.serviceName ?? '-';
+                // Ảnh lưu theo orderId để khớp với ảnh thu ngân chụp ở trang Lịch hẹn.
+                const woOrderId =
+                  typeof wo.orderId === 'string'
+                    ? wo.orderId
+                    : (wo.orderId?._id ?? wo.id);
+                
+                // Ưu tiên tên thợ BE trả kèm (manager không gọi được /admin/users),
+                // fallback về danh sách washers nếu có.
+                const washerObj = washers.find((w) => w._id === wo.assignedWasherId || w.id === wo.assignedWasherId);
+                const washer =
+                  wo.assignedWasherName ??
+                  washerObj?.fullName ??
+                  washerObj?.name ??
+                  (wo.assignedWasherId ? 'Đã giao (Chờ nhận)' : undefined);
 
-                const LIMIT = 5;
-                const isExpanded = expandedCols.has(col.id);
-                const visible = isExpanded ? sorted : sorted.slice(0, LIMIT);
-                const remaining = sorted.length - LIMIT;
+                const isPending = wo.status === 'waiting' || wo.status === 'assigned';
+                const isInProgress = wo.status === 'in_progress' || wo.status === 'returned';
+                const isCompleted = wo.status === 'quality_check';
 
                 return (
-                  <div key={col.id} className='flex-1 min-w-52 flex flex-col'>
-                    {/* Column header */}
-                    <div
-                      className={`flex items-center justify-between px-3 py-2 rounded-xl border ${col.headerBg} ${col.headerBorder} mb-2`}
-                    >
-                      <div className='flex items-center gap-2'>
-                        <span className={`size-2.5 rounded-full shrink-0 ${col.dot}`} />
-                        <span className={`text-sm font-bold ${col.titleCls}`}>
-                          {col.label}
-                        </span>
-                      </div>
-                      <span className={`text-xs font-black px-2 py-0.5 rounded-full ${col.countCls}`}>
-                        {sorted.length}
+                  <div
+                    key={wo.id}
+                    className={`bg-white rounded-2xl border transition-all duration-200 shadow-sm hover:shadow-md flex flex-col p-6 relative overflow-hidden ${
+                      isPending ? 'border-amber-100 hover:border-amber-200' :
+                      isInProgress ? 'border-indigo-100 hover:border-indigo-200 ring-2 ring-indigo-500/5' :
+                      'border-emerald-100 hover:border-emerald-200'
+                    }`}
+                  >
+                    {/* Header: License Plate & Status Badge */}
+                    <div className='flex items-center justify-between mb-4'>
+                      <span className='font-mono font-black text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-xl text-xs border border-indigo-100 shadow-sm'>
+                        {plate}
+                      </span>
+                      <span className={`inline-flex px-2.5 py-0.5 rounded-lg text-xs font-bold ${
+                        isPending ? 'bg-amber-50 text-amber-700 border border-amber-100' :
+                        isInProgress ? 'bg-blue-50 text-blue-700 border border-blue-100 animate-pulse' :
+                        'bg-emerald-50 text-emerald-700 border border-emerald-100'
+                      }`}>
+                        {wo.status === 'waiting' && 'Chờ giao thợ'}
+                        {wo.status === 'assigned' && 'Đã giao thợ'}
+                        {isInProgress && (wo.status === 'returned' ? 'QC Không đạt (Rửa lại)' : 'Đang rửa xe')}
+                        {isCompleted && 'Chờ QC'}
                       </span>
                     </div>
 
-                    {/* Card list */}
-                    <div className='space-y-2'>
-                      {sorted.length === 0 ? (
-                        <div className='flex flex-col items-center justify-center py-10 text-muted-foreground'>
-                          <Car className='size-7 mb-2 opacity-20' />
-                          <p className='text-xs'>Không có xe nào</p>
+                    {/* Customer & Service info */}
+                    <div className='flex-1 flex flex-col gap-2.5 mb-6'>
+                      <div>
+                        <p className='text-slate-500 text-[10px] uppercase font-bold tracking-wider'>Định danh phiếu</p>
+                        <p className='font-bold text-slate-800 text-sm'>{customer}</p>
+                      </div>
+                      <div>
+                        <p className='text-slate-500 text-[10px] uppercase font-bold tracking-wider'>Gói dịch vụ</p>
+                        <p className='font-bold text-slate-700 text-sm'>{service}</p>
+                      </div>
+                      
+                      {/* Thợ phụ trách */}
+                      <div className='mt-2 border-t border-slate-100 pt-3'>
+                        <p className='text-slate-500 text-[10px] uppercase font-bold tracking-wider mb-1'>Thợ phụ trách</p>
+                        {washer ? (
+                          <div className='flex items-center gap-1.5 text-slate-700 text-sm font-semibold'>
+                            <Users className='w-4 h-4 text-slate-500' />
+                            {washer}
+                          </div>
+                        ) : (
+                          <span className='text-amber-500 font-bold text-xs italic flex items-center gap-1 bg-amber-50 px-2 py-0.5 rounded-lg border border-amber-100 w-fit'>
+                            <Clock className='w-3.5 h-3.5' /> Đang đợi phân công thợ
+                          </span>
+                        )}
+                      </div>
+
+
+
+                      {/* Ảnh kiểm định xe (CHỈ XEM): thu ngân chụp trước khi rửa ở trang
+                          Lịch hẹn, thợ chụp sau khi rửa. Lưu theo orderId. */}
+                      <div className='mt-3 border-t border-slate-100 pt-3 flex flex-col gap-3'>
+                        {/* Trước khi rửa */}
+                        <div>
+                          <p className='text-[10px] font-black text-slate-500 uppercase tracking-wider mb-1.5 flex items-center gap-1'>
+                            <Camera className='w-3.5 h-3.5 text-amber-500' />
+                            Ảnh trước khi rửa (Trầy xước/Móp méo)
+                          </p>
+                          {(inspectionPhotos[woOrderId]?.preWash && inspectionPhotos[woOrderId].preWash.length > 0) ? (
+                            <div className='flex gap-2 overflow-x-auto pb-1 scrollbar-thin'>
+                              {inspectionPhotos[woOrderId].preWash.map((photo, pIdx) => (
+                                <div
+                                  key={pIdx}
+                                  onClick={() => setPreviewPhoto(photo)}
+                                  className='relative w-12 h-12 rounded-lg overflow-hidden border border-slate-200 shadow-sm bg-slate-50 cursor-pointer hover:border-amber-500 transition-all shrink-0 group'
+                                >
+                                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                                  <img src={photo} alt='Pre-wash' className='w-full h-full object-cover group-hover:scale-105 transition-transform' />
+                                  <div className='absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center'>
+                                    <Eye className='w-3 h-3 text-white' />
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <p className='text-xs italic text-slate-500 font-medium pl-1'>Chưa có ảnh trước khi rửa.</p>
+                          )}
                         </div>
-                      ) : (
-                        <>
-                          {visible.map((wo) => (
-                            <WOCard
-                              key={wo.id}
-                              wo={wo}
-                              leftBorder={col.leftBorder}
-                              onDetail={() => setDetailId(wo.id)}
-                              onQc={() => setQcTarget(wo)}
-                            />
-                          ))}
-                          {!isExpanded && remaining > 0 && (
-                            <button
-                              onClick={() =>
-                                setExpandedCols((s) => new Set([...s, col.id]))
-                              }
-                              className={`w-full py-2 text-xs font-semibold rounded-xl border border-dashed transition-colors ${col.headerBorder} ${col.titleCls} hover:${col.headerBg}`}
-                            >
-                              ··· Xem thêm {remaining} phiếu
-                            </button>
+
+                        {/* Sau khi rửa */}
+                        <div>
+                          <p className='text-[10px] font-black text-slate-500 uppercase tracking-wider mb-1.5 flex items-center gap-1'>
+                            <Camera className='w-3.5 h-3.5 text-emerald-500' />
+                            Ảnh sau khi rửa (Nghiệm thu sạch đẹp)
+                          </p>
+                          {(inspectionPhotos[woOrderId]?.postWash && inspectionPhotos[woOrderId].postWash.length > 0) ? (
+                            <div className='flex gap-2 overflow-x-auto pb-1 scrollbar-thin'>
+                              {inspectionPhotos[woOrderId].postWash.map((photo, pIdx) => (
+                                <div
+                                  key={pIdx}
+                                  onClick={() => setPreviewPhoto(photo)}
+                                  className='relative w-12 h-12 rounded-lg overflow-hidden border border-slate-200 shadow-sm bg-slate-50 cursor-pointer hover:border-emerald-500 transition-all shrink-0 group'
+                                >
+                                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                                  <img src={photo} alt='Post-wash' className='w-full h-full object-cover group-hover:scale-105 transition-transform' />
+                                  <div className='absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center'>
+                                    <Eye className='w-3 h-3 text-white' />
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <p className='text-xs italic text-slate-500 font-medium pl-1'>Chưa có ảnh sau khi rửa.</p>
                           )}
-                          {isExpanded && sorted.length > LIMIT && (
-                            <button
-                              onClick={() =>
-                                setExpandedCols((s) => {
-                                  const n = new Set(s);
-                                  n.delete(col.id);
-                                  return n;
-                                })
-                              }
-                              className={`w-full py-2 text-xs font-semibold rounded-xl border border-dashed transition-colors ${col.headerBorder} ${col.titleCls}`}
-                            >
-                              Thu gọn
-                            </button>
-                          )}
-                        </>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Operational Action Buttons */}
+                    <div className='mt-auto pt-4 border-t border-slate-100'>
+                      {isPending && (
+                        <button
+                          onClick={() => handleOpenAssign(wo)}
+                          className='w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm transition-all shadow-md shadow-indigo-600/10 flex items-center justify-center gap-1.5'
+                        >
+                          <Users className='w-4 h-4' />
+                          {wo.status === 'assigned' ? 'Đổi thợ phụ trách' : 'Giao thợ rửa xe'}
+                        </button>
+                      )}
+
+                      {isInProgress && (
+                        <div className='flex gap-2 w-full'>
+                          <button
+                            onClick={() => handleOpenAssign(wo)}
+                            className='flex-1 py-2 rounded-xl border border-slate-200 hover:border-slate-300 text-slate-600 font-bold text-xs transition-all flex items-center justify-center gap-1'
+                          >
+                            <Users className='w-3.5 h-3.5' /> Đổi thợ
+                          </button>
+                          <div className='flex-[1.5] bg-slate-50 border border-slate-100 rounded-xl px-3 py-2 flex items-center justify-center gap-2 text-xs font-semibold text-indigo-600'>
+                            <Clock className='w-4 h-4 animate-spin' /> {wo.status === 'returned' ? 'Đang rửa lại...' : 'Đang rửa...'}
+                          </div>
+                        </div>
+                      )}
+
+                      {isCompleted && (
+                        <button
+                          disabled={qcMutation.isPending}
+                          onClick={() => handleConfirmComplete(wo)}
+                          className='w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm transition-all shadow-md shadow-emerald-600/10 flex items-center justify-center gap-1.5 disabled:opacity-50'
+                        >
+                          <CheckCircle2 className='w-4 h-4' />
+                          Xác nhận hoàn thành
+                        </button>
                       )}
                     </div>
                   </div>
@@ -638,466 +455,83 @@ export default function ManagerWorkOrdersPage() {
         </div>
       </main>
 
-      {/* ── QC Dialog ──────────────────────────────────────────────────────── */}
-      <Dialog
-        open={!!qcTarget}
-        onOpenChange={(o) => !o && setQcTarget(null)}
-      >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Đánh giá chất lượng (QC)</DialogTitle>
-            <DialogDescription>
-              Kiểm định xe{' '}
-              <span className='font-mono font-bold text-foreground'>
-                {qcTarget?.vehicleSnapshot?.plate ?? ''}
-              </span>
-              . Đạt → hoàn tất đơn; Không đạt → trả thợ rửa lại.
-            </DialogDescription>
-          </DialogHeader>
-
-          {qcTarget?.checkinPhotos?.length ? (
-            <div className='space-y-2'>
-              <Label className='flex items-center gap-1 text-xs font-bold uppercase tracking-wider text-muted-foreground'>
-                <Camera className='size-3.5' /> Ảnh hiện trạng (
-                {qcTarget.checkinPhotos.length})
-              </Label>
-              <div className='flex flex-wrap gap-2'>
-                {qcTarget.checkinPhotos.map((u, i) => (
-                  <button
-                    key={i}
-                    type='button'
-                    onClick={() => setPreview(u)}
-                    className='size-16 overflow-hidden rounded-lg border hover:opacity-80 transition-opacity'
-                  >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={u}
-                      alt=''
-                      className='size-full object-cover'
-                    />
-                  </button>
-                ))}
+      {/* ── DIALOG: Giao việc thợ rửa xe ── */}
+      {isAssignOpen && assignTarget && (
+        <div className='fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4'>
+          <div className='bg-white rounded-3xl border border-slate-100 shadow-2xl p-6 max-w-md w-full animate-in fade-in zoom-in-95 duration-150'>
+            <div className='flex items-center gap-3 mb-4 text-indigo-600'>
+              <div className='w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center'>
+                <Users className='w-5 h-5' />
+              </div>
+              <div>
+                <h3 className='font-heading font-black text-slate-800 text-base'>Phân công thợ rửa xe</h3>
+                <p className='text-xs text-slate-500'>Chọn thợ rửa xe phụ trách cho xe {assignTarget.vehicleSnapshot?.plate ?? ''}</p>
               </div>
             </div>
-          ) : null}
 
-          {qcTarget?.checkoutPhotos?.length ? (
-            <div className='space-y-2'>
-              <Label className='flex items-center gap-1 text-xs font-bold uppercase tracking-wider text-muted-foreground'>
-                <CheckCircle2 className='size-3.5' /> Ảnh sau khi rửa (
-                {qcTarget.checkoutPhotos.length})
-              </Label>
-              <div className='flex flex-wrap gap-2'>
-                {qcTarget.checkoutPhotos.map((u, i) => (
-                  <button
-                    key={i}
-                    type='button'
-                    onClick={() => setPreview(u)}
-                    className='size-16 overflow-hidden rounded-lg border hover:opacity-80 transition-opacity'
-                  >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={u}
-                      alt=''
-                      className='size-full object-cover'
-                    />
-                  </button>
-                ))}
+            <div className='mb-6'>
+              <label className='block text-xs font-bold text-slate-500 uppercase mb-2 tracking-wider'>Chọn nhân viên rửa xe</label>
+              <div className='relative'>
+                <select
+                  value={selectedWasherId}
+                  onChange={(e) => setSelectedWasherId(e.target.value)}
+                  disabled={availableWashers.length === 0}
+                  className='w-full appearance-none bg-white border border-slate-200 rounded-xl px-4 py-3 pr-10 text-sm font-semibold text-slate-700 focus:outline-none focus:border-indigo-500 transition-all disabled:bg-slate-50 disabled:text-slate-400'
+                >
+                  <option value=''>-- Chọn nhân viên đang rảnh --</option>
+                  {availableWashers.map((w) => (
+                    <option key={w._id} value={w._id}>
+                      {w.fullName ?? w.name} ({w.email})
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown className='absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none' />
               </div>
-            </div>
-          ) : null}
-
-          <div className='grid grid-cols-2 gap-3'>
-            <Button
-              type='button'
-              variant={qcPassed ? 'default' : 'outline'}
-              onClick={() => setQcPassed(true)}
-            >
-              <CheckCircle2 className='size-4' /> Đạt
-            </Button>
-            <Button
-              type='button'
-              variant={!qcPassed ? 'destructive' : 'outline'}
-              onClick={() => setQcPassed(false)}
-            >
-              <XCircle className='size-4' /> Không đạt
-            </Button>
-          </div>
-
-          <div className='space-y-1.5'>
-            <Label htmlFor='qc-note'>Ghi chú chất lượng</Label>
-            <Textarea
-              id='qc-note'
-              value={qcNote}
-              onChange={(e) => setQcNote(e.target.value)}
-              rows={3}
-              placeholder={
-                qcPassed
-                  ? 'VD: Xe rửa sạch bóng, đạt yêu cầu…'
-                  : 'VD: Bánh sau còn bám bùn, kính chưa sạch…'
-              }
-            />
-          </div>
-
-          <DialogFooter>
-            <DialogClose asChild>
-              <Button variant='outline'>Hủy</Button>
-            </DialogClose>
-            <Button
-              variant={qcPassed ? 'default' : 'destructive'}
-              disabled={qcMutation.isPending}
-              onClick={() =>
-                qcTarget &&
-                qcMutation.mutate({
-                  id: qcTarget.id,
-                  passed: qcPassed,
-                  note: qcNote,
-                })
-              }
-            >
-              {qcMutation.isPending && <Spinner />} Hoàn tất đánh giá
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* ── Detail Dialog ───────────────────────────────────────────────────── */}
-      <Dialog
-        open={!!detailId}
-        onOpenChange={(o) => !o && setDetailId(null)}
-      >
-        <DialogContent className='max-w-lg'>
-          <DialogHeader>
-            <DialogTitle className='flex items-center gap-2'>
-              <Car className='size-4' /> Chi tiết phiếu rửa xe
-            </DialogTitle>
-            <DialogDescription>
-              {detail?.vehicleSnapshot?.plate
-                ? `Xe ${detail.vehicleSnapshot.plate}`
-                : 'Đang tải...'}
-            </DialogDescription>
-          </DialogHeader>
-
-          {isDetailLoading ? (
-            <div className='space-y-3 py-4'>
-              <Skeleton className='h-5 w-2/3' />
-              <Skeleton className='h-5 w-1/2' />
-              <div className='flex gap-2 pt-2'>
-                {[0, 1, 2, 3].map((i) => (
-                  <Skeleton
-                    key={i}
-                    className='size-16 rounded-lg'
-                  />
-                ))}
-              </div>
-            </div>
-          ) : detail ? (
-            <div className='space-y-4'>
-              <div className='grid grid-cols-2 gap-3 rounded-xl bg-muted/40 p-3 text-sm'>
-                <InfoItem
-                  label='Mã phiếu'
-                  value={detail.code ?? detail.id.slice(-6).toUpperCase()}
-                  mono
-                />
-                <InfoItem
-                  label='Trạng thái'
-                  value={STATUS_CFG[detail.status]?.label ?? detail.status}
-                />
-                <InfoItem
-                  label='Dịch vụ'
-                  value={detail.serviceName ?? '-'}
-                />
-                <InfoItem
-                  label='Thợ rửa'
-                  value={detail.assignedWasherName ?? 'Chưa gán'}
-                />
-                {detail.scheduledAt && (
-                  <InfoItem
-                    label='Giờ hẹn'
-                    value={formatDateTime(detail.scheduledAt)}
-                  />
-                )}
-              </div>
-
-              {/* Ảnh nhận xe */}
-              <div className='space-y-2'>
-                <Label className='flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-muted-foreground'>
-                  <Camera className='size-3.5 text-amber-500' />
-                  Ảnh nhận xe
-                  {detail.checkinPhotos?.length
-                    ? ` (${detail.checkinPhotos.length})`
-                    : ''}
-                </Label>
-                {detail.checkinPhotos?.length ? (
-                  <div className='flex flex-wrap gap-2'>
-                    {detail.checkinPhotos.map((u, i) => (
-                      <button
-                        key={i}
-                        type='button'
-                        onClick={() => setPreview(u)}
-                        className='size-16 overflow-hidden rounded-lg border hover:opacity-80 transition-opacity'
-                      >
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
-                          src={u}
-                          alt=''
-                          className='size-full object-cover'
-                        />
-                      </button>
-                    ))}
-                  </div>
-                ) : (
-                  <p className='text-xs italic text-muted-foreground'>
-                    Không có ảnh hiện trạng.
-                  </p>
-                )}
-              </div>
-
-              {/* Ảnh sau rửa */}
-              {(detail.checkoutPhotos?.length ?? 0) > 0 && (
-                <div className='space-y-2'>
-                  <Label className='flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-muted-foreground'>
-                    <Camera className='size-3.5 text-emerald-500' />
-                    Ảnh sau rửa ({detail.checkoutPhotos!.length})
-                  </Label>
-                  <div className='flex flex-wrap gap-2'>
-                    {detail.checkoutPhotos!.map((u, i) => (
-                      <button
-                        key={i}
-                        type='button'
-                        onClick={() => setPreview(u)}
-                        className='size-16 overflow-hidden rounded-lg border hover:opacity-80 transition-opacity'
-                      >
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
-                          src={u}
-                          alt=''
-                          className='size-full object-cover'
-                        />
-                      </button>
-                    ))}
-                  </div>
-                </div>
+              {availableWashers.length === 0 && (
+                <p className='mt-2 flex items-center gap-1.5 text-xs font-semibold text-amber-600'>
+                  <Clock className='w-3.5 h-3.5 shrink-0' />
+                  Tất cả thợ đang bận (được giao việc hoặc đang rửa). Vui lòng đợi
+                  thợ hoàn thành.
+                </p>
               )}
             </div>
-          ) : null}
 
-          <DialogFooter>
-            <DialogClose asChild>
-              <Button variant='outline'>Đóng</Button>
-            </DialogClose>
-            {detail?.status === 'quality_check' && (
-              <Button
-                onClick={() => {
-                  setQcTarget(detail);
-                  setDetailId(null);
-                }}
+            <div className='flex gap-3 justify-end'>
+              <button
+                onClick={() => { setIsAssignOpen(false); setAssignTarget(null); }}
+                className='px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-500 hover:bg-slate-50 transition-all'
               >
-                <ShieldCheck className='size-4' /> Đánh giá QC
-              </Button>
-            )}
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* ── Image preview ──────────────────────────────────────────────────── */}
-      <Dialog
-        open={!!preview}
-        onOpenChange={(o) => !o && setPreview(null)}
-      >
-        <DialogContent className='max-w-3xl border-none bg-transparent p-0 shadow-none'>
-          <DialogTitle className='sr-only'>Xem ảnh</DialogTitle>
-          {preview && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={preview}
-              alt='Xem ảnh'
-              className='max-h-[80vh] w-full rounded-xl object-contain'
-            />
-          )}
-        </DialogContent>
-      </Dialog>
-    </>
-  );
-}
-
-// ── WOCard ────────────────────────────────────────────────────────────────────
-function WOCard({
-  wo,
-  leftBorder,
-  onDetail,
-  onQc,
-}: {
-  wo: WorkOrder;
-  leftBorder: string;
-  onDetail: () => void;
-  onQc: () => void;
-}) {
-  const urgency = getUrgency(wo.scheduledAt, wo.status);
-  const timeStr = toHHmm(wo.scheduledAt);
-  const st = STATUS_CFG[wo.status];
-  const isVip = (wo.priorityLevel ?? 0) > 1;
-  const isReturned = wo.status === 'returned';
-
-  return (
-    <div
-      className={[
-        'bg-white rounded-xl border border-slate-200 border-l-4 shadow-sm',
-        'hover:shadow-md transition-all duration-150 p-3',
-        leftBorder,
-        urgency === 'overdue' ? 'ring-1 ring-rose-400/60 bg-rose-50/30' : '',
-      ].join(' ')}
-    >
-      {/* Row 1: plate + badges */}
-      <div className='flex items-start justify-between gap-1.5 mb-1.5'>
-        <div className='flex items-center gap-1.5 min-w-0'>
-          {isVip && (
-            <Star className='size-3.5 text-amber-500 fill-amber-400 shrink-0' />
-          )}
-          <span className='font-mono text-[15px] font-black text-slate-900 tracking-wide leading-tight truncate'>
-            {wo.vehicleSnapshot?.plate ?? '—'}
-          </span>
-        </div>
-        <div className='flex items-center gap-1 shrink-0'>
-          {urgency === 'overdue' && (
-            <Badge
-              variant='destructive'
-              className='gap-0.5 px-1.5 py-0.5 text-[10px]'
-            >
-              <AlertTriangle className='size-2.5' /> Trễ
-            </Badge>
-          )}
-          {urgency === 'soon' && (
-            <Badge
-              variant='warning'
-              className='gap-0.5 px-1.5 py-0.5 text-[10px]'
-            >
-              <Zap className='size-2.5' /> Sắp đến
-            </Badge>
-          )}
-          <Badge
-            variant={st.variant}
-            className={['px-1.5 py-0.5 text-[10px]', st.extraCls ?? ''].join(
-              ' ',
-            )}
-          >
-            {st.short}
-          </Badge>
-        </div>
-      </div>
-
-      {/* Row 2: service + code */}
-      <div className='flex items-center justify-between gap-1 mb-1.5'>
-        <span className='text-xs text-slate-600 font-medium truncate flex-1 leading-tight'>
-          {wo.serviceName ?? '—'}
-        </span>
-        <span className='font-mono text-[10px] text-slate-400 shrink-0'>
-          {wo.code ?? wo.id.slice(-6).toUpperCase()}
-        </span>
-      </div>
-
-      {/* Row 3: time + washer */}
-      <div className='flex items-center gap-3 mb-2.5'>
-        {timeStr && (
-          <div
-            className={`flex items-center gap-1 text-xs font-semibold shrink-0 ${
-              urgency === 'overdue' ? 'text-rose-600' : 'text-slate-500'
-            }`}
-          >
-            <Clock className='size-3' />
-            {timeStr}
+                Hủy bỏ
+              </button>
+              <button
+                disabled={!selectedWasherId || assignWasherMutation.isPending}
+                onClick={() => assignWasherMutation.mutate({ woId: assignTarget.id, washerId: selectedWasherId })}
+                className='px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-bold text-xs transition-all shadow-md shadow-indigo-600/10'
+              >
+                Xác nhận giao việc
+              </button>
+            </div>
           </div>
-        )}
-        <div className='flex items-center gap-1 text-xs text-slate-500 min-w-0 flex-1'>
-          <Users className='size-3 shrink-0 text-slate-400' />
-          {wo.assignedWasherName ? (
-            <span className='truncate'>{wo.assignedWasherName}</span>
-          ) : (
-            <span className='text-amber-600 font-medium'>Chưa phân công</span>
-          )}
         </div>
-        {isReturned && (
-          <Badge
-            variant='destructive'
-            className='gap-0.5 px-1.5 py-0.5 text-[10px] shrink-0'
-          >
-            <RotateCcw className='size-2.5' /> Rửa lại
-          </Badge>
-        )}
-      </div>
+      )}
 
-      {/* Row 4: actions */}
-      <div className='flex gap-1.5'>
-        {wo.status !== 'quality_check' && (
-          <Button
-            variant='outline'
-            size='sm'
-            onClick={onDetail}
-            className='flex-1 h-6 text-xs gap-1.5 px-2'
-          >
-            Chi tiết
-            {wo.checkinPhotos?.length ? (
-              <span className='inline-flex size-4 items-center justify-center rounded-full bg-amber-100 text-[9px] font-black text-amber-700'>
-                {wo.checkinPhotos.length}
-              </span>
-            ) : null}
-          </Button>
-        )}
-        {wo.status === 'quality_check' && (
-          <Button
-            size='sm'
-            onClick={onQc}
-            className='flex-1 h-6 text-xs gap-1 px-2 bg-purple-600 hover:bg-purple-700 text-white'
-          >
-            <ShieldCheck className='size-3' /> QC
-          </Button>
-        )}
-      </div>
-    </div>
-  );
-}
+      {/* Đã gỡ bỏ Dialog QC kiểm định phức tạp */}
 
-// ── StatChip ──────────────────────────────────────────────────────────────────
-function StatChip({
-  label,
-  value,
-  cls,
-  dot,
-}: {
-  label: string;
-  value: number;
-  cls: string;
-  dot?: string;
-}) {
-  return (
-    <div
-      className={`flex items-center gap-2 px-3 py-1.5 rounded-lg whitespace-nowrap ${cls}`}
-    >
-      {dot && <span className={`size-2 rounded-full shrink-0 ${dot}`} />}
-      <span className='text-sm font-black tabular-nums'>{value}</span>
-      <span className='text-xs font-medium opacity-70'>{label}</span>
-    </div>
-  );
-}
-
-// ── InfoItem ──────────────────────────────────────────────────────────────────
-function InfoItem({
-  label,
-  value,
-  mono,
-}: {
-  label: string;
-  value: string;
-  mono?: boolean;
-}) {
-  return (
-    <div>
-      <p className='text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-0.5'>
-        {label}
-      </p>
-      <p className={`font-semibold text-sm ${mono ? 'font-mono' : ''}`}>
-        {value}
-      </p>
-    </div>
+      {/* Lightbox Preview Modal */}
+      {previewPhoto && (
+        <div className='fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4' onClick={() => setPreviewPhoto(null)}>
+          <div className='relative max-w-3xl w-full max-h-[85vh] flex items-center justify-center animate-in fade-in zoom-in-95 duration-150'>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={previewPhoto} alt='Enlarged Preview' className='rounded-2xl max-w-full max-h-[80vh] object-contain shadow-2xl border border-white/10' />
+            <button 
+              onClick={() => setPreviewPhoto(null)} 
+              className='absolute top-3 right-3 bg-black/50 hover:bg-black text-white text-xs font-bold px-3 py-1.5 rounded-xl shadow-lg border border-white/10 animate-pulse'
+            >
+              Đóng xem ảnh (Esc)
+            </button>
+          </div>
+        </div>
+      )}
+    </>
   );
 }

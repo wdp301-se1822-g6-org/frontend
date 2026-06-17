@@ -68,7 +68,7 @@ export function RegisterForm({
           </button>
         )}
         <CardHeader className='space-y-1 pb-6 text-center'>
-          <CardTitle className='font-heading text-3xl font-bold tracking-tight text-primary'>
+          <CardTitle className='font-sans text-3xl font-bold tracking-tight text-primary'>
             Tham gia ngay
           </CardTitle>
           <p className='text-sm font-medium text-muted-foreground'>
