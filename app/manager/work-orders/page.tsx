@@ -11,8 +11,8 @@ import {
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import {
-  Wrench, Users, ShieldCheck, CheckCircle2,
-  XCircle, Clock, MessageSquare, ChevronDown, RefreshCw,
+  Wrench, Users, CheckCircle2,
+  Clock, ChevronDown, RefreshCw,
   Camera, Eye
 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -84,12 +84,6 @@ export default function ManagerWorkOrdersPage() {
   const [isAssignOpen, setIsAssignOpen] = useState(false);
   const [assignTarget, setAssignTarget] = useState<WorkOrderData | null>(null);
   const [selectedWasherId, setSelectedWasherId] = useState('');
-
-  // States cho Dialog QC
-  const [isQcOpen, setIsQcOpen] = useState(false);
-  const [qcTarget, setQcTarget] = useState<WorkOrderData | null>(null);
-  const [qcPassed, setQcPassed] = useState<boolean>(true);
-  const [qcNote, setQcNote] = useState('');
 
   // Lấy danh sách Work Orders
   const { data: workOrdersRes, isLoading: isLoadingWO, refetch } = useQuery({
@@ -181,7 +175,7 @@ export default function ManagerWorkOrdersPage() {
 
   // Mutation hoàn thành đơn (hoàn thành trực tiếp, không qua QC phức tạp)
   const qcMutation = useMutation({
-    mutationFn: async ({ woId, passed, note, targetWo }: { woId: string; passed: boolean; note: string; targetWo: WorkOrderData }) => {
+    mutationFn: async ({ woId, targetWo }: { woId: string; targetWo: WorkOrderData }) => {
       // Gọi trực tiếp kết quả QC Đạt để đóng Work Order
       await adminQcWorkOrder(woId, true, 'Hoàn thành bởi Quản lý');
       
@@ -194,9 +188,6 @@ export default function ManagerWorkOrdersPage() {
     },
     onSuccess: () => {
       toast.success('Đã hoàn thành và đóng đơn hàng rửa xe thành công!');
-      setIsQcOpen(false);
-      setQcTarget(null);
-      setQcNote('');
       qc.invalidateQueries({ queryKey: ['manager-work-orders'] });
       qc.invalidateQueries({ queryKey: ['manager-dashboard-workorders'] });
       qc.invalidateQueries({ queryKey: ['manager-orders'] });
@@ -214,7 +205,7 @@ export default function ManagerWorkOrdersPage() {
 
   const handleConfirmComplete = (wo: WorkOrderData) => {
     if (confirm('Xác nhận xe đã rửa sạch đẹp và hoàn thành đơn hàng này?')) {
-      qcMutation.mutate({ woId: wo.id, passed: true, note: 'Hoàn thành bởi Quản lý', targetWo: wo });
+      qcMutation.mutate({ woId: wo.id, targetWo: wo });
     }
   };
 

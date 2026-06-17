@@ -1,11 +1,10 @@
 'use client';
 
 import { AdminTopbar } from '@/components/admin/AdminTopbar';
-import { adminGetOrders, adminCreateWorkOrder, adminUpdateOrderStatus } from '@/lib/admin-api';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { adminGetOrders } from '@/lib/admin-api';
+import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
-import { Search, RefreshCw, ChevronDown, CheckCircle2, AlertCircle, X } from 'lucide-react';
-import { toast } from 'sonner';
+import { Search, RefreshCw, ChevronDown, X } from 'lucide-react';
 
 interface OrderData {
   _id?: string;
@@ -39,7 +38,6 @@ const statusConfig: Record<string, { label: string; cls: string }> = {
 const statusOptions = ['all', 'pending_payment', 'confirmed', 'checked_in', 'in_progress', 'completed', 'cancelled', 'no_show'];
 
 export default function ManagerOrdersPage() {
-  const qc = useQueryClient();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [page, setPage] = useState(1);
@@ -51,25 +49,6 @@ export default function ManagerOrdersPage() {
       page, limit: 10,
       ...(statusFilter !== 'all' ? { status: statusFilter } : {}),
     }),
-  });
-
-  // Mutation check-in khách hàng
-  const checkInMutation = useMutation({
-    mutationFn: async (orderId: string) => {
-      // 1. Tạo Work Order (Check-in)
-      await adminCreateWorkOrder(orderId);
-      // 2. Tự động chuyển trạng thái Order sang checked_in
-      await adminUpdateOrderStatus(orderId, 'checked_in');
-    },
-    onSuccess: () => {
-      toast.success('Check-in khách hàng thành công! Đã tạo phiếu rửa xe.');
-      qc.invalidateQueries({ queryKey: ['manager-orders'] });
-      qc.invalidateQueries({ queryKey: ['manager-dashboard-workorders'] });
-    },
-    onError: (err) => {
-      const errMsg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message ?? 'Đã xảy ra lỗi khi check-in.';
-      toast.error(`Check-in thất bại: ${errMsg}`);
-    }
   });
 
   const orders: OrderData[] = data?.data?.data ?? data?.data ?? [];
@@ -162,7 +141,6 @@ export default function ManagerOrdersPage() {
                       const s = statusConfig[o.status ?? ''] ?? { label: o.status, cls: 'bg-slate-100 text-slate-500' };
                       
                       const orderId = o._id ?? o.id ?? '';
-                      const isConfirmed = o.status === 'confirmed';
 
                       const formattedTime = (o.scheduledAt ?? o.bookingDate)
                         ? new Date((o.scheduledAt ?? o.bookingDate) as string).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })

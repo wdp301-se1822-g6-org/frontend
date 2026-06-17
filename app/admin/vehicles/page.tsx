@@ -50,8 +50,8 @@ export default function AdminVehiclesPage() {
   };
 
   const sorted = [...filtered].sort((a, b) => {
-    let aVal: any = '';
-    let bVal: any = '';
+    let aVal: string | number = '';
+    let bVal: string | number = '';
 
     if (sortField === 'licensePlate') {
       aVal = a.licensePlate ?? '';

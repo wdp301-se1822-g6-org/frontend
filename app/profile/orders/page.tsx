@@ -32,7 +32,7 @@ import {
 import { getMyVehicles } from '@/lib/customer-api';
 import { cn } from '@/lib/utils';
 import { formatCurrency } from '@/lib/format';
-import { Order, OrderStatus, AvailableSlot, StaffShift } from '@/types/order';
+import { Order, OrderStatus, AvailableSlot } from '@/types/order';
 
 interface CustomerVehicle {
   _id?: string;
@@ -276,10 +276,10 @@ export default function MyOrdersPage() {
     const shifts = res.data || [];
     
     const targetDate = new Date(targetTime).getTime();
-    return shifts.filter((s: any) => {
+    return shifts.filter((s: StaffShift) => {
       const start = new Date(s.startAt).getTime();
       const end = new Date(s.endAt).getTime();
-      return targetDate >= start && targetDate < end && (s.currentBookings < s.maxBookings);
+      return targetDate >= start && targetDate < end && ((s.currentBookings ?? 0) < (s.maxBookings ?? 0));
     });
   };
 

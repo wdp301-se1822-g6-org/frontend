@@ -14,7 +14,6 @@ import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import {
   AlertTriangle,
   CalendarCheck,
-  Car,
   CircleDollarSign,
   Clock,
   CreditCard,

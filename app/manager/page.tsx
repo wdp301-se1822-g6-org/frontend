@@ -4,25 +4,20 @@ import { AdminTopbar } from '@/components/admin/AdminTopbar';
 import { DonutChart } from '@/components/admin/dashboard/DonutChart';
 import {
   adminGetDashboard,
-  adminGetShifts,
   adminGetWorkOrders,
 } from '@/lib/admin-api';
-import { getThisMonthRange, getTodayRange } from '@/lib/date-range';
-import { formatCurrency, formatNumber, formatPercent } from '@/lib/format';
+import { getThisMonthRange } from '@/lib/date-range';
+import { formatCurrency, formatNumber } from '@/lib/format';
 import type { DashboardReport } from '@/types/dashboard';
 import { useQuery } from '@tanstack/react-query';
 import {
   ArrowRight,
-  CalendarCheck,
   CheckCircle2,
   ClipboardCheck,
   Clock,
   CreditCard,
-  PieChart,
   RotateCcw,
-  ShieldCheck,
   UserPlus,
-  Wrench,
 } from 'lucide-react';
 import type { ElementType } from 'react';
 import Link from 'next/link';
@@ -45,14 +40,7 @@ interface WorkOrderRow {
   vehicleSnapshot?: { plate?: string };
 }
 
-/* Real staff-shift shape (BE StaffShiftResponseDto). */
-interface ShiftRow {
-  id?: string;
-  startAt?: string;
-  stationName?: string;
-  maxBookings?: number;
-  currentBookings?: number;
-}
+
 
 const STATUS_LABELS: Record<string, string> = {
   pending_payment: 'Chờ thanh toán',
@@ -109,14 +97,8 @@ export default function ManagerOverviewPage() {
     queryFn: () => adminGetWorkOrders({ limit: 100 }),
   });
 
-  const { data: shiftsData } = useQuery({
-    queryKey: ['manager-overview-shifts'],
-    queryFn: () => adminGetShifts({ limit: 100 }),
-  });
-
   const workOrders: WorkOrderRow[] =
     workOrdersData?.data?.data ?? workOrdersData?.data ?? [];
-  const shifts: ShiftRow[] = shiftsData?.data?.data ?? shiftsData?.data ?? [];
 
   // ── Operational alerts (real-time, not date-bound) ──────────────────────
   const waitingCount = workOrders.filter((w) => w.status === 'waiting').length;
@@ -127,20 +109,7 @@ export default function ManagerOverviewPage() {
     (w) => w.status === 'returned',
   ).length;
 
-  const todayStr = new Date().toDateString();
-  const fullSlots = shifts.filter((s) => {
-    if (!s.startAt || !s.maxBookings) return false;
-    if (new Date(s.startAt).toDateString() !== todayStr) return false;
-    return (s.currentBookings ?? 0) / s.maxBookings >= 0.8;
-  });
-
   const activeWorkOrders = workOrders.filter((w) => w.status !== 'done');
-  const qcDone = workOrders.filter((w) => w.qcPassed != null);
-  const qcPassed = workOrders.filter((w) => w.qcPassed === true);
-  const qcRate =
-    qcDone.length > 0
-      ? Math.round((qcPassed.length / qcDone.length) * 100)
-      : null;
 
   const ov = todayReport?.overview;
 
@@ -478,35 +447,7 @@ function SlateKpi({
   );
 }
 
-function QuickAction({
-  icon: Icon,
-  title,
-  sub,
-  href,
-}: {
-  icon: ElementType;
-  title: string;
-  sub: string;
-  href: string;
-}) {
-  return (
-    <Link
-      href={href}
-      className='flex items-center justify-between p-5 rounded-2xl border border-slate-100 hover:border-indigo-200 bg-slate-50/50 hover:bg-indigo-50/10 hover:-translate-y-0.5 transition-all duration-200 group'
-    >
-      <div className='flex items-center gap-4 min-w-0'>
-        <div className='w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600 group-hover:scale-110 transition-transform shrink-0'>
-          <Icon className='w-5 h-5' />
-        </div>
-        <div className='min-w-0'>
-          <h3 className='font-heading font-bold text-slate-800 text-sm truncate'>{title}</h3>
-          <p className='text-xs text-slate-500 mt-0.5 truncate'>{sub}</p>
-        </div>
-      </div>
-      <ArrowRight className='w-5 h-5 text-slate-300 group-hover:text-indigo-600 transition-colors shrink-0' />
-    </Link>
-  );
-}
+
 
 function MiniStat({ label, value }: { label: string; value: string }) {
   return (
