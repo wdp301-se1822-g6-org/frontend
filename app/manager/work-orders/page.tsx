@@ -6,10 +6,11 @@ import {
   adminGetUsers,
   adminAssignWasher,
   adminQcWorkOrder,
-  adminUpdateOrderStatus
+  adminUpdateOrderStatus,
+  adminGetWorkOrdersQueue
 } from '@/lib/admin-api';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import {
   Wrench, Users, CheckCircle2,
   Clock, ChevronDown, RefreshCw,
@@ -64,7 +65,7 @@ interface WorkOrderData {
 
 export default function ManagerWorkOrdersPage() {
   const qc = useQueryClient();
-  const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'in_progress' | 'completed'>('all');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'in_progress' | 'completed' | 'fifo'>('all');
   // Ảnh kiểm định chỉ để XEM ở trang Vận hành (thu ngân chụp ảnh trước khi rửa
   // ở trang Lịch hẹn, thợ chụp ảnh sau khi rửa). Lưu chung localStorage theo orderId.
   const [inspectionPhotos] = useState<Record<string, { preWash: string[]; postWash: string[] }>>(() => {
@@ -86,9 +87,16 @@ export default function ManagerWorkOrdersPage() {
   const [selectedWasherId, setSelectedWasherId] = useState('');
 
   // Lấy danh sách Work Orders
-  const { data: workOrdersRes, isLoading: isLoadingWO, refetch } = useQuery({
+  const { data: workOrdersRes, isLoading: isLoadingWO, refetch: refetchWO } = useQuery({
     queryKey: ['manager-work-orders'],
     queryFn: () => adminGetWorkOrders(),
+  });
+
+  // Lấy danh sách hàng đợi FIFO
+  const { data: fifoQueueRes, isLoading: isLoadingFIFO, refetch: refetchFIFO } = useQuery({
+    queryKey: ['manager-work-orders-queue'],
+    queryFn: () => adminGetWorkOrdersQueue(),
+    enabled: statusFilter === 'fifo',
   });
 
   // Lấy danh sách thợ rửa xe
@@ -117,42 +125,59 @@ export default function ManagerWorkOrdersPage() {
   ];
 
   const allWorkOrders: WorkOrderData[] = workOrdersRes?.data?.data ?? workOrdersRes?.data ?? [];
+  const fifoQueue: WorkOrderData[] = fifoQueueRes?.data ?? [];
   const fetchedWashers: UserData[] = washersRes?.data?.data ?? washersRes?.data ?? [];
   const washers = fetchedWashers.length > 0 ? fetchedWashers : FALLBACK_WASHERS;
 
+  const isPageLoading = statusFilter === 'fifo' ? isLoadingFIFO : isLoadingWO;
+  const refetch = () => {
+    if (statusFilter === 'fifo') {
+      refetchFIFO();
+    } else {
+      refetchWO();
+    }
+  };
+
   // Thợ đang bận = đang được giao việc hoặc đang rửa (kể cả rửa lại sau QC).
   // Những thợ này không hiện trong danh sách để gán tiếp.
-  const busyWasherIds = new Set(
-    allWorkOrders
-      .filter(
-        (wo) =>
-          wo.status === 'assigned' ||
-          wo.status === 'in_progress' ||
-          wo.status === 'returned',
-      )
-      .map((wo) => wo.assignedWasherId)
-      .filter((id): id is string => Boolean(id)),
-  );
-  const availableWashers = washers.filter(
-    (w) => !busyWasherIds.has(w._id) && !busyWasherIds.has(w.id ?? ''),
-  );
+  const availableWashers = useMemo(() => {
+    const busyIds = new Set(
+      allWorkOrders
+        .filter(
+          (wo) =>
+            wo.status === 'assigned' ||
+            wo.status === 'in_progress' ||
+            wo.status === 'returned',
+        )
+        .map((wo) => wo.assignedWasherId)
+        .filter((id): id is string => Boolean(id)),
+    );
+    return washers.filter(
+      (w) => !busyIds.has(w._id) && !busyIds.has(w.id ?? ''),
+    );
+  }, [allWorkOrders, washers]);
 
   // Lọc phiếu rửa xe theo trạng thái ở frontend để khớp tab
-  const workOrders = allWorkOrders.filter((wo) => {
-    if (statusFilter === 'all') {
-      return wo.status !== 'done'; // Chỉ hiện những phiếu đang hoạt động
+  const workOrders = useMemo(() => {
+    if (statusFilter === 'fifo') {
+      return fifoQueue;
     }
-    if (statusFilter === 'pending') {
-      return wo.status === 'waiting' || wo.status === 'assigned';
-    }
-    if (statusFilter === 'in_progress') {
-      return wo.status === 'in_progress' || wo.status === 'returned';
-    }
-    if (statusFilter === 'completed') {
-      return wo.status === 'quality_check';
-    }
-    return true;
-  });
+    return allWorkOrders.filter((wo) => {
+      if (statusFilter === 'all') {
+        return wo.status !== 'done'; // Chỉ hiện những phiếu đang hoạt động
+      }
+      if (statusFilter === 'pending') {
+        return wo.status === 'waiting' || wo.status === 'assigned';
+      }
+      if (statusFilter === 'in_progress') {
+        return wo.status === 'in_progress' || wo.status === 'returned';
+      }
+      if (statusFilter === 'completed') {
+        return wo.status === 'quality_check';
+      }
+      return true;
+    });
+  }, [allWorkOrders, statusFilter, fifoQueue]);
 
   // Mutation giao việc cho thợ
   const assignWasherMutation = useMutation({
@@ -218,7 +243,7 @@ export default function ManagerWorkOrdersPage() {
           {/* Status Tabs Filter */}
           <div className='flex items-center justify-between mb-8 border-b border-slate-200 pb-2'>
             <div className='flex gap-6'>
-              {(['all', 'pending', 'in_progress', 'completed'] as const).map((tab) => (
+              {(['all', 'pending', 'in_progress', 'completed', 'fifo'] as const).map((tab) => (
                 <button
                   key={tab}
                   onClick={() => setStatusFilter(tab)}
@@ -230,6 +255,7 @@ export default function ManagerWorkOrdersPage() {
                   {tab === 'pending' && 'Chờ giao thợ'}
                   {tab === 'in_progress' && 'Đang rửa xe'}
                   {tab === 'completed' && 'Đã rửa xong (Chờ QC)'}
+                  {tab === 'fifo' && 'Hàng đợi FIFO (Hôm nay)'}
                   
                   {statusFilter === tab && (
                     <div className='absolute bottom-0 left-0 right-0 h-0.5 bg-indigo-600 rounded-full' />
@@ -247,7 +273,7 @@ export default function ManagerWorkOrdersPage() {
           </div>
 
           {/* Cards Grid */}
-          {isLoadingWO ? (
+          {isPageLoading ? (
             <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
               {Array.from({ length: 3 }).map((_, i) => (
                 <div key={i} className='bg-white rounded-2xl p-6 border border-slate-100 shadow-sm animate-pulse h-48' />
@@ -339,25 +365,21 @@ export default function ManagerWorkOrdersPage() {
                           </span>
                         )}
                       </div>
-
-
-
-                      {/* Ảnh kiểm định xe (CHỈ XEM): thu ngân chụp trước khi rửa ở trang
-                          Lịch hẹn, thợ chụp sau khi rửa. Lưu theo orderId. */}
-                      <div className='mt-3 border-t border-slate-100 pt-3 flex flex-col gap-3'>
-                        {/* Trước khi rửa */}
+                      {/* Ảnh kiểm định xe (CHỈ XEM) */}
+                      <div className='mt-3 space-y-3.5 border-t border-slate-100 pt-3'>
+                        {/* Trước khi rửa (Check-in) */}
                         <div>
                           <p className='text-[10px] font-black text-slate-500 uppercase tracking-wider mb-1.5 flex items-center gap-1'>
-                            <Camera className='w-3.5 h-3.5 text-amber-500' />
-                            Ảnh trước khi rửa (Trầy xước/Móp méo)
+                            <Camera className='w-3.5 h-3.5 text-indigo-500' />
+                            Ảnh trước khi rửa (Thu ngân chụp)
                           </p>
-                          {(inspectionPhotos[woOrderId]?.preWash && inspectionPhotos[woOrderId].preWash.length > 0) ? (
+                          {((wo.checkinPhotos && (wo.checkinPhotos as string[]).length > 0) || (inspectionPhotos[woOrderId]?.preWash && inspectionPhotos[woOrderId].preWash.length > 0)) ? (
                             <div className='flex gap-2 overflow-x-auto pb-1 scrollbar-thin'>
-                              {inspectionPhotos[woOrderId].preWash.map((photo, pIdx) => (
+                              {((wo.checkinPhotos as string[]) || inspectionPhotos[woOrderId]?.preWash || []).map((photo, pIdx) => (
                                 <div
                                   key={pIdx}
                                   onClick={() => setPreviewPhoto(photo)}
-                                  className='relative w-12 h-12 rounded-lg overflow-hidden border border-slate-200 shadow-sm bg-slate-50 cursor-pointer hover:border-amber-500 transition-all shrink-0 group'
+                                  className='relative w-12 h-12 rounded-lg overflow-hidden border border-slate-200 shadow-sm bg-slate-50 cursor-pointer hover:border-indigo-500 transition-all shrink-0 group'
                                 >
                                   {/* eslint-disable-next-line @next/next/no-img-element */}
                                   <img src={photo} alt='Pre-wash' className='w-full h-full object-cover group-hover:scale-105 transition-transform' />

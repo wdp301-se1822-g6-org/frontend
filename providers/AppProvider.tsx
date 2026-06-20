@@ -5,7 +5,15 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useEffect, useRef, type ReactNode } from 'react';
 import { Toaster } from 'sonner';
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 2, // 2 minutes
+      refetchOnWindowFocus: false, // disable aggressive refetch on tab focus
+      retry: 1, // retry failed queries once
+    },
+  },
+});
 
 export default function AppProvider({ children }: { children: ReactNode }) {
   const { initAuth, _hasHydrated } = useAuthStore();

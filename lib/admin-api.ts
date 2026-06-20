@@ -159,3 +159,27 @@ export const adminGrantVoucher = (data: GrantVoucherPayload) =>
 
 export const adminRevokeVoucher = (id: string, reason: string) =>
   axiosInstance.patch(`/admin/vouchers/${id}/revoke`, { reason });
+
+// ─── Golden Hours ──────────────────────────────────────
+export const adminGetGoldenHours = () =>
+  axiosInstance.get(ENDPOINTS.adminGoldenHours.list);
+
+export const adminCreateGoldenHour = (data: Record<string, unknown>) =>
+  axiosInstance.post(ENDPOINTS.adminGoldenHours.create, data);
+
+export const adminUpdateGoldenHour = (id: string, data: Record<string, unknown>) =>
+  axiosInstance.patch(ENDPOINTS.adminGoldenHours.byId(id), data);
+
+export const adminDeleteGoldenHour = (id: string) =>
+  axiosInstance.delete(ENDPOINTS.adminGoldenHours.byId(id));
+
+// ─── Pricing Policy ────────────────────────────────────
+export const adminGetPricingPolicy = () =>
+  axiosInstance.get(ENDPOINTS.adminPricingPolicy.get);
+
+export const adminUpdatePricingPolicy = (data: Record<string, unknown>) =>
+  axiosInstance.patch(ENDPOINTS.adminPricingPolicy.update, data);
+
+// ─── Work Orders Queue ──────────────────────────────────
+export const adminGetWorkOrdersQueue = () =>
+  axiosInstance.get(ENDPOINTS.adminWorkOrders.queue);

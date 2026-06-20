@@ -1,7 +1,7 @@
 'use client';
 
 import { AdminTopbar } from '@/components/admin/AdminTopbar';
-import { adminGetOrders, adminCreateWorkOrder } from '@/lib/admin-api';
+import { adminGetOrders, adminCreateWorkOrder, adminGetWorkOrders } from '@/lib/admin-api';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { Search, RefreshCw, ChevronDown, CheckCircle2, AlertCircle, Camera, Plus, Trash2, Eye, X } from 'lucide-react';
@@ -79,6 +79,11 @@ export default function CashierOrdersPage() {
       page, limit: 10,
       ...(statusFilter !== 'all' ? { status: statusFilter } : {}),
     }),
+  });
+
+  const { data: workOrdersRes } = useQuery({
+    queryKey: ['cashier-work-orders-all'],
+    queryFn: () => adminGetWorkOrders(),
   });
 
   // Mutation check-in khách hàng (kèm ảnh hiện trạng)
@@ -193,6 +198,13 @@ export default function CashierOrdersPage() {
                       const isConfirmed = o.status === 'confirmed';
                       const isReceived = o.status === 'checked_in' || o.status === 'in_progress' || o.status === 'completed';
 
+                      const workOrdersList = workOrdersRes?.data?.data ?? workOrdersRes?.data ?? [];
+                      const matchingWo = (workOrdersList as Array<{ orderId?: string | { _id?: string; id?: string }; checkinPhotos?: string[] }>).find((wo) => {
+                        const woOrderId = typeof wo.orderId === 'string' ? wo.orderId : wo.orderId?._id ?? wo.orderId?.id;
+                        return woOrderId === orderId;
+                      });
+                      const checkinPhotos = matchingWo?.checkinPhotos || [];
+
                       return (
                         <tr key={orderId} className='hover:bg-slate-50/20 transition-colors'>
                           <td className='px-5 py-4 font-mono text-xs text-slate-500'>
@@ -236,9 +248,30 @@ export default function CashierOrdersPage() {
                                 Check-in xe
                               </button>
                             ) : isReceived ? (
-                              <span className='text-xs font-bold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-100 flex items-center gap-1 w-fit'>
-                                <CheckCircle2 className='w-3.5 h-3.5' /> Đã nhận xe
-                              </span>
+                              <div className='flex flex-col gap-1.5'>
+                                <span className='text-xs font-bold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-100 flex items-center gap-1 w-fit'>
+                                  <CheckCircle2 className='w-3.5 h-3.5' /> Đã nhận xe
+                                </span>
+                                {checkinPhotos.length > 0 ? (
+                                  <div className='flex gap-1 overflow-x-auto max-w-[150px] py-1 scrollbar-none'>
+                                    {checkinPhotos.map((photo, pIdx) => (
+                                      <div
+                                        key={pIdx}
+                                        onClick={() => setPreviewPhoto(photo)}
+                                        className='relative w-8 h-8 rounded-lg overflow-hidden border border-slate-200 shadow-sm bg-slate-50 cursor-pointer hover:border-indigo-500 transition-all shrink-0 group'
+                                      >
+                                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                                        <img src={photo} alt='Pre-wash' className='w-full h-full object-cover group-hover:scale-105 transition-transform' />
+                                        <div className='absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center'>
+                                          <Eye className='w-2.5 h-2.5 text-white' />
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                ) : (
+                                  <span className='text-[10px] text-slate-400 italic pl-1'>Chưa có ảnh check-in</span>
+                                )}
+                              </div>
                             ) : (
                               <span className='text-xs font-medium text-slate-500 flex items-center gap-1 italic'>
                                 <AlertCircle className='w-3.5 h-3.5' /> Không khả dụng

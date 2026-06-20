@@ -58,6 +58,8 @@ export default function ChatbotWidget() {
 
   // Load session từ localStorage và nạp lại lịch sử nếu có
   useEffect(() => {
+    if (pathname !== '/') return;
+
     const storedSession = localStorage.getItem('wave_chat_session_id');
     if (storedSession) {
       let active = true;
@@ -90,7 +92,7 @@ export default function ChatbotWidget() {
         active = false;
       };
     }
-  }, []);
+  }, [pathname]);
 
   const handleSendMessage = async (textToSend: string) => {
     if (!textToSend.trim() || isLoading) return;
