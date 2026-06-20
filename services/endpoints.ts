@@ -39,6 +39,7 @@ export const ENDPOINTS = {
     byId: (id: string) => `/admin/work-orders/${id}`,
     assign: (id: string) => `/admin/work-orders/${id}/assign`,
     qc: (id: string) => `/admin/work-orders/${id}/qc`,
+    queue: '/admin/work-orders/queue',
   },
   /** Work Orders cho thợ rửa xe - BE `WasherWorkOrderController` */
   washerWorkOrders: {
@@ -122,5 +123,17 @@ export const ENDPOINTS = {
   },
   payments: {
     webhook: '/payments/webhook',
+  },
+  adminGoldenHours: {
+    list: '/admin/golden-hours',
+    create: '/admin/golden-hours',
+    byId: (id: string) => `/admin/golden-hours/${id}`,
+  },
+  adminPricingPolicy: {
+    get: '/admin/pricing-policy',
+    update: '/admin/pricing-policy',
+  },
+  washerSchedule: {
+    me: '/washers/me/schedule',
   },
 } as const;

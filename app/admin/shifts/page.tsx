@@ -66,25 +66,38 @@ function ShiftModal({
   onSave: (d: Record<string, unknown>) => void;
   staffList: UserData[];
 }) {
-  // Format ISO string to datetime-local string (YYYY-MM-DDThh:mm)
-  const formatForInput = (isoString?: string) => {
+  const getBlockFromTimes = (startStr?: string, endStr?: string): 'morning' | 'afternoon' | 'fullday' => {
+    if (!startStr) return 'morning';
+    const date = new Date(startStr);
+    const hour = date.getHours();
+    if (hour < 12) {
+      if (endStr) {
+        const endDate = new Date(endStr);
+        const endHour = endDate.getHours();
+        if (endHour - hour > 6) return 'fullday';
+      }
+      return 'morning';
+    }
+    return 'afternoon';
+  };
+
+  const formatDateForInput = (isoString?: string) => {
     if (!isoString) return '';
     const date = new Date(isoString);
     const pad = (num: number) => String(num).padStart(2, '0');
-    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
   };
 
   const [form, setForm] = useState({
     staffId: typeof item?.staffId === 'object' ? item?.staffId?._id ?? item?.staffId?.id ?? '' : item?.staffId ?? '',
     shiftType: item?.shiftType ?? 'washer',
     stationName: item?.stationName ?? 'Bay 1',
-    startAt: formatForInput(item?.startAt),
-    endAt: formatForInput(item?.endAt),
-    maxBookings: item?.maxBookings ?? 10,
+    date: formatDateForInput(item?.startAt) || formatDateForInput(new Date().toISOString()),
+    block: getBlockFromTimes(item?.startAt, item?.endAt),
     note: item?.note ?? '',
   });
 
-  const minDateTime = !item ? formatForInput(new Date().toISOString()) : undefined;
+  const minDate = !item ? formatDateForInput(new Date().toISOString()) : undefined;
 
   // Tự động cập nhật shiftType tương ứng khi chọn staffId
   const handleStaffChange = (staffId: string) => {
@@ -103,24 +116,8 @@ function ShiftModal({
       toast.error('Vui lòng chọn nhân viên ca trực.');
       return;
     }
-    if (!form.startAt || !form.endAt) {
-      toast.error('Vui lòng nhập đầy đủ thời gian bắt đầu và kết thúc.');
-      return;
-    }
-
-    // Mở khóa cho phép admin tự do gán ca làm việc tùy thích
-
-    const start = new Date(form.startAt);
-    const end = new Date(form.endAt);
-    
-    // Chỉ chặn thời gian quá khứ đối với ca tạo mới
-    if (!item && start < new Date()) {
-      toast.error('Thời gian bắt đầu không được ở trong quá khứ.');
-      return;
-    }
-
-    if (start >= end) {
-      toast.error('Thời gian bắt đầu phải nhỏ hơn thời gian kết thúc.');
+    if (!form.date) {
+      toast.error('Vui lòng chọn ngày trực.');
       return;
     }
 
@@ -128,9 +125,8 @@ function ShiftModal({
       staffId: form.staffId,
       shiftType: form.shiftType,
       stationName: form.stationName,
-      startAt: start.toISOString(),
-      endAt: end.toISOString(),
-      maxBookings: Number(form.maxBookings),
+      date: form.date,
+      block: form.block,
       note: form.note,
     });
   };
@@ -195,59 +191,30 @@ function ShiftModal({
             />
           </div>
 
-          {/* Giờ bắt đầu (startAt) */}
+          {/* Ngày trực (date) */}
           <div>
-            <label className='block text-xs font-black uppercase tracking-widest text-slate-500 mb-1.5'>Thời gian bắt đầu</label>
+            <label className='block text-xs font-black uppercase tracking-widest text-slate-500 mb-1.5'>Ngày làm việc</label>
             <input
-              type='datetime-local'
-              min={minDateTime}
-              value={form.startAt}
-              onChange={(e) => {
-                const val = e.target.value;
-                if (val === "") {
-                  setForm({ ...form, startAt: val });
-                } else if (!item && minDateTime && val < minDateTime) {
-                  setForm({ ...form, startAt: minDateTime });
-                } else {
-                  setForm({ ...form, startAt: val });
-                }
-              }}
+              type='date'
+              min={minDate}
+              value={form.date}
+              onChange={(e) => setForm({ ...form, date: e.target.value })}
               className='w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-indigo-500/50 shadow-sm text-slate-700 font-semibold'
             />
           </div>
 
-          {/* Giờ kết thúc (endAt) */}
+          {/* Ca làm (block) */}
           <div>
-            <label className='block text-xs font-black uppercase tracking-widest text-slate-500 mb-1.5'>Thời gian kết thúc</label>
-            <input
-              type='datetime-local'
-              min={form.startAt || minDateTime}
-              value={form.endAt}
-              onChange={(e) => {
-                const val = e.target.value;
-                const currentMin = form.startAt || minDateTime;
-                if (val === "") {
-                  setForm({ ...form, endAt: val });
-                } else if (!item && currentMin && val < currentMin) {
-                  setForm({ ...form, endAt: currentMin });
-                } else {
-                  setForm({ ...form, endAt: val });
-                }
-              }}
-              className='w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-indigo-500/50 shadow-sm text-slate-700 font-semibold'
-            />
-          </div>
-
-          {/* Tối đa booking */}
-          <div>
-            <label className='block text-xs font-black uppercase tracking-widest text-slate-500 mb-1.5'>Giới hạn đặt lịch tối đa</label>
-            <input
-              type='number'
-              min={1}
-              value={form.maxBookings}
-              onChange={(e) => setForm({ ...form, maxBookings: Number(e.target.value) })}
-              className='w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-indigo-500/50 shadow-sm text-slate-700 font-semibold'
-            />
+            <label className='block text-xs font-black uppercase tracking-widest text-slate-500 mb-1.5'>Ca làm việc</label>
+            <select
+              value={form.block}
+              onChange={(e) => setForm({ ...form, block: e.target.value as 'morning' | 'afternoon' | 'fullday' })}
+              className='w-full border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo-500/50 bg-white font-semibold text-slate-700 shadow-sm cursor-pointer'
+            >
+              <option value='morning'>Sáng (Morning)</option>
+              <option value='afternoon'>Chiều (Afternoon)</option>
+              <option value='fullday'>Cả ngày (Full day)</option>
+            </select>
           </div>
 
           {/* Ghi chú */}

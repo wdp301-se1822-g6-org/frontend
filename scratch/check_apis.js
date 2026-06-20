@@ -1,68 +1,57 @@
 const fs = require('fs');
 const path = require('path');
 
-const jsPath = 'C:\\Users\\user\\.gemini\\antigravity-ide\\brain\\0dcc52be-6916-4385-8bb9-ff3f88b89deb\\.system_generated\\steps\\27\\content.md';
+const jsPath = 'C:\\Users\\user\\.gemini\\antigravity-ide\\brain\\fbff0117-a332-42fd-96d2-6e1da3ae334c\\.system_generated\\steps\\129\\content.md';
 const endpointsTsPath = 'f:\\WDP\\frontend\\services\\endpoints.ts';
+const libDir = 'f:\\WDP\\frontend\\lib';
 
 const fileContent = fs.readFileSync(jsPath, 'utf8');
-// Find the swaggerDoc block
-const startIdx = fileContent.indexOf('"swaggerDoc":');
-if (startIdx === -1) {
-  console.error('Cannot find swaggerDoc in init file');
+const separator = '---';
+const sepIdx = fileContent.indexOf(separator);
+if (sepIdx === -1) {
+  console.error('Cannot find separator in content file');
   process.exit(1);
 }
 
-// Find options = { ... }; we can try to parse the JSON portion
-// Let's find the opening brace after "swaggerDoc":
-const openBraceIdx = fileContent.indexOf('{', startIdx);
-let braceCount = 1;
-let closeBraceIdx = openBraceIdx + 1;
-while (braceCount > 0 && closeBraceIdx < fileContent.length) {
-  if (fileContent[closeBraceIdx] === '{') {
-    braceCount++;
-  } else if (fileContent[closeBraceIdx] === '}') {
-    braceCount--;
-  }
-  closeBraceIdx++;
-}
-
-const swaggerDocJsonStr = fileContent.substring(openBraceIdx, closeBraceIdx);
+const jsonStr = fileContent.substring(sepIdx + separator.length).trim();
 let spec;
 try {
-  spec = JSON.parse(swaggerDocJsonStr);
+  spec = JSON.parse(jsonStr);
 } catch (e) {
   console.error('JSON parse error:', e.message);
-  // fallback using eval (since it's a JS file)
-  try {
-    spec = eval('(' + swaggerDocJsonStr + ')');
-  } catch (ee) {
-    console.error('Eval error:', ee.message);
-    process.exit(1);
-  }
+  process.exit(1);
 }
 
 const allApiPaths = Object.keys(spec.paths);
 console.log('Total Swagger API paths:', allApiPaths.length);
 
+// Read endpoints.ts
 const endpointsTs = fs.readFileSync(endpointsTsPath, 'utf8');
-const matches = [...endpointsTs.matchAll(/(?:\:|return)\s*(?:`|')(\/.*?)(?:`|')/g)];
-const frontendPaths = matches.map(m => {
-  return m[1].replace(/\$\{.*?\}/g, '{id}').replace('/api', '');
-});
+
+// Also scan lib files to see if paths are called directly
+const libFiles = fs.readdirSync(libDir)
+  .filter(file => file.endsWith('.ts'))
+  .map(file => fs.readFileSync(path.join(libDir, file), 'utf8'));
+
+const allSourceCode = [endpointsTs, ...libFiles].join('\n');
 
 const missing = allApiPaths.filter(apiPath => {
   if (apiPath === '/') return false;
-  // Swagger paths have /api prefix, strip it for matching if needed
-  const normalizedApi = apiPath.replace(/^\/api/, '');
+  if (apiPath === '/health') return false;
+
+  // Swagger paths might have dynamic parts like {id} or :id or {sessionId}
+  // Let's create a regular expression to match if this path or a variation of it exists in the codebase
+  // For example: /admin/users/{id} -> look for /admin/users/
+  const cleanPath = apiPath.split('/{')[0].split('/:')[0];
   
-  // check if any frontend path matches
-  return !frontendPaths.some(fp => {
-    // exact match or match dynamic params
-    const fNorm = fp.replace(/\{.*?\}/g, 'PARAM');
-    const aNorm = normalizedApi.replace(/\{.*?\}/g, 'PARAM');
-    return fNorm === aNorm;
-  });
+  // Also check direct match of the path with parameters formatted as template strings
+  // E.g., /admin/users/${id} or /admin/users/{id}
+  const isUsed = allSourceCode.includes(cleanPath) || 
+                 allSourceCode.includes(apiPath) ||
+                 allSourceCode.includes(apiPath.replace(/{.*?}/g, ''));
+
+  return !isUsed;
 });
 
-console.log('\nMissing APIs (Not found in endpoints.ts):');
+console.log('\nMissing APIs (Not referenced in endpoints.ts or lib/*.ts):');
 missing.forEach(p => console.log(p));

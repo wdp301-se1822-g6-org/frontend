@@ -4,10 +4,11 @@ import { AdminTopbar } from '@/components/admin/AdminTopbar';
 import {
   washerGetWorkOrders,
   washerStartWorkOrder,
-  washerFinishWorkOrder
+  washerFinishWorkOrder,
+  washerGetSchedule
 } from '@/lib/washer-api';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import {
   CheckCircle2,
   RefreshCw,
@@ -19,7 +20,9 @@ import {
   Camera,
   Trash2,
   Plus,
-  Eye
+  Eye,
+  Calendar,
+  Clock
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useEffect } from 'react';
@@ -68,6 +71,17 @@ interface WorkOrderData {
   [key: string]: unknown;
 }
 
+interface WasherScheduleItem {
+  bookingId?: string;
+  scheduledAt?: string;
+  vehicle?: { licensePlate?: string };
+  service?: { name?: string; durationMinutes?: number };
+  customer?: { name?: string; phone?: string };
+  location?: string;
+  status?: string;
+  [key: string]: unknown;
+}
+
 const WASH_STEPS = [
   'Nhận xe & Kiểm tra trầy xước ban đầu',
   'Xịt gầm & Vệ sinh bùn đất hốc bánh xe',
@@ -79,7 +93,7 @@ const WASH_STEPS = [
 
 export default function WasherDashboard() {
   const qc = useQueryClient();
-  const [activeTab, setActiveTab] = useState<'todo' | 'completed'>('todo');
+  const [activeTab, setActiveTab] = useState<'todo' | 'completed' | 'schedule'>('todo');
   
   // Lưu trạng thái checklist của từng Work Order đang rửa xe (ID -> mảng boolean)
   const [checklists, setChecklists] = useState<Record<string, boolean[]>>({});
@@ -151,20 +165,41 @@ export default function WasherDashboard() {
   };
 
   // Lấy danh sách Work Orders của thợ hiện tại
-  const { data: workOrdersRes, isLoading, refetch, isRefetching } = useQuery({
+  const { data: workOrdersRes, isLoading: isLoadingWO, refetch: refetchWO, isRefetching: isRefetchingWO } = useQuery({
     queryKey: ['washer-work-orders', activeTab],
     queryFn: () => washerGetWorkOrders(),
   });
 
+  // Lấy lịch trình cá nhân của thợ
+  const { data: scheduleRes, isLoading: isLoadingSchedule, refetch: refetchSchedule, isRefetching: isRefetchingSchedule } = useQuery({
+    queryKey: ['washer-schedule'],
+    queryFn: () => washerGetSchedule(),
+    enabled: activeTab === 'schedule',
+  });
+
   const allWorkOrders: WorkOrderData[] = workOrdersRes?.data?.data ?? workOrdersRes?.data ?? [];
+  const scheduleItems = scheduleRes?.data ?? [];
+
+  const isLoading = activeTab === 'schedule' ? isLoadingSchedule : isLoadingWO;
+  const isRefetching = activeTab === 'schedule' ? isRefetchingSchedule : isRefetchingWO;
+
+  const refetch = () => {
+    if (activeTab === 'schedule') {
+      refetchSchedule();
+    } else {
+      refetchWO();
+    }
+  };
 
   // Lọc work orders theo Tab hoạt động
-  const workOrders = allWorkOrders.filter((wo) => {
-    if (activeTab === 'todo') {
-      return wo.status === 'assigned' || wo.status === 'in_progress' || wo.status === 'returned';
-    }
-    return wo.status === 'quality_check' || wo.status === 'done';
-  });
+  const workOrders = useMemo(() => {
+    return allWorkOrders.filter((wo) => {
+      if (activeTab === 'todo') {
+        return wo.status === 'assigned' || wo.status === 'in_progress' || wo.status === 'returned';
+      }
+      return wo.status === 'quality_check' || wo.status === 'done';
+    });
+  }, [allWorkOrders, activeTab]);
 
   // Mutation Bắt đầu rửa xe
   const startWashMutation = useMutation({
@@ -188,12 +223,12 @@ export default function WasherDashboard() {
 
   // Mutation Hoàn thành rửa xe
   const finishWashMutation = useMutation({
-    mutationFn: async ({ woId, currentStatus }: { woId: string; currentStatus: string }) => {
+    mutationFn: async ({ woId, photoKey, currentStatus }: { woId: string; photoKey: string; currentStatus: string }) => {
       if (currentStatus === 'returned') {
         await washerStartWorkOrder(woId);
         await new Promise((resolve) => setTimeout(resolve, 350));
       }
-      const rawWoPhotos = inspectionPhotos[woId];
+      const rawWoPhotos = inspectionPhotos[photoKey];
       const postWashPhotos = (rawWoPhotos && typeof rawWoPhotos === 'object' && 'postWash' in rawWoPhotos)
         ? (rawWoPhotos.postWash as string[])
         : [];
@@ -254,6 +289,17 @@ export default function WasherDashboard() {
                   <div className='absolute bottom-0 left-0 right-0 h-0.5 bg-indigo-600 rounded-full' />
                 )}
               </button>
+              <button
+                onClick={() => setActiveTab('schedule')}
+                className={`pb-3 text-sm font-bold transition-all relative ${
+                  activeTab === 'schedule' ? 'text-indigo-600' : 'text-slate-500 hover:text-slate-600'
+                }`}
+              >
+                Lịch trình cá nhân
+                {activeTab === 'schedule' && (
+                  <div className='absolute bottom-0 left-0 right-0 h-0.5 bg-indigo-600 rounded-full' />
+                )}
+              </button>
             </div>
 
             <button
@@ -272,6 +318,78 @@ export default function WasherDashboard() {
                 <div key={i} className='bg-white rounded-3xl p-6 border border-slate-100 shadow-sm animate-pulse h-48' />
               ))}
             </div>
+          ) : activeTab === 'schedule' ? (
+            scheduleItems.length === 0 ? (
+              <div className='bg-white rounded-3xl p-16 text-center border border-slate-100 shadow-sm max-w-md mx-auto mt-8'>
+                <div className='w-16 h-16 rounded-2xl bg-indigo-50 flex items-center justify-center mx-auto mb-6 text-indigo-600'>
+                  <Calendar className='w-8 h-8' />
+                </div>
+                <h3 className='font-heading text-lg font-black text-slate-800 mb-2'>Trống lịch trình</h3>
+                <p className='text-slate-500 text-sm leading-relaxed'>
+                  Hôm nay ông chủ chưa có lịch hẹn đặt trước nào được ghi nhận.
+                </p>
+              </div>
+            ) : (
+              <div className='space-y-4'>
+                {scheduleItems.map((item: WasherScheduleItem) => {
+                  const dateStr = item.scheduledAt
+                    ? new Date(item.scheduledAt).toLocaleString('vi-VN', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        day: '2-digit',
+                        month: '2-digit',
+                      })
+                    : '-';
+                  return (
+                    <div
+                      key={item.bookingId}
+                      className='bg-white rounded-3xl border border-slate-100 shadow-sm p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:shadow-md transition-all'
+                    >
+                      <div className='flex items-center gap-4'>
+                        <div className='px-4 py-2 bg-indigo-50 text-indigo-700 rounded-2xl font-mono font-black text-sm tracking-wide border border-indigo-100'>
+                          {item.vehicle?.licensePlate || '-'}
+                        </div>
+                        <div>
+                          <h4 className='font-heading font-bold text-slate-800 text-sm'>
+                            {item.service?.name || 'Gói rửa xe'} ({item.service?.durationMinutes || 30} phút)
+                          </h4>
+                          <p className='text-xs text-slate-500 font-medium mt-0.5'>
+                            Khách hàng: <span className='text-slate-700 font-bold'>{item.customer?.name || 'Khách vãng lai'}</span>
+                            {item.customer?.phone && ` • SĐT: ${item.customer.phone}`}
+                          </p>
+                          {item.location && (
+                            <p className='text-xs text-slate-500 font-semibold mt-1'>
+                              Vị trí: <span className='text-indigo-600'>{item.location}</span>
+                            </p>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className='flex flex-col items-end gap-2 shrink-0 border-t sm:border-t-0 pt-3 sm:pt-0 border-slate-50'>
+                        <span className='text-slate-500 text-xs font-semibold flex items-center gap-1'>
+                          <Clock className='w-3.5 h-3.5' /> {dateStr}
+                        </span>
+                        <span className={`inline-flex px-2.5 py-0.5 rounded-lg text-[10px] font-black uppercase ${
+                          item.status === 'confirmed' ? 'bg-blue-50 text-blue-700 border border-blue-100' :
+                          item.status === 'checked_in' ? 'bg-amber-50 text-amber-700 border border-amber-100' :
+                          item.status === 'in_progress' ? 'bg-indigo-50 text-indigo-700 border border-indigo-100' :
+                          item.status === 'completed' ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' :
+                          'bg-slate-100 text-slate-400'
+                        }`}>
+                          {item.status === 'confirmed' && 'Chờ rửa xe'}
+                          {item.status === 'checked_in' && 'Đã nhận xe'}
+                          {item.status === 'in_progress' && 'Đang rửa'}
+                          {item.status === 'completed' && 'Hoàn thành'}
+                          {item.status === 'cancelled' && 'Đã hủy'}
+                          {item.status === 'pending_payment' && 'Chờ thanh toán'}
+                          {item.status === 'no_show' && 'Vắng mặt'}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )
           ) : workOrders.length === 0 ? (
             <div className='bg-white rounded-3xl p-16 text-center border border-slate-100 shadow-sm max-w-md mx-auto mt-8'>
               <div className='w-16 h-16 rounded-2xl bg-indigo-50 flex items-center justify-center mx-auto mb-6 text-indigo-600'>
@@ -425,9 +543,9 @@ export default function WasherDashboard() {
                                 1. Ảnh trước khi rửa (Trầy xước/Móp méo có sẵn)
                               </p>
 
-                              {(inspectionPhotos[photoKey]?.preWash && inspectionPhotos[photoKey].preWash.length > 0) ? (
+                              {((wo.checkinPhotos && (wo.checkinPhotos as string[]).length > 0) || (inspectionPhotos[photoKey]?.preWash && inspectionPhotos[photoKey].preWash.length > 0)) ? (
                                 <div className='grid grid-cols-4 gap-3'>
-                                  {inspectionPhotos[photoKey].preWash.map((photo, pIdx) => (
+                                  {((wo.checkinPhotos as string[]) || inspectionPhotos[photoKey]?.preWash || []).map((photo, pIdx) => (
                                     <div
                                       key={pIdx}
                                       onClick={() => setPreviewPhoto(photo)}
@@ -521,7 +639,7 @@ export default function WasherDashboard() {
                             )}
 
                             <button
-                              onClick={() => finishWashMutation.mutate({ woId: wo.id, currentStatus: wo.status })}
+                              onClick={() => finishWashMutation.mutate({ woId: wo.id, photoKey, currentStatus: wo.status })}
                               disabled={finishWashMutation.isPending}
                               className={`w-full py-3.5 rounded-2xl font-black text-sm text-white transition-all shadow-lg flex items-center justify-center gap-1.5 ${
                                 checkedCount === WASH_STEPS.length
