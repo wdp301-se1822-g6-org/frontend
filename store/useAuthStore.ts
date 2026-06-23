@@ -12,8 +12,6 @@ interface AuthState {
   setRefreshToken: (token: string | null) => void;
   refreshAccessToken: () => Promise<string | null>;
   getUser: () => Promise<User | null>;
-  initAuth: () => Promise<void>;
-  isInitialized: boolean;
   _hasHydrated: boolean;
   setHasHydrated: (state: boolean) => void;
 }
@@ -24,7 +22,6 @@ export const useAuthStore = create<AuthState>()(
       authUser: null,
       accessToken: null,
       refreshToken: null,
-      isInitialized: false,
       _hasHydrated: false,
       setHasHydrated: (state) => set({ _hasHydrated: state }),
       setUser: (user) => set({ authUser: user }),
@@ -36,7 +33,9 @@ export const useAuthStore = create<AuthState>()(
         if (!refreshToken) return null;
 
         try {
-          const res = await axiosInstance.post('/auth/refresh', { refreshToken });
+          const res = await axiosInstance.post('/auth/refresh', {
+            refreshToken,
+          });
           const { accessToken, refreshToken: newRefreshToken, user } = res.data;
           set({
             accessToken,
@@ -52,41 +51,26 @@ export const useAuthStore = create<AuthState>()(
 
       getUser: async (): Promise<User | null> => {
         const token = get().accessToken;
-        if (!token) {
-          set({ isInitialized: true });
-          return null;
-        }
+        if (!token) return null;
         try {
           const res = await axiosInstance.get('/auth/me');
           const resData = res.data?.data || res.data || res;
           const fetchedUser = (resData?.user || resData) as User;
-          
+
           if (fetchedUser && typeof fetchedUser === 'object') {
-            // MERGE with existing user to preserve properties like 'name' if missing from API
             const mergedUser = { ...get().authUser, ...fetchedUser };
-            set({ authUser: mergedUser, isInitialized: true });
+            set({ authUser: mergedUser });
             return mergedUser;
           }
           return null;
-        } catch {
-          set({ isInitialized: true });
-          return null;
-        }
-      },
-
-      initAuth: async () => {
-        // Wait for hydration if it hasn't happened yet
-        if (!get()._hasHydrated) {
-          return;
-        }
-        if (get().isInitialized) return;
-        
-        try {
-          await get().getUser();
         } catch (err) {
-          console.error('initAuth ERROR:', err);
-        } finally {
-          set({ isInitialized: true });
+          if (
+            (err as { response?: { status?: number } })?.response?.status ===
+            401
+          ) {
+            set({ authUser: null, accessToken: null, refreshToken: null });
+          }
+          return null;
         }
       },
     }),

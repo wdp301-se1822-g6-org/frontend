@@ -9,10 +9,10 @@ import {
   Trash2, 
   Pencil, 
   AlertTriangle, 
-  X, 
-  Loader2, 
-  Star 
+  X,
+  Star
 } from 'lucide-react';
+import { Spinner } from '@/components/ui/spinner';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -240,7 +240,7 @@ export default function VehicleManagement() {
       {/* Main Content */}
       {isLoading ? (
         <div className="flex flex-col items-center justify-center py-20 gap-4">
-          <Loader2 className="w-10 h-10 animate-spin text-primary" />
+          <Spinner className="size-10 text-primary" />
           <span className="text-muted-foreground text-sm">Đang tải danh sách xe...</span>
         </div>
       ) : vehicles.length === 0 ? (
@@ -490,7 +490,7 @@ export default function VehicleManagement() {
                     className="bg-primary hover:bg-primary/90 text-white rounded-xl px-6 py-2.5 font-semibold shadow-lg shadow-primary/15 min-w-[120px]"
                     disabled={isSubmitLoading}
                   >
-                    {isSubmitLoading ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : 'Lưu lại'}
+                    {isSubmitLoading ? <Spinner className="size-5 mx-auto" /> : 'Lưu lại'}
                   </Button>
                 </div>
               </form>
@@ -533,7 +533,7 @@ export default function VehicleManagement() {
                   className="bg-red-500 hover:bg-red-600 text-white rounded-xl px-5 py-2 font-semibold shadow-lg shadow-red-500/15 min-w-[100px]"
                   disabled={isSubmitLoading}
                 >
-                  {isSubmitLoading ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : 'Đồng ý xóa'}
+                  {isSubmitLoading ? <Spinner className="size-5 mx-auto" /> : 'Đồng ý xóa'}
                 </Button>
               </div>
             </CardContent>

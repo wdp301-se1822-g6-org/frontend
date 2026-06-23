@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Ticket, Calendar, Loader2, Info, Gift, Percent } from 'lucide-react';
+import { Ticket, Calendar, Info, Gift, Percent } from 'lucide-react';
+import { Spinner } from '@/components/ui/spinner';
 import { useVouchers } from '@/hooks/vouchers/useVouchers';
 import { Voucher, VoucherStatus } from '@/types/voucher';
 import { formatCurrency, formatDate } from '@/lib/format';
@@ -170,7 +171,7 @@ export default function MyVoucherPage() {
       {/* Content */}
       {isLoading ? (
         <div className='flex flex-col items-center justify-center min-h-[300px] gap-3'>
-          <Loader2 className='w-8 h-8 text-primary animate-spin' />
+          <Spinner className='size-8 text-primary' />
           <p className='text-sm text-muted-foreground font-semibold'>
             Đang tải voucher...
           </p>

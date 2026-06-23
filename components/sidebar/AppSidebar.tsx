@@ -3,10 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import {
-  LogOut,
-  ChevronLeft,
-} from 'lucide-react';
+import { LogOut, ChevronLeft } from 'lucide-react';
 import { useState } from 'react';
 import { useAuthStore } from '@/store/useAuthStore';
 import { axiosInstance } from '@/lib/axios';
@@ -25,7 +22,9 @@ export function AppSidebar({ role }: Props) {
 
   const handleLogout = async () => {
     try {
-      await axiosInstance.post('/auth/logout');
+      await axiosInstance.post('/auth/logout', {
+        refreshToken: localStorage.getItem('refreshToken'),
+      });
     } catch {
       // ignore
     } finally {
@@ -45,8 +44,9 @@ export function AppSidebar({ role }: Props) {
 
   return (
     <aside
-      className={`sticky top-0 h-screen self-start flex flex-col bg-gradient-to-br from-gray-50 via-purple-50 to-blue-50 text-slate-700 transition-all duration-300 shrink-0 border-r backdrop-blur-sm ${collapsed ? 'w-[72px]' : 'w-64'
-        }`}
+      className={`sticky top-0 h-screen self-start flex flex-col bg-gradient-to-br from-gray-50 via-purple-50 to-blue-50 text-slate-700 transition-all duration-300 shrink-0 border-r backdrop-blur-sm ${
+        collapsed ? 'w-[72px]' : 'w-64'
+      }`}
     >
       {/* Logo */}
       <div className='flex items-center gap-2 px-4 py-5 border-b border-slate-800/60'>
@@ -59,13 +59,16 @@ export function AppSidebar({ role }: Props) {
         />
         {!collapsed && (
           <span className='text-slate-700 font-black text-xl tracking-tighter truncate'>
-            WAVE <span className='text-indigo-400 text-xs font-bold ml-1 uppercase'>{config.title}</span>
+            WAVE{' '}
+            <span className='text-indigo-400 text-xs font-bold ml-1 uppercase'>
+              {config.title}
+            </span>
           </span>
         )}
         <button
           onClick={() => setCollapsed((v) => !v)}
           title={collapsed ? 'Mở rộng' : 'Thu gọn'}
-          className="
+          className='
     absolute
     -right-3
     top-6
@@ -84,11 +87,12 @@ export function AppSidebar({ role }: Props) {
     hover:text-slate-900
     hover:shadow-lg
     transition-all
-  "
+  '
         >
           <ChevronLeft
-            className={`h-4 w-4 transition-transform duration-300 ${collapsed ? 'rotate-180' : ''
-              }`}
+            className={`h-4 w-4 transition-transform duration-300 ${
+              collapsed ? 'rotate-180' : ''
+            }`}
           />
         </button>
       </div>
@@ -101,10 +105,11 @@ export function AppSidebar({ role }: Props) {
             <Link
               key={href}
               href={href}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group ${isActive
-                ? config.activeClass
-                : 'text-slate-400 hover:text-black hover:bg-indigo-50'
-                }`}
+              className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group ${
+                isActive
+                  ? config.activeClass
+                  : 'text-slate-400 hover:text-black hover:bg-indigo-50'
+              }`}
             >
               <Icon className='w-5 h-5 shrink-0' />
               {!collapsed && (
@@ -119,12 +124,18 @@ export function AppSidebar({ role }: Props) {
       <div className='px-3 py-4 border-t border-slate-800/60 flex flex-col gap-2'>
         {!collapsed && authUser && (
           <div className='flex items-center gap-3 px-3 py-2.5 rounded-xl bg-white/5'>
-            <div className={`w-8 h-8 rounded-full ${config.avatarClass} flex items-center justify-center text-white font-black text-xs shrink-0`}>
+            <div
+              className={`w-8 h-8 rounded-full ${config.avatarClass} flex items-center justify-center text-white font-black text-xs shrink-0`}
+            >
               {initials}
             </div>
             <div className='flex-1 min-w-0'>
-              <p className='text-sm font-semibold text-black truncate'>{authUser.name}</p>
-              <p className='text-xs text-slate-800 truncate'>{authUser.email}</p>
+              <p className='text-sm font-semibold text-black truncate'>
+                {authUser.name}
+              </p>
+              <p className='text-xs text-slate-800 truncate'>
+                {authUser.email}
+              </p>
             </div>
           </div>
         )}
@@ -134,7 +145,9 @@ export function AppSidebar({ role }: Props) {
           className='flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-500/10 transition-all w-full text-left'
         >
           <LogOut className='w-5 h-5 shrink-0' />
-          {!collapsed && <span className='text-sm font-semibold'>Đăng xuất</span>}
+          {!collapsed && (
+            <span className='text-sm font-semibold'>Đăng xuất</span>
+          )}
         </button>
       </div>
     </aside>

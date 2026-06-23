@@ -1,0 +1,29 @@
+import { axiosInstance } from '@/lib/axios';
+import { useAuthStore } from '@/store/useAuthStore';
+import { ENDPOINTS } from '@/services/endpoints';
+import { useRouter } from 'next/navigation';
+import { useCallback } from 'react';
+
+export const useLogout = () => {
+  const router = useRouter();
+  const setUser = useAuthStore((s) => s.setUser);
+  const setAccessToken = useAuthStore((s) => s.setAccessToken);
+  const setRefreshToken = useAuthStore((s) => s.setRefreshToken);
+
+  return useCallback(
+    async (redirectTo: string = '/') => {
+      const { refreshToken } = useAuthStore.getState();
+      try {
+        await axiosInstance.post(ENDPOINTS.auth.logout, { refreshToken });
+      } catch {
+        // ignore
+      } finally {
+        setAccessToken(null);
+        setRefreshToken(null);
+        setUser(null);
+        router.replace(redirectTo);
+      }
+    },
+    [router, setAccessToken, setRefreshToken, setUser],
+  );
+};

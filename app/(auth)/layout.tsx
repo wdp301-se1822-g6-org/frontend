@@ -10,13 +10,13 @@ interface LayoutProps {
   children: React.ReactNode;
 }
 export default function AuthLayout({ children }: LayoutProps) {
-  const { accessToken, isInitialized, authUser } = useAuthStore();
+  const { accessToken, _hasHydrated, authUser } = useAuthStore();
   const setAccessToken = useAuthStore((s) => s.setAccessToken);
   const setUser = useAuthStore((s) => s.setUser);
   const router = useRouter();
 
   useEffect(() => {
-    if (!isInitialized) return;
+    if (!_hasHydrated) return;
 
     if (accessToken && authUser) {
       if (authUser.role === 'admin') {
@@ -34,9 +34,9 @@ export default function AuthLayout({ children }: LayoutProps) {
       setAccessToken(null);
       setUser(null);
     }
-  }, [isInitialized, accessToken, authUser, router, setAccessToken, setUser]);
+  }, [_hasHydrated, accessToken, authUser, router, setAccessToken, setUser]);
 
-  if (!isInitialized) {
+  if (!_hasHydrated) {
     return (
       <main className='min-h-screen bg-background px-4 py-24'>
         <div className='mx-auto grid max-w-5xl gap-10 lg:grid-cols-2 lg:items-center'>

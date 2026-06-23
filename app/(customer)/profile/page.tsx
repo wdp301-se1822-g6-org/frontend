@@ -50,9 +50,9 @@ const YEAR_OPTIONS = Array.from({ length: 100 }, (_, i) => 2024 - i);
 
 export default function ProfilePage() {
   const authUser = useAuthStore((s) => s.authUser);
-  const isInitialized = useAuthStore((s) => s.isInitialized);
+  const _hasHydrated = useAuthStore((s) => s._hasHydrated);
 
-  if (!isInitialized) {
+  if (!_hasHydrated) {
     return <ProfilePageSkeleton />;
   }
 
