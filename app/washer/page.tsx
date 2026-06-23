@@ -207,7 +207,7 @@ export default function WasherDashboard() {
       await washerStartWorkOrder(woId);
     },
     onSuccess: (_, woId) => {
-      toast.success('Đã bắt đầu rửa xe! Cố gắng rửa thật sạch nhé ông chủ.');
+      toast.success('Đã bắt đầu rửa xe! Cố gắng rửa thật sạch nhé bạn.');
       // Khởi tạo checklist trống cho work order này
       setChecklists(prev => ({
         ...prev,
@@ -326,7 +326,7 @@ export default function WasherDashboard() {
                 </div>
                 <h3 className='font-heading text-lg font-black text-slate-800 mb-2'>Trống lịch trình</h3>
                 <p className='text-slate-500 text-sm leading-relaxed'>
-                  Hôm nay ông chủ chưa có lịch hẹn đặt trước nào được ghi nhận.
+                  Hôm nay bạn chưa có lịch hẹn đặt trước nào được ghi nhận.
                 </p>
               </div>
             ) : (
@@ -398,7 +398,7 @@ export default function WasherDashboard() {
               <h3 className='font-heading text-lg font-black text-slate-800 mb-2'>Trống lịch trình</h3>
               <p className='text-slate-500 text-sm leading-relaxed'>
                 {activeTab === 'todo'
-                  ? 'Hiện tại ông chủ chưa có xe nào được phân công. Hãy nghỉ ngơi chút hoặc nhắc Cashier/Manager giao xe nhé!'
+                  ? 'Hiện tại bạn chưa có xe nào được phân công. Hãy nghỉ ngơi chút hoặc nhắc Cashier/Manager giao xe nhé!'
                   : 'Chưa có lịch sử xe hoàn thành nào trong hôm nay.'}
               </p>
             </div>

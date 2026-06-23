@@ -135,9 +135,6 @@ export const adminGetWorkOrder = (id: string) =>
 export const adminAssignWasher = (id: string, washerId: string) =>
   axiosInstance.patch(`/admin/work-orders/${id}/assign`, { washerId });
 
-export const adminQcWorkOrder = (id: string, passed: boolean, note?: string) =>
-  axiosInstance.patch(`/admin/work-orders/${id}/qc`, { passed, note });
-
 // ─── Vouchers (Admin / Manager) ────────────────────────
 export interface GrantVoucherPayload {
   customerId: string;

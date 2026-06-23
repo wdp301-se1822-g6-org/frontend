@@ -12,6 +12,7 @@ export const ENDPOINTS = {
     me: '/auth/me',
     otpSend: '/auth/otp/send',
     otpVerify: '/auth/otp/verify',
+    adminOnly: '/auth/admin-only',
   },
   /** Đơn của chính khách hàng - BE `OrderController` (@Controller('me/orders')). */
   orders: {
@@ -20,6 +21,8 @@ export const ENDPOINTS = {
     reschedule: (id: string) => `/me/orders/${id}/reschedule`,
     cancel: (id: string) => `/me/orders/${id}/cancel`,
     availableSlots: '/me/orders/available-slots',
+    preview: '/me/orders/preview',
+    mineWorkOrder: (orderId: string) => `/me/orders/${orderId}/work-order`,
   },
   /** Báo cáo quản trị / phân tích vận hành - BE `DashboardController` (@Controller('admin/dashboard')). */
   adminDashboard: {
@@ -38,7 +41,6 @@ export const ENDPOINTS = {
     create: '/admin/work-orders',
     byId: (id: string) => `/admin/work-orders/${id}`,
     assign: (id: string) => `/admin/work-orders/${id}/assign`,
-    qc: (id: string) => `/admin/work-orders/${id}/qc`,
     queue: '/admin/work-orders/queue',
   },
   /** Work Orders cho thợ rửa xe - BE `WasherWorkOrderController` */
@@ -46,7 +48,6 @@ export const ENDPOINTS = {
     list: '/me/work-orders',
     byId: (id: string) => `/me/work-orders/${id}`,
     start: (id: string) => `/me/work-orders/${id}/start`,
-    checklist: (id: string) => `/me/work-orders/${id}/checklist`,
     finish: (id: string) => `/me/work-orders/${id}/finish`,
   },
   serviceTypes: {
@@ -86,6 +87,8 @@ export const ENDPOINTS = {
     create: '/admin/shifts',
     byId: (id: string) => `/admin/shifts/${id}`,
     status: (id: string) => `/admin/shifts/${id}/status`,
+    staff: '/admin/shifts/staff',
+    staffStats: '/admin/shifts/staff-stats',
   },
   loyalty: {
     mine: '/me/loyalty',
@@ -94,6 +97,14 @@ export const ENDPOINTS = {
   vouchers: {
     mine: '/me/vouchers',
     byId: (id: string) => `/me/vouchers/${id}`,
+    claim: '/me/vouchers/claim',
+  },
+  adminVouchers: {
+    list: '/admin/vouchers',
+    create: '/admin/vouchers',
+    bulk: '/admin/vouchers/bulk',
+    byId: (id: string) => `/admin/vouchers/${id}`,
+    revoke: (id: string) => `/admin/vouchers/${id}/revoke`,
   },
   tierConfigs: {
     list: '/tier-configs',
@@ -136,4 +147,17 @@ export const ENDPOINTS = {
   washerSchedule: {
     me: '/washers/me/schedule',
   },
+  feedback: {
+    submit: '/me/feedback',
+    byOrderId: (orderId: string) => `/me/feedback/${orderId}`,
+  },
+  adminFeedback: {
+    list: '/admin/feedback',
+    washerSummary: (washerId: string) => `/admin/feedback/washers/${washerId}/summary`,
+  },
+  upload: {
+    image: '/upload/image',
+    images: '/upload/images',
+  },
+  health: '/health',
 } as const;

@@ -36,7 +36,7 @@ export default function ChatbotWidget() {
     {
       id: 'welcome',
       role: 'assistant',
-      content: 'Chào mừng ông chủ đến với WAVE Auto-Wash! Tôi là trợ lý ảo, tôi có thể giúp gì cho ông chủ hôm nay?'
+      content: 'Chào mừng quý khách đến với WAVE Auto-Wash! Tôi là trợ lý ảo, tôi có thể giúp gì cho quý khách hôm nay?'
     }
   ]);
   const [input, setInput] = useState('');
@@ -125,7 +125,7 @@ export default function ChatbotWidget() {
       setMessages(prev => [...prev, {
         id: nextMsgId('err'),
         role: 'assistant',
-        content: 'Xin lỗi ông chủ, đường truyền kết nối với máy chủ của tôi đang gặp chút sự cố. Ông chủ vui lòng thử lại sau giây lát!'
+        content: 'Xin lỗi quý khách, đường truyền kết nối với máy chủ của tôi đang gặp chút sự cố. Quý khách vui lòng thử lại sau giây lát!'
       }]);
     } finally {
       setIsLoading(false);
@@ -133,14 +133,14 @@ export default function ChatbotWidget() {
   };
 
   const handleResetChat = () => {
-    if (window.confirm('Ông chủ có chắc chắn muốn làm mới và xóa toàn bộ lịch sử chat không?')) {
+    if (window.confirm('Bạn có chắc chắn muốn làm mới và xóa toàn bộ lịch sử chat không?')) {
       localStorage.removeItem('wave_chat_session_id');
       setSessionId(null);
       setMessages([
         {
           id: 'welcome',
           role: 'assistant',
-          content: 'Chào mừng ông chủ đến với WAVE Auto-Wash! Tôi đã làm mới cuộc hội thoại. Tôi có thể giúp gì cho ông chủ lúc này?'
+          content: 'Chào mừng quý khách đến với WAVE Auto-Wash! Tôi đã làm mới cuộc hội thoại. Tôi có thể giúp gì cho quý khách lúc này?'
         }
       ]);
       toast.success('Đã làm mới cuộc hội thoại thành công.');
@@ -305,7 +305,7 @@ export default function ChatbotWidget() {
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Nhập câu hỏi của ông chủ..."
+              placeholder="Nhập câu hỏi của bạn..."
               className="flex-1 bg-slate-50/50 border border-slate-200 focus:border-primary/50 focus:ring-1 focus:ring-primary/50 rounded-xl px-4 py-2.5 text-xs font-medium focus:outline-none transition-all placeholder:text-slate-400 text-slate-700"
             />
             <button

@@ -123,3 +123,10 @@ export const getAvailableShifts = (params: {
   to: string;
   shiftType?: 'cashier' | 'washer';
 }) => axiosInstance.get('/shifts/available', { params });
+
+// ─── Feedback (Customer) ────────────────────────────────
+export const submitFeedback = (data: { orderId: string; rating: number; comment?: string }) =>
+  axiosInstance.post(ENDPOINTS.feedback.submit, data);
+
+export const getFeedbackEligibility = (orderId: string) =>
+  axiosInstance.get(ENDPOINTS.feedback.byOrderId(orderId));

@@ -28,6 +28,10 @@ export interface Order {
   note?: string;
   payosCheckoutUrl?: string;
   payosOrderCode?: number;
+  assignedWasherId?: string;
+  assignedWasherName?: string;
+  assignedWasherPhone?: string;
+  assignedWasherAvgRating?: number;
   createdAt: string;
   updatedAt: string;
 }

@@ -2,15 +2,15 @@
 
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { 
-  Calendar, 
-  Clock, 
-  Car, 
-  CheckCircle, 
-  XCircle, 
-  AlertCircle, 
-  RefreshCw, 
-  Info, 
+import {
+  Calendar,
+  Clock,
+  Car,
+  CheckCircle,
+  XCircle,
+  AlertCircle,
+  RefreshCw,
+  Info,
   CreditCard,
   Loader2,
   User2,
@@ -22,14 +22,14 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { 
-  useMyOrders, 
-  useCancelOrder, 
-  useRescheduleOrder, 
-  useAvailableSlots, 
-  useActiveServiceTypes 
+import {
+  useMyOrders,
+  useCancelOrder,
+  useRescheduleOrder,
+  useAvailableSlots,
+  useActiveServiceTypes
 } from '@/hooks/orders/useOrders';
-import { getMyVehicles } from '@/lib/customer-api';
+import { getMyVehicles, submitFeedback } from '@/lib/customer-api';
 import { cn } from '@/lib/utils';
 import { formatCurrency } from '@/lib/format';
 import { Order, OrderStatus, AvailableSlot } from '@/types/order';
@@ -64,16 +64,16 @@ export default function MyOrdersPage() {
   const { data: orders = [], isLoading: isLoadingOrders, refetch } = useMyOrders();
   const { data: serviceTypes = [] } = useActiveServiceTypes();
   const [vehicles, setVehicles] = useState<CustomerVehicle[]>([]);
-  
+
   const cancelMutation = useCancelOrder();
   const rescheduleMutation = useRescheduleOrder();
 
   const [activeTab, setActiveTab] = useState('all');
-  
+
   // Dialog states
   const [cancellingOrder, setCancellingOrder] = useState<Order | null>(null);
   const [cancelReason, setCancelReason] = useState('');
-  
+
   const [reschedulingOrder, setReschedulingOrder] = useState<Order | null>(null);
   const [rescheduleDate, setRescheduleDate] = useState('');
   const [rescheduleSlot, setRescheduleSlot] = useState('');
@@ -104,7 +104,7 @@ export default function MyOrdersPage() {
     const handleStatusUpdate = (data: { orderId: string; status: OrderStatus }) => {
       const target = (orders as Order[]).find((o: Order) => o.id === data.orderId || o._id === data.orderId);
       if (target) {
-        toast.info(`Trạng thái đơn hàng #${(data.orderId).slice(-6).toUpperCase()} của ông chủ đã chuyển sang: ${data.status === 'in_progress' ? 'Đang rửa xe' : data.status === 'completed' ? 'Hoàn thành' : data.status}`);
+        toast.info(`Trạng thái đơn hàng #${(data.orderId).slice(-6).toUpperCase()} của bạn đã chuyển sang: ${data.status === 'in_progress' ? 'Đang rửa xe' : data.status === 'completed' ? 'Hoàn thành' : data.status}`);
         refetch();
       }
     };
@@ -156,7 +156,7 @@ export default function MyOrdersPage() {
   // Filter orders based on active tab
   const filteredOrders = useMemo(() => {
     // Sort orders by scheduledAt descending
-    const sorted = [...orders].sort((a, b) => 
+    const sorted = [...orders].sort((a, b) =>
       new Date(b.scheduledAt).getTime() - new Date(a.scheduledAt).getTime()
     );
 
@@ -206,7 +206,7 @@ export default function MyOrdersPage() {
       const current = new Date(today);
       current.setDate(today.getDate() + i);
       const val = current.toISOString().split('T')[0];
-      const lbl = current.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' }) + ' (' + 
+      const lbl = current.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' }) + ' (' +
         (i === 0 ? 'Hôm nay' : i === 1 ? 'Ngày mai' : current.toLocaleDateString('vi-VN', { weekday: 'short' })) + ')';
       dates.push({ value: val, label: lbl });
     }
@@ -236,7 +236,7 @@ export default function MyOrdersPage() {
       // Let's call `/shifts/available` to find a shift that covers `scheduledAt`.
       // Let's find the shift:
       toast.loading('Đang xử lý đổi lịch...');
-      
+
       const slotsRes = await getAvailableSlotsForReschedule(reschedulingOrder.serviceTypeId, rescheduleSlot);
       if (!slotsRes || slotsRes.length === 0) {
         toast.dismiss();
@@ -270,11 +270,11 @@ export default function MyOrdersPage() {
     const dateOnly = targetTime.split('T')[0];
     const fromStr = `${dateOnly}T00:00:00.000Z`;
     const toStr = `${dateOnly}T23:59:59.000Z`;
-    
+
     const { getAvailableShifts } = await import('@/lib/customer-api');
     const res = await getAvailableShifts({ from: fromStr, to: toStr, shiftType: 'washer' });
     const shifts = res.data || [];
-    
+
     const targetDate = new Date(targetTime).getTime();
     return shifts.filter((s: { startAt: string; endAt: string; currentBookings?: number; maxBookings?: number }) => {
       const start = new Date(s.startAt).getTime();
@@ -283,34 +283,38 @@ export default function MyOrdersPage() {
     });
   };
 
-  const getMockWasher = (orderId: string) => {
-    let hash = 0;
-    for (let i = 0; i < orderId.length; i++) {
-      hash = orderId.charCodeAt(i) + ((hash << 5) - hash);
-    }
-    const names = ['Nguyễn Văn Bình', 'Trần Hữu Kiên', 'Lê Hoàng Long', 'Phạm Minh Đức', 'Vũ Quốc Anh'];
-    const name = names[Math.abs(hash % names.length)];
-    const rating = 4.5 + (Math.abs(hash % 6) / 10);
+  const getWasherInfo = (order: Order) => {
+    if (!order.assignedWasherName) return null;
     return {
-      name,
-      rating: rating.toFixed(1),
-      phone: `09${8 - Math.abs(hash % 3)}${Math.abs(hash % 10000000).toString().padStart(7, '0')}`,
+      name: order.assignedWasherName,
+      rating: typeof order.assignedWasherAvgRating === 'number' ? order.assignedWasherAvgRating.toFixed(1) : '5.0',
+      phone: order.assignedWasherPhone || 'Chưa cập nhật',
     };
   };
 
-  const handleFeedbackSubmit = () => {
+  const handleFeedbackSubmit = async () => {
     if (!feedbackOrder) return;
     toast.loading('Đang gửi đánh giá...');
-    setTimeout(() => {
+    try {
+      await submitFeedback({
+        orderId: feedbackOrder.id,
+        rating: feedbackRating,
+        comment: feedbackComment.trim() || undefined
+      });
       const updated = { ...submittedFeedbacks, [feedbackOrder.id]: true };
       setSubmittedFeedbacks(updated);
       localStorage.setItem('wave_submitted_feedbacks', JSON.stringify(updated));
       toast.dismiss();
-      toast.success('Cảm ơn ông chủ đã gửi đánh giá dịch vụ!');
+      toast.success('Cảm ơn bạn đã gửi đánh giá dịch vụ!');
       setFeedbackOrder(null);
       setFeedbackRating(5);
       setFeedbackComment('');
-    }, 1000);
+    } catch (err) {
+      toast.dismiss();
+      console.error(err);
+      const errMsg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message ?? 'Không thể gửi đánh giá.';
+      toast.error(`Lỗi: ${errMsg}`);
+    }
   };
 
   // Handle Cancel Submit
@@ -393,7 +397,7 @@ export default function MyOrdersPage() {
 
   return (
     <div className="space-y-6">
-      
+
       {/* Title */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-border pb-4">
         <div>
@@ -438,7 +442,7 @@ export default function MyOrdersPage() {
             <Calendar className="w-12 h-12 text-slate-300" />
             <p className="font-bold text-foreground">Không tìm thấy lịch hẹn nào</p>
             <p className="text-xs text-muted-foreground max-w-xs">
-              Ông chủ chưa có lịch hẹn nào tương ứng với trạng thái lọc này.
+              Bạn chưa có lịch hẹn nào tương ứng với trạng thái lọc này.
             </p>
           </CardContent>
         </Card>
@@ -462,7 +466,7 @@ export default function MyOrdersPage() {
             });
 
             return (
-              <Card 
+              <Card
                 key={order.id}
                 className={cn(
                   "border-none rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all bg-white/95 backdrop-blur-md relative",
@@ -471,7 +475,7 @@ export default function MyOrdersPage() {
               >
                 <CardContent className="p-5 flex flex-col md:flex-row md:items-center justify-between gap-5">
                   <div className="flex-1 space-y-3">
-                    
+
                     {/* Header: Service Name & Status Badge */}
                     <div className="flex flex-wrap items-center justify-between sm:justify-start gap-3">
                       <span className="font-black text-base text-foreground tracking-tight">
@@ -482,7 +486,7 @@ export default function MyOrdersPage() {
 
                     {/* Middle info */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 text-xs font-semibold text-slate-500">
-                      
+
                       {/* Vehicle */}
                       <div className="flex items-center gap-2">
                         <Car className="w-4 h-4 text-primary shrink-0" />
@@ -508,14 +512,14 @@ export default function MyOrdersPage() {
                             order.paymentStatus === 'paid'
                               ? "text-emerald-500"
                               : Number(order.amount) === 0
-                              ? "text-emerald-600"
-                              : "text-amber-500"
+                                ? "text-emerald-600"
+                                : "text-amber-500"
                           )}>
                             {order.paymentStatus === 'paid'
                               ? 'Đã trả'
                               : Number(order.amount) === 0
-                              ? 'Miễn phí (voucher)'
-                              : 'Chưa trả'}
+                                ? 'Miễn phí (voucher)'
+                                : 'Chưa trả'}
                           </span>
                         </span>
                       </div>
@@ -529,20 +533,38 @@ export default function MyOrdersPage() {
                     )}
 
                     {/* Washer info representation */}
-                    {(order.status === 'checked_in' || order.status === 'in_progress' || order.status === 'completed') && (
-                      <div className="mt-3 bg-indigo-50/30 border border-indigo-100/30 p-3 rounded-xl flex items-center justify-between gap-3 max-w-2xl">
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center font-bold text-indigo-600 text-xs border border-indigo-200">
-                            {getMockWasher(order.id).name[0]}
+                    {(order.status === 'checked_in' || order.status === 'in_progress' || order.status === 'completed') && (() => {
+                      const washer = getWasherInfo(order);
+                      if (!washer) {
+                        return (
+                          <div className="mt-3 bg-slate-50 border border-slate-200/50 p-3 rounded-xl flex items-center justify-between gap-3 max-w-2xl">
+                            <div className="flex items-center gap-3">
+                              <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center font-bold text-slate-400 text-xs border border-slate-200">
+                                ?
+                              </div>
+                              <div>
+                                <p className="text-[10px] text-muted-foreground uppercase font-black tracking-wider">Thợ rửa xe</p>
+                                <p className="font-bold text-amber-600 text-xs">Đang chờ phân công thợ</p>
+                              </div>
+                            </div>
                           </div>
-                          <div>
-                            <p className="text-[10px] text-muted-foreground uppercase font-black tracking-wider">Thợ rửa xe</p>
-                            <p className="font-bold text-slate-800 text-xs">{getMockWasher(order.id).name}</p>
-                            <p className="text-[10px] text-amber-600 font-bold">⭐ {getMockWasher(order.id).rating} • SĐT: {getMockWasher(order.id).phone}</p>
+                        );
+                      }
+                      return (
+                        <div className="mt-3 bg-indigo-50/30 border border-indigo-100/30 p-3 rounded-xl flex items-center justify-between gap-3 max-w-2xl">
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center font-bold text-indigo-600 text-xs border border-indigo-200">
+                              {washer.name[0]}
+                            </div>
+                            <div>
+                              <p className="text-[10px] text-muted-foreground uppercase font-black tracking-wider">Thợ rửa xe</p>
+                              <p className="font-bold text-slate-800 text-xs">{washer.name}</p>
+                              <p className="text-[10px] text-amber-600 font-bold">⭐ {washer.rating}</p>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    )}
+                      );
+                    })()}
                   </div>
 
                   {/* Actions right panel */}
@@ -621,12 +643,12 @@ export default function MyOrdersPage() {
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
           <Card className="w-full max-w-lg border-none shadow-2xl rounded-2xl overflow-hidden bg-white/95 backdrop-blur-md animate-in zoom-in-95 duration-200">
             <CardContent className="p-6">
-              
+
               <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-5">
                 <h3 className="font-heading text-base font-bold text-foreground flex items-center gap-2">
                   <Calendar className="w-5 h-5 text-primary" /> Đổi lịch hẹn rửa xe
                 </h3>
-                <button 
+                <button
                   onClick={() => {
                     setReschedulingOrder(null);
                     setRescheduleSlot('');
@@ -645,7 +667,7 @@ export default function MyOrdersPage() {
                     {getServiceName(reschedulingOrder.serviceTypeId)}
                   </span>
                   <span className="text-[10px] text-slate-400 font-semibold block">
-                    Lịch cũ: {new Date(reschedulingOrder.scheduledAt).toLocaleTimeString('vi-VN', {hour: '2-digit', minute: '2-digit'})} ngày {new Date(reschedulingOrder.scheduledAt).toLocaleDateString('vi-VN')}
+                    Lịch cũ: {new Date(reschedulingOrder.scheduledAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })} ngày {new Date(reschedulingOrder.scheduledAt).toLocaleDateString('vi-VN')}
                   </span>
                 </div>
 
@@ -671,7 +693,7 @@ export default function MyOrdersPage() {
                 {/* Slots Grid */}
                 <div className="space-y-2 pt-1">
                   <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider block">Chọn giờ còn trống</Label>
-                  
+
                   {isLoadingSlots ? (
                     <div className="flex justify-center items-center py-8">
                       <Loader2 className="w-6 h-6 animate-spin text-primary" />
@@ -702,8 +724,8 @@ export default function MyOrdersPage() {
                               isSelected
                                 ? "border-primary bg-primary/5 ring-1 ring-primary/20"
                                 : isFull
-                                ? "border-border bg-slate-100 text-slate-400 cursor-not-allowed"
-                                : "border-border bg-card hover:bg-slate-50"
+                                  ? "border-border bg-slate-100 text-slate-400 cursor-not-allowed"
+                                  : "border-border bg-card hover:bg-slate-50"
                             )}
                           >
                             <span className="font-extrabold text-xs text-foreground">{timeStr}</span>
@@ -748,7 +770,7 @@ export default function MyOrdersPage() {
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
           <Card className="w-full max-w-md border-none shadow-2xl rounded-2xl overflow-hidden bg-white/95 backdrop-blur-md animate-in zoom-in-95 duration-200">
             <CardContent className="p-6">
-              
+
               <div className="flex items-start gap-3 mb-4">
                 <div className="p-2.5 rounded-full bg-red-50 text-red-500 mt-0.5">
                   <AlertCircle className="w-5 h-5" />
@@ -757,7 +779,7 @@ export default function MyOrdersPage() {
                   <h3 className="font-heading text-base font-bold text-foreground">Bạn muốn hủy lịch rửa xe này?</h3>
                   <p className="text-xs text-muted-foreground leading-normal">
                     Lịch hẹn vào lúc <span className="font-bold text-foreground">
-                      {new Date(cancellingOrder.scheduledAt).toLocaleTimeString('vi-VN', {hour:'2-digit', minute:'2-digit'})} ngày {new Date(cancellingOrder.scheduledAt).toLocaleDateString('vi-VN')}
+                      {new Date(cancellingOrder.scheduledAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })} ngày {new Date(cancellingOrder.scheduledAt).toLocaleDateString('vi-VN')}
                     </span> sẽ bị hủy bỏ.
                   </p>
                 </div>
@@ -808,10 +830,10 @@ export default function MyOrdersPage() {
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
           <Card className="w-full max-w-md border-none shadow-2xl rounded-2xl overflow-hidden bg-white/95 backdrop-blur-md animate-in zoom-in-95 duration-200">
             <CardContent className="p-6">
-              
+
               <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-5">
                 <h3 className="font-heading text-base font-bold text-foreground">Đánh giá chất lượng rửa xe</h3>
-                <button 
+                <button
                   onClick={() => {
                     setFeedbackOrder(null);
                     setFeedbackRating(5);
@@ -827,11 +849,11 @@ export default function MyOrdersPage() {
                 {/* Thợ được đánh giá */}
                 <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 flex items-center gap-3">
                   <div className="w-9 h-9 rounded-full bg-indigo-100 flex items-center justify-center font-bold text-indigo-600 text-sm">
-                    {getMockWasher(feedbackOrder.id).name[0]}
+                    {getWasherInfo(feedbackOrder)?.name[0] || '?'}
                   </div>
                   <div>
                     <span className="text-[10px] text-muted-foreground font-bold uppercase block">Thợ phụ trách</span>
-                    <span className="font-bold text-slate-800 text-xs block">{getMockWasher(feedbackOrder.id).name}</span>
+                    <span className="font-bold text-slate-800 text-xs block">{getWasherInfo(feedbackOrder)?.name || 'Chưa phân công'}</span>
                   </div>
                 </div>
 
@@ -861,7 +883,7 @@ export default function MyOrdersPage() {
 
                 {/* Bình luận */}
                 <div className="space-y-1.5">
-                  <Label htmlFor="feedback-comment" className="text-xs font-bold text-slate-500 uppercase tracking-wider block">Nhận xét của ông chủ</Label>
+                  <Label htmlFor="feedback-comment" className="text-xs font-bold text-slate-500 uppercase tracking-wider block">Nhận xét của bạn</Label>
                   <textarea
                     id="feedback-comment"
                     placeholder="VD: Thợ rửa rất sạch, nhiệt tình, đúng giờ..."
