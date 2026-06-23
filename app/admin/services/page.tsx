@@ -6,8 +6,9 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useMemo, useState, type ReactNode } from 'react';
 import {
   Plus, Pencil, Power, X, Search, MoreHorizontal, Clock, AlertTriangle,
-  Layers, CircleCheck, CircleSlash, Car, Bike, Truck, Sparkles, Loader2, Info, Tag, Check,
+  Layers, CircleCheck, CircleSlash, Car, Bike, Truck, Sparkles, Info, Tag, Check,
 } from 'lucide-react';
+import { Spinner } from '@/components/ui/spinner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -269,7 +270,7 @@ function ServiceModal({ item, vehicleTypes, saving, error, onClose, onSave }: { 
           <div className='flex gap-3'>
             <Button variant='outline' className='flex-1' onClick={onClose} disabled={saving}>Huỷ</Button>
             <Button className='flex-1' onClick={handleSave} disabled={saving}>
-              {saving && <Loader2 className='size-4 animate-spin' />}
+              {saving && <Spinner className='size-4' />}
               {item ? 'Lưu thay đổi' : 'Tạo dịch vụ'}
             </Button>
           </div>
