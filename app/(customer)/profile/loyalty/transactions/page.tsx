@@ -6,12 +6,12 @@ import {
   History,
   Search,
   Download,
-  Loader2,
   Info,
   Coins,
   Clock,
   ShieldCheck,
 } from 'lucide-react';
+import { Spinner } from '@/components/ui/spinner';
 import { getMyLoyalty, getMyLoyaltyTransactions } from '@/lib/customer-api';
 import { LoyaltyAccount, LoyaltyTransaction } from '@/types/loyalty';
 import { formatNumber, formatDate } from '@/lib/format';
@@ -201,7 +201,7 @@ export default function LoyaltyTransactionsPage() {
         {/* Table */}
         {isLoading ? (
           <div className='flex flex-col items-center justify-center min-h-72 gap-3'>
-            <Loader2 className='w-8 h-8 text-primary animate-spin' />
+            <Spinner className='size-8 text-primary' />
             <p className='text-sm text-muted-foreground font-semibold'>
               Đang tải lịch sử điểm thưởng...
             </p>

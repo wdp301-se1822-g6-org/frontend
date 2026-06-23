@@ -14,7 +14,6 @@ import {
   CreditCard,
   DollarSign,
   FileText,
-  Loader2,
   ShieldCheck,
   HelpCircle,
   AlertCircle,
@@ -22,8 +21,8 @@ import {
   Sparkles,
   X,
 } from 'lucide-react';
+import { Spinner } from '@/components/ui/spinner';
 import { toast } from 'sonner';
-import { AuthGuard } from '@/components/auth/AuthGuard';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -72,11 +71,7 @@ interface VehicleType {
 }
 
 export default function BookingPage() {
-  return (
-    <AuthGuard>
-      <BookingFlow />
-    </AuthGuard>
-  );
+  return <BookingFlow />;
 }
 
 function BookingFlow() {
@@ -708,7 +703,7 @@ function BookingFlow() {
                               disabled={isSavingVehicle}
                             >
                               {isSavingVehicle ? (
-                                <Loader2 className='w-4 h-4 animate-spin' />
+                                <Spinner className='size-4' />
                               ) : (
                                 'Lưu & Chọn'
                               )}
@@ -718,7 +713,7 @@ function BookingFlow() {
                       </Card>
                     ) : isLoadingVehicles ? (
                       <div className='flex flex-col items-center justify-center py-10 gap-3'>
-                        <Loader2 className='w-8 h-8 animate-spin text-primary' />
+                        <Spinner className='size-8 text-primary' />
                         <span className='text-xs text-muted-foreground'>
                           Đang tải danh sách xe...
                         </span>
@@ -831,7 +826,7 @@ function BookingFlow() {
 
                     {isLoadingServices ? (
                       <div className='flex flex-col items-center justify-center py-10 gap-3'>
-                        <Loader2 className='w-8 h-8 animate-spin text-primary' />
+                        <Spinner className='size-8 text-primary' />
                         <span className='text-xs text-muted-foreground'>
                           Đang tải danh sách gói rửa xe...
                         </span>
@@ -1020,7 +1015,7 @@ function BookingFlow() {
 
                       {isLoadingSlots ? (
                         <div className='flex flex-col items-center justify-center py-10 gap-3'>
-                          <Loader2 className='w-8 h-8 animate-spin text-primary' />
+                          <Spinner className='size-8 text-primary' />
                           <span className='text-xs text-muted-foreground'>
                             Đang tìm kiếm ca trống phù hợp...
                           </span>
@@ -1396,7 +1391,7 @@ function BookingFlow() {
                       >
                         {createOrderMutation.isPending ? (
                           <>
-                            <Loader2 className='w-4 h-4 animate-spin' /> Đang
+                            <Spinner className='size-4' /> Đang
                             tạo đơn đặt...
                           </>
                         ) : (
@@ -1524,8 +1519,9 @@ function BookingFlow() {
                           )
                         : 0;
                     const original = preview?.originalAmount ?? base;
-                    const discount = preview?.discountAmount ?? localGoldenDiscount;
-                    const total = preview?.amount ?? (base - localGoldenDiscount);
+                    const discount =
+                      preview?.discountAmount ?? localGoldenDiscount;
+                    const total = preview?.amount ?? base - localGoldenDiscount;
                     return (
                       <>
                         <div className='flex justify-between items-center text-sm font-bold text-muted-foreground'>
@@ -1548,13 +1544,13 @@ function BookingFlow() {
                         {(preview?.isGoldenHour
                           ? preview.tierDiscountPercent > 0
                           : localGoldenDiscount > 0) && (
-                            <p className='text-[10px] text-muted-foreground -mt-1.5'>
-                              Khung giờ vàng
-                              {preview?.tierName
-                                ? ` · hạng ${preview.tierName} giảm ${preview.tierDiscountPercent}%`
-                                : ` · giảm ${selectedSlotData?.discountPercent}%`}
-                            </p>
-                          )}
+                          <p className='text-[10px] text-muted-foreground -mt-1.5'>
+                            Khung giờ vàng
+                            {preview?.tierName
+                              ? ` · hạng ${preview.tierName} giảm ${preview.tierDiscountPercent}%`
+                              : ` · giảm ${selectedSlotData?.discountPercent}%`}
+                          </p>
+                        )}
 
                         <div className='flex justify-between items-center text-md font-black text-foreground pt-1 border-t border-dashed border-slate-100'>
                           <span>Tổng thanh toán</span>

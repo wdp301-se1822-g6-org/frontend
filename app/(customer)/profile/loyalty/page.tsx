@@ -12,9 +12,9 @@ import {
   Coins,
   TrendingUp,
   Info,
-  Loader2,
   Ticket,
 } from 'lucide-react';
+import { Spinner } from '@/components/ui/spinner';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 // Mapping color styles for each tier card
@@ -133,7 +133,7 @@ export default function LoyaltyPage() {
   if (isLoading) {
     return (
       <div className='flex flex-col items-center justify-center min-h-[400px] gap-3'>
-        <Loader2 className='w-8 h-8 text-primary animate-spin' />
+        <Spinner className='size-8 text-primary' />
         <p className='text-sm text-muted-foreground font-semibold'>
           Đang tải dữ liệu thành viên...
         </p>

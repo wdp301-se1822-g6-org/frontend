@@ -12,10 +12,10 @@ import {
   RefreshCw,
   Info,
   CreditCard,
-  Loader2,
   User2,
   X
 } from 'lucide-react';
+import { Spinner } from '@/components/ui/spinner';
 import { toast } from 'sonner';
 import { socket } from '@/lib/socket';
 import { Card, CardContent } from '@/components/ui/card';
@@ -433,7 +433,7 @@ export default function MyOrdersPage() {
       {/* Main orders list */}
       {isLoadingOrders ? (
         <div className="flex flex-col items-center justify-center py-20 gap-3">
-          <Loader2 className="w-10 h-10 animate-spin text-primary" />
+          <Spinner className="size-10 text-primary" />
           <span className="text-sm text-muted-foreground">Đang tải danh sách lịch đặt...</span>
         </div>
       ) : filteredOrders.length === 0 ? (
@@ -696,7 +696,7 @@ export default function MyOrdersPage() {
 
                   {isLoadingSlots ? (
                     <div className="flex justify-center items-center py-8">
-                      <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                      <Spinner className="size-6 text-primary" />
                     </div>
                   ) : availableSlots.length === 0 ? (
                     <p className="text-xs text-amber-500 font-bold bg-amber-50 p-3 border border-amber-200 rounded-xl text-center">
@@ -816,7 +816,7 @@ export default function MyOrdersPage() {
                   className="bg-red-500 hover:bg-red-600 text-white rounded-xl text-xs font-bold px-5 h-9 cursor-pointer"
                   disabled={cancelMutation.isPending}
                 >
-                  {cancelMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Xác nhận hủy'}
+                  {cancelMutation.isPending ? <Spinner className="size-4" /> : 'Xác nhận hủy'}
                 </Button>
               </div>
 
