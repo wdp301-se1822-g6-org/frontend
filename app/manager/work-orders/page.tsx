@@ -3,11 +3,10 @@
 import { AdminTopbar } from '@/components/admin/AdminTopbar';
 import {
   adminGetWorkOrders,
-  adminGetUsers,
   adminAssignWasher,
-  adminQcWorkOrder,
   adminUpdateOrderStatus,
-  adminGetWorkOrdersQueue
+  adminGetWorkOrdersQueue,
+  adminGetShiftStaff
 } from '@/lib/admin-api';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState, useMemo } from 'react';
@@ -102,7 +101,13 @@ export default function ManagerWorkOrdersPage() {
   // Lấy danh sách thợ rửa xe
   const { data: washersRes } = useQuery({
     queryKey: ['admin-washers'],
-    queryFn: () => adminGetUsers({ role: 'washer' }),
+    queryFn: async () => {
+      const res = await adminGetShiftStaff();
+      const staff = res.data || [];
+      return {
+        data: staff.filter((s: { role: string }) => s.role === 'washer')
+      };
+    },
   });
 
   const FALLBACK_WASHERS: UserData[] = [
@@ -200,10 +205,7 @@ export default function ManagerWorkOrdersPage() {
 
   // Mutation hoàn thành đơn (hoàn thành trực tiếp, không qua QC phức tạp)
   const qcMutation = useMutation({
-    mutationFn: async ({ woId, targetWo }: { woId: string; targetWo: WorkOrderData }) => {
-      // Gọi trực tiếp kết quả QC Đạt để đóng Work Order
-      await adminQcWorkOrder(woId, true, 'Hoàn thành bởi Quản lý');
-      
+    mutationFn: async ({ targetWo }: { woId?: string; targetWo: WorkOrderData }) => {
       const oId = typeof targetWo.orderId === 'string'
         ? targetWo.orderId
         : (targetWo.orderId as { _id?: string; id?: string })?._id || (targetWo.orderId as { _id?: string; id?: string })?.id;

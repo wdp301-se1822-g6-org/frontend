@@ -20,12 +20,6 @@ export const washerStartWorkOrder = (id: string) =>
   axiosInstance.patch(`/me/work-orders/${id}/start`);
 
 /**
- * Cập nhật Checklist của Work Order
- */
-export const washerUpdateChecklist = (id: string, checklist: unknown) =>
-  axiosInstance.patch(`/me/work-orders/${id}/checklist`, { checklist });
-
-/**
  * Hoàn thành rửa xe, chuyển trạng thái cho Cashier/Manager đánh giá QC
  */
 export const washerFinishWorkOrder = (id: string, checkoutPhotos: string[]) =>
