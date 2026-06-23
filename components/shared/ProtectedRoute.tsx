@@ -1,5 +1,6 @@
 'use client';
 
+import { Spinner } from '@/components/ui/spinner';
 import { useAuthStore } from '@/store/useAuthStore';
 import { useRouter } from 'next/navigation';
 import { useEffect, type ReactNode } from 'react';
@@ -11,11 +12,11 @@ export default function ProtectedRoute({
   children: ReactNode;
   allowedRoles?: string[];
 }) {
-  const { authUser, isInitialized, _hasHydrated } = useAuthStore();
+  const { authUser, _hasHydrated } = useAuthStore();
   const router = useRouter();
 
   useEffect(() => {
-    if (!_hasHydrated || !isInitialized) return;
+    if (!_hasHydrated) return;
 
     if (!authUser) {
       router.replace('/login');
@@ -45,14 +46,13 @@ export default function ProtectedRoute({
         }
       }
     }
-  }, [authUser, isInitialized, _hasHydrated, allowedRoles, router]);
+  }, [authUser, _hasHydrated, allowedRoles, router]);
 
-  if (!_hasHydrated || !isInitialized) {
+  if (!_hasHydrated) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50/50">
         <div className="flex flex-col items-center gap-3">
-          <div className="w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
-          <p className="text-sm font-semibold text-slate-500">Đang kiểm tra quyền truy cập...</p>
+          <Spinner className="size-8 text-indigo-600" />
         </div>
       </div>
     );
