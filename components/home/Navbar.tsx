@@ -23,11 +23,11 @@ import {
   Bell,
   User2,
 } from 'lucide-react';
-import { axiosInstance } from '@/lib/axios';
 import { cn } from '@/lib/utils';
 import { getTierMeta } from '@/constants';
 import { getInitials } from '@/lib/format';
 import { useQuery } from '@tanstack/react-query';
+import { useLogout } from '@/hooks/auth/useLogout';
 import { getMyLoyalty } from '@/lib/customer-api';
 import type { LoyaltyAccount } from '@/types/loyalty';
 
@@ -43,22 +43,9 @@ const navLinks = [
 
 export function Navbar() {
   const authUser = useAuthStore((s) => s.authUser);
-  const setAccessToken = useAuthStore((s) => s.setAccessToken);
-  const setUser = useAuthStore((s) => s.setUser);
   const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
-
-  const handleLogout = async () => {
-    try {
-      await axiosInstance.post('/auth/logout');
-    } catch {
-      // ignore
-    } finally {
-      setAccessToken(null);
-      setUser(null);
-      router.replace('/');
-    }
-  };
+  const handleLogout = useLogout();
 
   // Lấy dữ liệu loyalty thật (cùng query key với trang loyalty -> dùng chung
   // cache, không gọi API thừa). Điểm và tiến độ rửa lấy từ đây thay vì
@@ -232,13 +219,12 @@ export function Navbar() {
                         <Car className='w-5 h-5 text-primary' />
                         Xe của tôi
                       </DropdownMenuItem>
-
                     </div>
 
                     <DropdownMenuSeparator className='bg-border/50 my-1' />
 
                     <DropdownMenuItem
-                      onClick={handleLogout}
+                      onClick={() => handleLogout()}
                       className='p-3 rounded-lg cursor-pointer flex items-center gap-3 text-red-500/80 font-bold hover:bg-red-500/5 hover:text-red-500 transition-colors focus:bg-red-500/5 focus:text-red-500'
                     >
                       <LogOut className='w-5 h-5' />
@@ -324,7 +310,7 @@ export function Navbar() {
           <div className='flex gap-3 pt-2 border-t border-border'>
             {authUser ? (
               <Button
-                onClick={handleLogout}
+                onClick={() => handleLogout()}
                 className='flex-1 bg-red-500/20 text-red-400 hover:bg-red-500/30 border-0 h-9 text-sm'
               >
                 Đăng xuất
