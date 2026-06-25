@@ -1,267 +1,79 @@
 'use client';
 
+import { useMemo, useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Plus, RefreshCw, CalendarX2, SearchX, AlertCircle } from 'lucide-react';
+import { toast } from 'sonner';
+
 import { AdminTopbar } from '@/components/admin/AdminTopbar';
+import { Button } from '@/components/ui/button';
+import { EmptyState } from '@/components/ui/empty-state';
 import {
   adminGetShifts,
   adminCreateShift,
   adminUpdateShift,
   adminToggleShift,
-  adminGetShiftStaff
+  adminGetShiftStaff,
 } from '@/lib/admin-api';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useState } from 'react';
-import { Plus, Pencil, Power, X, Clock, User, MapPin, RefreshCw } from 'lucide-react';
-import { toast } from 'sonner';
-
-type PopulatedStaff = {
-  _id?: string;
-  id?: string;
-  fullName?: string;
-  name?: string;
-  role?: string;
-};
-
-type Shift = {
-  _id?: string;
-  id?: string;
-  staffId?: string | PopulatedStaff;
-  shiftType?: 'cashier' | 'washer';
-  stationName?: string;
-  startAt?: string;
-  endAt?: string;
-  maxBookings?: number;
-  currentBookings?: number;
-  status?: string;
-  note?: string;
-};
-
-type UserData = {
-  _id?: string;
-  id?: string;
-  fullName?: string;
-  name?: string;
-  email?: string;
-  role?: string;
-};
-
-const getMockFeedback = (staffId?: string) => {
-  if (!staffId) return { rating: 5.0, count: 0 };
-  let hash = 0;
-  for (let i = 0; i < staffId.length; i++) {
-    hash = staffId.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  const rating = 4.0 + (Math.abs(hash % 11) / 10);
-  const count = 5 + Math.abs(hash % 45);
-  return { rating: Number(rating.toFixed(1)), count };
-};
-
-function ShiftModal({
-  item,
-  onClose,
-  onSave,
-  staffList,
-}: {
-  item?: Shift | null;
-  onClose: () => void;
-  onSave: (d: Record<string, unknown>) => void;
-  staffList: UserData[];
-}) {
-  const getBlockFromTimes = (startStr?: string, endStr?: string): 'morning' | 'afternoon' | 'fullday' => {
-    if (!startStr) return 'morning';
-    const date = new Date(startStr);
-    const hour = date.getHours();
-    if (hour < 12) {
-      if (endStr) {
-        const endDate = new Date(endStr);
-        const endHour = endDate.getHours();
-        if (endHour - hour > 6) return 'fullday';
-      }
-      return 'morning';
-    }
-    return 'afternoon';
-  };
-
-  const formatDateForInput = (isoString?: string) => {
-    if (!isoString) return '';
-    const date = new Date(isoString);
-    const pad = (num: number) => String(num).padStart(2, '0');
-    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
-  };
-
-  const [form, setForm] = useState({
-    staffId: typeof item?.staffId === 'object' ? item?.staffId?._id ?? item?.staffId?.id ?? '' : item?.staffId ?? '',
-    shiftType: item?.shiftType ?? 'washer',
-    stationName: item?.stationName ?? 'Bay 1',
-    date: formatDateForInput(item?.startAt) || formatDateForInput(new Date().toISOString()),
-    block: getBlockFromTimes(item?.startAt, item?.endAt),
-    note: item?.note ?? '',
-  });
-
-  const minDate = !item ? formatDateForInput(new Date().toISOString()) : undefined;
-
-  // Tự động cập nhật shiftType tương ứng khi chọn staffId
-  const handleStaffChange = (staffId: string) => {
-    setForm((prev) => {
-      const selectedStaff = staffList.find((s) => (s._id ?? s.id) === staffId);
-      if (staffId && selectedStaff && (selectedStaff.role === 'washer' || selectedStaff.role === 'cashier')) {
-        return { ...prev, staffId, shiftType: selectedStaff.role as 'washer' | 'cashier' };
-      }
-      return { ...prev, staffId };
-    });
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!form.staffId) {
-      toast.error('Vui lòng chọn nhân viên ca trực.');
-      return;
-    }
-    if (!form.date) {
-      toast.error('Vui lòng chọn ngày trực.');
-      return;
-    }
-
-    onSave({
-      staffId: form.staffId,
-      shiftType: form.shiftType,
-      stationName: form.stationName,
-      date: form.date,
-      block: form.block,
-      note: form.note,
-    });
-  };
-
-  return (
-    <div className='fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4' onClick={onClose}>
-      <form
-        onSubmit={handleSubmit}
-        className='bg-white rounded-3xl p-8 w-full max-w-md shadow-2xl border border-slate-100 animate-in fade-in zoom-in-95 duration-150 flex flex-col gap-5 max-h-[90vh] overflow-y-auto'
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className='flex items-center justify-between pb-3 border-b border-slate-100'>
-          <h3 className='font-heading font-black text-slate-800 text-lg'>{item ? 'Sửa ca trực nhân viên' : 'Thêm ca trực mới'}</h3>
-          <button type='button' onClick={onClose}>
-            <X className='w-5 h-5 text-slate-500 hover:text-slate-600' />
-          </button>
-        </div>
-
-        <div className='flex flex-col gap-4'>
-          {/* Chọn nhân viên */}
-          <div>
-            <label className='block text-xs font-black uppercase tracking-widest text-slate-500 mb-1.5'>Nhân viên ca trực</label>
-            <select
-              value={form.staffId}
-              onChange={(e) => handleStaffChange(e.target.value)}
-              className='w-full border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo-500/50 bg-white font-semibold text-slate-700 shadow-sm cursor-pointer'
-            >
-              <option value=''>-- Chọn nhân viên --</option>
-              {staffList.map((s) => {
-                const sId = s._id ?? s.id ?? '';
-                return (
-                  <option key={sId} value={sId}>
-                    {s.fullName ?? s.name} ({s.role === 'washer' ? 'Rửa xe' : 'Thu ngân'})
-                  </option>
-                );
-              })}
-            </select>
-          </div>
-
-          {/* Loại ca (Shift Type) */}
-          <div>
-            <label className='block text-xs font-black uppercase tracking-widest text-slate-500 mb-1.5'>Loại ca làm việc</label>
-            <select
-              value={form.shiftType}
-              onChange={(e) => setForm({ ...form, shiftType: e.target.value as 'washer' | 'cashier' })}
-              className='w-full border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo-500/50 bg-white font-semibold text-slate-700 shadow-sm cursor-pointer'
-            >
-              <option value='washer'>Nhân viên rửa xe (Washer)</option>
-              <option value='cashier'>Thu ngân (Cashier)</option>
-            </select>
-          </div>
-
-          {/* Tên trạm làm việc (Station Name) */}
-          <div>
-            <label className='block text-xs font-black uppercase tracking-widest text-slate-500 mb-1.5'>Tên trạm / Bãi làm việc</label>
-            <input
-              type='text'
-              value={form.stationName}
-              onChange={(e) => setForm({ ...form, stationName: e.target.value })}
-              placeholder='Ví dụ: Bay 1, Quầy thu ngân'
-              className='w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-indigo-500/50 shadow-sm text-slate-700 font-semibold'
-            />
-          </div>
-
-          {/* Ngày trực (date) */}
-          <div>
-            <label className='block text-xs font-black uppercase tracking-widest text-slate-500 mb-1.5'>Ngày làm việc</label>
-            <input
-              type='date'
-              min={minDate}
-              value={form.date}
-              onChange={(e) => setForm({ ...form, date: e.target.value })}
-              className='w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-indigo-500/50 shadow-sm text-slate-700 font-semibold'
-            />
-          </div>
-
-          {/* Ca làm (block) */}
-          <div>
-            <label className='block text-xs font-black uppercase tracking-widest text-slate-500 mb-1.5'>Ca làm việc</label>
-            <select
-              value={form.block}
-              onChange={(e) => setForm({ ...form, block: e.target.value as 'morning' | 'afternoon' | 'fullday' })}
-              className='w-full border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo-500/50 bg-white font-semibold text-slate-700 shadow-sm cursor-pointer'
-            >
-              <option value='morning'>Sáng (Morning)</option>
-              <option value='afternoon'>Chiều (Afternoon)</option>
-              <option value='fullday'>Cả ngày (Full day)</option>
-            </select>
-          </div>
-
-          {/* Ghi chú */}
-          <div>
-            <label className='block text-xs font-black uppercase tracking-widest text-slate-500 mb-1.5'>Ghi chú / Mô tả</label>
-            <input
-              type='text'
-              value={form.note}
-              onChange={(e) => setForm({ ...form, note: e.target.value })}
-              placeholder='Ghi chú ca trực...'
-              className='w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-indigo-500/50 shadow-sm text-slate-700 font-semibold'
-            />
-          </div>
-        </div>
-
-        <div className='flex gap-3 mt-4 border-t border-slate-100 pt-4'>
-          <button
-            type='button'
-            onClick={onClose}
-            className='flex-1 py-3 rounded-xl border border-slate-200 text-sm font-bold text-slate-500 hover:bg-slate-50 transition-all shadow-sm'
-          >
-            Huỷ
-          </button>
-          <button
-            type='submit'
-            className='flex-1 py-3 rounded-xl bg-indigo-600 text-white text-sm font-black hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-600/10'
-          >
-            Lưu ca trực
-          </button>
-        </div>
-      </form>
-    </div>
-  );
-}
+import {
+  getShiftId,
+  getStaffName,
+  getRoleLabel,
+  getShiftStatus,
+  getStartMs,
+  getCreatedMs,
+  getCapacity,
+  isWithinRange,
+  STATUS_META,
+  type Shift,
+  type UserData,
+  type DateRangeKey,
+  type SortKey,
+} from '@/lib/shift-helpers';
+import { ShiftKpiCards } from '@/components/admin/shifts/ShiftKpiCards';
+import {
+  ShiftToolbar,
+  type StatusFilter,
+  type ShiftView,
+  type RoleOption,
+} from '@/components/admin/shifts/ShiftToolbar';
+import { ShiftTable } from '@/components/admin/shifts/ShiftTable';
+import { ShiftCard } from '@/components/admin/shifts/ShiftCard';
+import {
+  ShiftTableSkeleton,
+  ShiftCardSkeleton,
+} from '@/components/admin/shifts/ShiftSkeletons';
+import { ShiftModal } from '@/components/admin/shifts/ShiftModal';
+import { ShiftCancelDialog } from '@/components/admin/shifts/ShiftCancelDialog';
 
 export default function AdminShiftsPage() {
   const qc = useQueryClient();
-  const [editShift, setEditShift] = useState<Shift | null | false>(false);
 
-  // Lấy danh sách Shifts (StaffShifts)
-  const { data: shiftsRes, isLoading, refetch, isRefetching } = useQuery({
+  // Modal & dialog state
+  const [editShift, setEditShift] = useState<Shift | null | false>(false);
+  const [cancelTarget, setCancelTarget] = useState<Shift | null>(null);
+
+  // Filter / view state
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
+  const [roleFilter, setRoleFilter] = useState<string>('all');
+  const [dateRange, setDateRange] = useState<DateRangeKey>('all');
+  const [sort, setSort] = useState<SortKey>('soonest');
+  const [view, setView] = useState<ShiftView>('table');
+
+  // Danh sách Shifts
+  const {
+    data: shiftsRes,
+    isLoading,
+    isError,
+    refetch,
+    isRefetching,
+  } = useQuery({
     queryKey: ['admin-shifts'],
     queryFn: () => adminGetShifts({ limit: 100 }),
   });
 
-  // Danh sách nhân viên (washers & cashiers) để gán ca - dùng endpoint riêng
-  // mà cả manager lẫn admin đều gọi được (trả về id THẬT, active).
+  // Danh sách nhân viên (washers & cashiers) để gán ca
   const { data: usersRes } = useQuery({
     queryKey: ['admin-shifts-staff'],
     queryFn: async (): Promise<UserData[]> => {
@@ -270,9 +82,13 @@ export default function AdminShiftsPage() {
     },
   });
 
-  const shifts: Shift[] = shiftsRes?.data?.data ?? shiftsRes?.data ?? [];
-  const staffList: UserData[] = usersRes ?? [];
+  const shifts: Shift[] = useMemo(
+    () => shiftsRes?.data?.data ?? shiftsRes?.data ?? [],
+    [shiftsRes],
+  );
+  const staffList: UserData[] = useMemo(() => usersRes ?? [], [usersRes]);
 
+  // ─── Mutations (API contract giữ nguyên) ──────────────────────────
   const createShift = useMutation({
     mutationFn: adminCreateShift,
     onSuccess: () => {
@@ -281,34 +97,42 @@ export default function AdminShiftsPage() {
       setEditShift(false);
     },
     onError: (err: unknown) => {
-      const errMsg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message ?? 'Đã xảy ra lỗi khi tạo ca trực.';
+      const errMsg =
+        (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??
+        'Đã xảy ra lỗi khi tạo ca trực.';
       toast.error(`Thêm thất bại: ${errMsg}`);
-    }
+    },
   });
 
   const updateShift = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: Record<string, unknown> }) => adminUpdateShift(id, data),
+    mutationFn: ({ id, data }: { id: string; data: Record<string, unknown> }) =>
+      adminUpdateShift(id, data),
     onSuccess: () => {
       toast.success('Cập nhật ca trực nhân viên thành công!');
       qc.invalidateQueries({ queryKey: ['admin-shifts'] });
       setEditShift(false);
     },
     onError: (err: unknown) => {
-      const errMsg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message ?? 'Đã xảy ra lỗi khi cập nhật ca trực.';
+      const errMsg =
+        (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??
+        'Đã xảy ra lỗi khi cập nhật ca trực.';
       toast.error(`Cập nhật thất bại: ${errMsg}`);
-    }
+    },
   });
 
   const toggleShift = useMutation({
-    mutationFn: ({ id, status }: { id: string; status: string }) => adminToggleShift(id, status),
+    mutationFn: ({ id, status }: { id: string; status: string }) =>
+      adminToggleShift(id, status),
     onSuccess: () => {
       toast.success('Cập nhật trạng thái ca trực thành công!');
       qc.invalidateQueries({ queryKey: ['admin-shifts'] });
     },
     onError: (err: unknown) => {
-      const errMsg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message ?? 'Không thể cập nhật trạng thái ca trực.';
+      const errMsg =
+        (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??
+        'Không thể cập nhật trạng thái ca trực.';
       toast.error(`Lỗi: ${errMsg}`);
-    }
+    },
   });
 
   const handleSave = (d: Record<string, unknown>) => {
@@ -319,164 +143,237 @@ export default function AdminShiftsPage() {
     }
   };
 
+  const handleSetStatus = (shift: Shift, status: string) => {
+    toggleShift.mutate({ id: getShiftId(shift), status });
+  };
+
+  const handleCancelConfirm = () => {
+    if (!cancelTarget) return;
+    toggleShift.mutate(
+      { id: getShiftId(cancelTarget), status: 'cancelled' },
+      { onSuccess: () => setCancelTarget(null) },
+    );
+  };
+
+  // ─── Role filter options (dynamic từ data) ────────────────────────
+  const roleOptions: RoleOption[] = useMemo(() => {
+    const set = new Set<string>();
+    for (const s of shifts) if (s.shiftType) set.add(s.shiftType);
+    return [
+      { value: 'all', label: 'Tất cả vai trò' },
+      ...Array.from(set).map((t) => ({ value: t, label: getRoleLabel(t) })),
+    ];
+  }, [shifts]);
+
+  // ─── Lọc + sắp xếp ────────────────────────────────────────────────
+  const filtered = useMemo(() => {
+    const term = search.trim().toLowerCase();
+
+    const list = shifts.filter((s) => {
+      const status = getShiftStatus(s);
+      if (statusFilter !== 'all' && status !== statusFilter) return false;
+      if (roleFilter !== 'all' && s.shiftType !== roleFilter) return false;
+      if (!isWithinRange(s, dateRange)) return false;
+      if (term) {
+        const haystack = [
+          getStaffName(s, staffList) ?? '',
+          getRoleLabel(s.shiftType),
+          s.stationName ?? '',
+          s.note ?? '',
+          STATUS_META[status].label,
+        ]
+          .join(' ')
+          .toLowerCase();
+        if (!haystack.includes(term)) return false;
+      }
+      return true;
+    });
+
+    return list.sort((a, b) => {
+      if (sort === 'soonest') return getStartMs(a) - getStartMs(b);
+      if (sort === 'newest') return getCreatedMs(b) - getCreatedMs(a);
+      return getCapacity(b).ratio - getCapacity(a).ratio;
+    });
+  }, [shifts, staffList, statusFilter, roleFilter, dateRange, search, sort]);
+
+  const hasFilters =
+    search.trim() !== '' ||
+    statusFilter !== 'all' ||
+    roleFilter !== 'all' ||
+    dateRange !== 'all';
+
+  const resetFilters = () => {
+    setSearch('');
+    setStatusFilter('all');
+    setRoleFilter('all');
+    setDateRange('all');
+  };
+
+  const cardGrid = (
+    <div className='grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3'>
+      {filtered.map((shift) => (
+        <ShiftCard
+          key={getShiftId(shift)}
+          shift={shift}
+          staffList={staffList}
+          onEdit={(s) => setEditShift(s)}
+          onCancelRequest={(s) => setCancelTarget(s)}
+          onSetStatus={handleSetStatus}
+        />
+      ))}
+    </div>
+  );
+
   return (
     <>
-      <AdminTopbar title='Phân ca làm việc' subtitle='Quản lý ca trực làm việc thực tế của nhân viên thu ngân và thợ rửa xe' />
-      <main className='flex-1 p-8 overflow-y-auto bg-slate-50/50'>
-        <div className='max-w-6xl mx-auto'>
-          
-          {/* Header Action */}
-          <div className='flex items-center justify-between mb-8 border-b border-slate-200/60 pb-3'>
-            <h2 className='font-heading font-black text-slate-800 text-base'>Danh sách ca trực hoạt động</h2>
-            <div className='flex gap-2.5'>
-              <button
+      <AdminTopbar
+        title='Phân ca làm việc'
+        subtitle='Quản lý lịch làm, trạng thái ca và phân bổ nhân sự'
+      />
+
+      <main className='flex-1 overflow-y-auto bg-muted/30 p-4 sm:p-6 lg:p-8'>
+        <div className='mx-auto flex max-w-7xl flex-col gap-5'>
+          {/* Header / actions */}
+          <div className='flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between'>
+            <div>
+              <h2 className='font-heading text-lg font-bold text-foreground'>
+                Danh sách ca làm việc
+              </h2>
+              <p className='mt-0.5 text-sm text-muted-foreground'>
+                Theo dõi lịch làm, trạng thái và sức chứa của từng ca.
+              </p>
+            </div>
+            <div className='flex items-center gap-2.5'>
+              <Button
+                variant='outline'
                 onClick={() => refetch()}
-                className='flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-500 bg-white hover:border-slate-300 transition-all shadow-sm'
+                disabled={isRefetching}
               >
-                <RefreshCw className={`w-3.5 h-3.5 ${isRefetching ? 'animate-spin' : ''}`} /> Làm mới
-              </button>
-              <button
-                onClick={() => setEditShift(null)}
-                className='flex items-center gap-2 bg-indigo-600 text-white text-xs font-black px-4 py-2.5 rounded-xl hover:bg-indigo-700 transition-all shadow-md shadow-indigo-600/10'
-              >
-                <Plus className='w-4 h-4' />Thêm ca trực nhân viên
-              </button>
+                <RefreshCw className={isRefetching ? 'animate-spin' : ''} />
+                Làm mới
+              </Button>
+              <Button onClick={() => setEditShift(null)}>
+                <Plus />
+                Thêm ca làm việc
+              </Button>
             </div>
           </div>
 
-          {/* Shifts grid */}
-          <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
-            {isLoading ? (
-              Array.from({ length: 6 }).map((_, i) => (
-                <div key={i} className='h-36 bg-white rounded-3xl border border-slate-100 animate-pulse shadow-sm' />
-              ))
-            ) : shifts.length === 0 ? (
-              <div className='col-span-full py-20 text-center text-slate-500 font-semibold bg-white rounded-3xl border border-slate-100 shadow-sm max-w-md mx-auto w-full'>
-                Chưa có ca làm việc nào của nhân viên được phân công.
-              </div>
+          {/* KPI summary */}
+          <ShiftKpiCards shifts={shifts} loading={isLoading} />
+
+          {/* Toolbar */}
+          <ShiftToolbar
+            search={search}
+            onSearchChange={setSearch}
+            status={statusFilter}
+            onStatusChange={setStatusFilter}
+            role={roleFilter}
+            onRoleChange={setRoleFilter}
+            roleOptions={roleOptions}
+            dateRange={dateRange}
+            onDateRangeChange={setDateRange}
+            sort={sort}
+            onSortChange={setSort}
+            view={view}
+            onViewChange={setView}
+            resultCount={filtered.length}
+            totalCount={shifts.length}
+          />
+
+          {/* Content */}
+          {isLoading ? (
+            view === 'table' ? (
+              <>
+                <div className='hidden md:block'>
+                  <ShiftTableSkeleton />
+                </div>
+                <div className='md:hidden'>
+                  <ShiftCardSkeleton />
+                </div>
+              </>
             ) : (
-              shifts.map((s) => {
-                const id = s._id ?? s.id ?? '';
-                const staffIdStr = typeof s.staffId === 'object' ? s.staffId?._id ?? s.staffId?.id : s.staffId;
-                const staffUser = staffList.find((u) => (u._id ?? u.id) === staffIdStr);
-                const staffName = staffUser?.fullName ?? staffUser?.name ?? (typeof s.staffId === 'object' ? s.staffId?.fullName ?? s.staffId?.name : '') ?? 'Chưa xác định';
-                const startTime = s.startAt ? new Date(s.startAt).toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' }) : '-';
-                const endTime = s.endAt ? new Date(s.endAt).toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' }) : '-';
-                const isCancelled = s.status === 'cancelled';
-                const isActive = s.status === 'active';
-
-                return (
-                  <div
-                    key={id}
-                    className={`bg-white rounded-3xl border shadow-sm p-6 flex flex-col justify-between gap-4 transition-all hover:shadow-md ${
-                      isCancelled ? 'border-slate-100 bg-slate-50/50 opacity-70' :
-                      isActive ? 'border-indigo-100 ring-2 ring-indigo-500/5' :
-                      'border-slate-100/80'
-                    }`}
-                  >
-                    <div className='flex flex-col gap-2.5'>
-                      {/* Name & status badge */}
-                      <div className='flex items-center justify-between'>
-                        <span className={`inline-flex px-2 py-0.5 rounded-lg text-xs font-bold ${
-                          s.shiftType === 'washer' ? 'bg-indigo-50 text-indigo-700 border border-indigo-100' :
-                          'bg-emerald-50 text-emerald-700 border border-emerald-100'
-                        }`}>
-                          {s.shiftType === 'washer' ? 'Rửa xe' : 'Thu ngân'}
-                        </span>
-                        
-                        <span className={`inline-flex px-2 py-0.5 rounded-lg text-[10px] font-black uppercase ${
-                          s.status === 'active' ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' :
-                          s.status === 'completed' ? 'bg-slate-100 text-slate-500' :
-                          s.status === 'cancelled' ? 'bg-rose-50 text-rose-700 border border-rose-100' :
-                          'bg-blue-50 text-blue-700 border border-blue-100'
-                        }`}>
-                          {s.status === 'active' ? 'Đang chạy' :
-                           s.status === 'completed' ? 'Hoàn thành' :
-                           s.status === 'cancelled' ? 'Đã hủy' : 'Đã lên lịch'}
-                        </span>
-                      </div>
-
-                      {/* Staff user name */}
-                      <div className='flex items-center gap-1.5 text-slate-800 font-bold mt-1.5'>
-                        <User className='w-4 h-4 text-slate-500 shrink-0' />
-                        {staffName}
-                      </div>
-
-                      {/* Rating & Feedback */}
-                      {s.shiftType === 'washer' && (
-                        <div className='flex items-center gap-1.5 text-[11px] font-bold text-amber-600 bg-amber-50/50 px-2 py-0.5 rounded-lg border border-amber-100/50 w-fit'>
-                          <span>⭐ {getMockFeedback(staffIdStr).rating}</span>
-                          <span className='text-slate-300'>|</span>
-                          <span className='text-slate-500'>{getMockFeedback(staffIdStr).count} đánh giá</span>
-                        </div>
-                      )}
-
-                      {/* Station details */}
-                      <div className='flex items-center gap-1.5 text-slate-500 text-xs font-medium'>
-                        <MapPin className='w-3.5 h-3.5 text-slate-500 shrink-0' />
-                        Trạm trực: <span className='font-bold text-slate-700'>{s.stationName ?? 'Chưa xác định'}</span>
-                      </div>
-
-                      {/* Work time */}
-                      <div className='flex items-center gap-1.5 text-slate-500 text-xs font-medium'>
-                        <Clock className='w-3.5 h-3.5 text-slate-500 shrink-0' />
-                        {startTime} – {endTime}
-                      </div>
-                      
-                      {/* Note */}
-                      {s.note && (
-                        <div className='text-[11px] text-slate-500 bg-slate-50 px-2 py-1.5 rounded-xl border border-slate-100/50 mt-1 italic'>
-                          &quot;{s.note}&quot;
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Operational Actions */}
-                    <div className='border-t border-slate-100 pt-3 flex items-center justify-between mt-1'>
-                      <span className='text-[10px] font-bold text-slate-500 uppercase tracking-wide'>
-                        Khả dụng: <span className='font-black text-slate-800'>{s.currentBookings ?? 0} / {s.maxBookings} xe</span>
-                      </span>
-                      
-                      <div className='flex items-center gap-1.5'>
-                        {/* Edit Button */}
-                        {!isCancelled && s.status !== 'completed' && (
-                          <button
-                            onClick={() => setEditShift(s)}
-                            title='Chỉnh sửa ca làm'
-                            className='w-7 h-7 rounded-lg border border-slate-200 flex items-center justify-center hover:border-indigo-300 hover:text-indigo-600 bg-white transition-all'
-                          >
-                            <Pencil className='w-3 h-3' />
-                          </button>
-                        )}
-                        
-                        {/* Cancel/Active toggle button */}
-                        {s.status === 'scheduled' && (
-                          <button
-                            onClick={() => toggleShift.mutate({ id, status: 'cancelled' })}
-                            title='Hủy bỏ ca trực'
-                            className='w-7 h-7 rounded-lg border border-slate-200 flex items-center justify-center hover:border-rose-300 hover:text-rose-600 bg-white transition-all text-slate-500'
-                          >
-                            <Power className='w-3 h-3' />
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })
-            )}
-          </div>
+              <ShiftCardSkeleton />
+            )
+          ) : isError ? (
+            <EmptyState
+              icon={AlertCircle}
+              title='Không tải được danh sách ca'
+              description='Đã xảy ra lỗi khi kết nối tới máy chủ. Vui lòng thử lại.'
+              action={
+                <Button variant='outline' onClick={() => refetch()}>
+                  <RefreshCw />
+                  Thử lại
+                </Button>
+              }
+            />
+          ) : filtered.length === 0 ? (
+            hasFilters ? (
+              <EmptyState
+                icon={SearchX}
+                title='Không có ca nào khớp bộ lọc'
+                description='Thử thay đổi từ khoá hoặc bộ lọc để xem thêm ca làm việc.'
+                action={
+                  <Button variant='outline' onClick={resetFilters}>
+                    Xoá bộ lọc
+                  </Button>
+                }
+              />
+            ) : (
+              <EmptyState
+                icon={CalendarX2}
+                title='Chưa có ca làm việc nào'
+                description='Bắt đầu bằng cách phân ca trực đầu tiên cho nhân viên.'
+                action={
+                  <Button onClick={() => setEditShift(null)}>
+                    <Plus />
+                    Thêm ca làm việc
+                  </Button>
+                }
+              />
+            )
+          ) : view === 'table' ? (
+            <>
+              {/* Desktop: bảng — Mobile: thẻ */}
+              <div className='hidden md:block'>
+                <ShiftTable
+                  shifts={filtered}
+                  staffList={staffList}
+                  onEdit={(s) => setEditShift(s)}
+                  onCancelRequest={(s) => setCancelTarget(s)}
+                  onSetStatus={handleSetStatus}
+                />
+              </div>
+              <div className='md:hidden'>{cardGrid}</div>
+            </>
+          ) : (
+            cardGrid
+          )}
         </div>
       </main>
 
+      {/* Create / Edit modal */}
       {editShift !== false && (
         <ShiftModal
           item={editShift}
           onClose={() => setEditShift(false)}
           onSave={handleSave}
           staffList={staffList}
+          isPending={createShift.isPending || updateShift.isPending}
         />
       )}
+
+      {/* Cancel confirm */}
+      <ShiftCancelDialog
+        shift={cancelTarget}
+        staffList={staffList}
+        open={cancelTarget !== null}
+        onOpenChange={(open) => {
+          if (!open) setCancelTarget(null);
+        }}
+        onConfirm={handleCancelConfirm}
+        isPending={toggleShift.isPending}
+      />
     </>
   );
 }

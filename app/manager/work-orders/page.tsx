@@ -64,7 +64,7 @@ interface WorkOrderData {
 
 export default function ManagerWorkOrdersPage() {
   const qc = useQueryClient();
-  const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'in_progress' | 'completed' | 'fifo'>('all');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'in_progress' | 'fifo'>('all');
   // Ảnh kiểm định chỉ để XEM ở trang Vận hành (thu ngân chụp ảnh trước khi rửa
   // ở trang Lịch hẹn, thợ chụp ảnh sau khi rửa). Lưu chung localStorage theo orderId.
   const [inspectionPhotos] = useState<Record<string, { preWash: string[]; postWash: string[] }>>(() => {
@@ -177,9 +177,6 @@ export default function ManagerWorkOrdersPage() {
       if (statusFilter === 'in_progress') {
         return wo.status === 'in_progress' || wo.status === 'returned';
       }
-      if (statusFilter === 'completed') {
-        return wo.status === 'quality_check';
-      }
       return true;
     });
   }, [allWorkOrders, statusFilter, fifoQueue]);
@@ -245,7 +242,7 @@ export default function ManagerWorkOrdersPage() {
           {/* Status Tabs Filter */}
           <div className='flex items-center justify-between mb-8 border-b border-slate-200 pb-2'>
             <div className='flex gap-6'>
-              {(['all', 'pending', 'in_progress', 'completed', 'fifo'] as const).map((tab) => (
+              {(['all', 'pending', 'in_progress', 'fifo'] as const).map((tab) => (
                 <button
                   key={tab}
                   onClick={() => setStatusFilter(tab)}
@@ -256,7 +253,6 @@ export default function ManagerWorkOrdersPage() {
                   {tab === 'all' && 'Tất cả phiếu'}
                   {tab === 'pending' && 'Chờ giao thợ'}
                   {tab === 'in_progress' && 'Đang rửa xe'}
-                  {tab === 'completed' && 'Đã rửa xong (Chờ QC)'}
                   {tab === 'fifo' && 'Hàng đợi FIFO (Hôm nay)'}
                   
                   {statusFilter === tab && (
@@ -494,11 +490,14 @@ export default function ManagerWorkOrdersPage() {
                   className='w-full appearance-none bg-white border border-slate-200 rounded-xl px-4 py-3 pr-10 text-sm font-semibold text-slate-700 focus:outline-none focus:border-indigo-500 transition-all disabled:bg-slate-50 disabled:text-slate-400'
                 >
                   <option value=''>-- Chọn nhân viên đang rảnh --</option>
-                  {availableWashers.map((w) => (
-                    <option key={w._id} value={w._id}>
-                      {w.fullName ?? w.name} ({w.email})
-                    </option>
-                  ))}
+                  {availableWashers.map((w) => {
+                    const washerId = w._id ?? w.id ?? '';
+                    return (
+                      <option key={washerId} value={washerId}>
+                        {w.fullName ?? w.name} ({w.email})
+                      </option>
+                    );
+                  })}
                 </select>
                 <ChevronDown className='absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none' />
               </div>
