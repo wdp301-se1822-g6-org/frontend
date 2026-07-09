@@ -60,24 +60,6 @@ export function HeroSection() {
                 Khám phá dịch vụ
               </Button>
             </div>
-
-            {/* Subtle Stats */}
-            <div className='mt-7 grid grid-cols-3 gap-3 sm:gap-6 border-t border-border pt-6 w-full animate-fade-in-up [animation-delay:800ms] opacity-0 fill-mode-forwards'>
-              {[
-                { value: '15K+', label: 'Khách hàng' },
-                { value: '60K+', label: 'Lượt dịch vụ' },
-                { value: '4.9/5', label: 'Đánh giá' },
-              ].map((s) => (
-                <div key={s.label}>
-                  <div className='text-2xl font-bold text-foreground'>
-                    {s.value}
-                  </div>
-                  <div className='text-[10px] font-semibold text-muted-foreground uppercase mt-1 tracking-widest'>
-                    {s.label}
-                  </div>
-                </div>
-              ))}
-            </div>
           </div>
 
           {/* Right Visual - Triple Image Staggered Stack */}

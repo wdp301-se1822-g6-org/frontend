@@ -67,23 +67,20 @@ const socialIcons = [
 
 const footerLinks = {
   services: [
-    { label: 'Gói Kim Cương', href: '#booking' },
-    { label: 'Gói Vàng', href: '#booking' },
-    { label: 'Gói Bạc', href: '#booking' },
-    { label: 'Gói Nhanh', href: '#booking' },
-    { label: 'Thẻ quà tặng', href: '#' },
+    { label: 'Đặt lịch rửa xe', href: '/booking' },
+    { label: 'Hạng thành viên', href: '/#loyalty' },
+    { label: 'Bảng dịch vụ', href: '/#services' },
   ],
   support: [
     { label: 'Câu hỏi thường gặp', href: '#' },
     { label: 'Chính sách bảo mật', href: '#' },
     { label: 'Điều khoản dịch vụ', href: '#' },
-    { label: 'Liên hệ hỗ trợ', href: '#contact' },
   ],
 };
 
 export function Footer() {
   return (
-    <footer className='bg-background text-foreground px-4 border-t border-border'>
+    <footer id='contact' className='bg-background text-foreground px-4 border-t border-border scroll-mt-20'>
       <div className='max-w-7xl mx-auto'>
         {/* Main footer */}
         <div className='py-10 sm:py-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 sm:gap-10'>
@@ -97,7 +94,7 @@ export function Footer() {
                 height={40}
                 className='rounded-full object-cover border border-border shadow-sm'
               />
-              <span className='font-heading font-black text-2xl tracking-tight text-foreground'>
+              <span className='font-heading font-bold text-2xl tracking-tight text-foreground'>
                 WAVE
               </span>
             </div>
@@ -121,7 +118,7 @@ export function Footer() {
 
           {/* Services */}
           <div>
-            <h4 className='font-heading font-semibold text-black mb-4'>Dịch vụ</h4>
+            <h4 className='font-heading font-semibold text-foreground mb-4'>Dịch vụ</h4>
             <ul className='space-y-2.5'>
               {footerLinks.services.map((link) => (
                 <li key={link.label}>
@@ -138,7 +135,7 @@ export function Footer() {
 
           {/* Support */}
           <div>
-            <h4 className='font-heading font-semibold text-black mb-4'>Hỗ trợ</h4>
+            <h4 className='font-heading font-semibold text-foreground mb-4'>Hỗ trợ</h4>
             <ul className='space-y-2.5'>
               {footerLinks.support.map((link) => (
                 <li key={link.label}>
@@ -155,7 +152,7 @@ export function Footer() {
 
           {/* Contact */}
           <div>
-            <h4 className='font-heading font-semibold text-black mb-4'>Liên hệ</h4>
+            <h4 className='font-heading font-semibold text-foreground mb-4'>Liên hệ</h4>
             <ul className='space-y-3'>
               <li className='flex items-start gap-3 text-sm text-foreground/60 font-semibold'>
                 <MapPin className='w-5 h-5 text-primary shrink-0 mt-0.5' />
@@ -163,7 +160,7 @@ export function Footer() {
               </li>
               <li className='flex items-center gap-3 text-sm text-foreground/60 font-semibold'>
                 <Clock className='w-5 h-5 text-primary shrink-0' />
-                07:00 – 21:00 (Thứ 2 – Chủ nhật)
+                08:00 – 12:00 & 14:00 – 17:00 (Thứ 2 – Chủ nhật)
               </li>
               <li className='flex items-center gap-3 text-sm text-foreground/60 font-semibold'>
                 <Phone className='w-5 h-5 text-primary shrink-0' />

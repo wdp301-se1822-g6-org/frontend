@@ -155,18 +155,20 @@ export function AboutSection() {
               />
               <div className='absolute inset-0 bg-linear-to-t from-primary/30 to-transparent' />
             </div>
-            <div className='flex items-center gap-4 bg-white rounded-2xl p-4 shadow-xl shadow-primary/5 border border-border/50'>
-              <div className='w-12 h-12 rounded-xl bg-primary flex items-center justify-center shrink-0 shadow-lg shadow-primary/20'>
-                <Headphones className='w-6 h-6 text-white' />
+            <div className='flex items-center gap-4 bg-card rounded-2xl p-4 shadow-sm border border-border'>
+              <div className='w-12 h-12 rounded-xl bg-primary flex items-center justify-center shrink-0'>
+                <Headphones className='w-6 h-6 text-primary-foreground' />
               </div>
               <div>
-                <p className='text-xs uppercase tracking-widest text-primary'>
-                  Hỗ trợ 24/7
+                <p className='text-xs uppercase tracking-[0.08em] text-primary'>
+                  Hỗ trợ khách hàng
                 </p>
-                <p className='text-sm font-bold text-foreground'>
-                  Luôn sẵn sàng hỗ lắng nghe bạn
+                <p className='text-sm font-semibold text-foreground'>
+                  Luôn sẵn sàng lắng nghe bạn
                 </p>
-                <p className='text-xs text-foreground/50'>Hotline: 1800 1234</p>
+                <p className='text-xs text-muted-foreground'>
+                  Nhận xe 08:00 – 12:00 & 14:00 – 17:00 mỗi ngày
+                </p>
               </div>
             </div>
           </div>

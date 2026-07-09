@@ -26,7 +26,7 @@ const packages: WashPackage[] = [
     pricePerWash: '150,000đ',
     priceMonthly: '499,000đ',
     highlight: true,
-    gradient: 'from-cyan-500 to-blue-600',
+    gradient: 'from-primary to-primary',
     features: [
       'Rửa áp lực cao toàn xe',
       'Phủ nano bảo vệ sơn',

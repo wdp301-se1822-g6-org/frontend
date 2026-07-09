@@ -13,7 +13,7 @@ const features = [
     icon: CalendarCheck,
     title: 'Đặt lịch trực tuyến',
     desc: 'Chọn ngày, giờ và dịch vụ phù hợp ngay trên web hoặc app. Nhận xác nhận tức thì, không cần gọi điện.',
-    color: 'bg-cyan-50 text-cyan-600',
+    color: 'bg-accent text-primary',
   },
   {
     icon: History,
@@ -25,7 +25,7 @@ const features = [
     icon: Car,
     title: 'Quản lý xe cá nhân',
     desc: 'Lưu thông tin nhiều xe, nhận gợi ý dịch vụ phù hợp với từng loại xe và theo dõi tình trạng xe.',
-    color: 'bg-purple-50 text-purple-600',
+    color: 'bg-accent text-primary',
   },
   {
     icon: Gift,

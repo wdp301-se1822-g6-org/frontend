@@ -16,7 +16,7 @@ const steps = [
     icon: UserPlus,
     title: 'Tạo tài khoản',
     desc: 'Đăng ký miễn phí chỉ trong 1 phút. Thêm thông tin xe và bắt đầu hành trình thành viên của bạn.',
-    badge: 'from-cyan-400 to-cyan-500',
+    badge: 'from-primary to-primary',
   },
   {
     step: '02',
@@ -30,7 +30,7 @@ const steps = [
     icon: Star,
     title: 'Tích điểm & nâng hạng',
     desc: 'Mỗi lần rửa xe tích lũy điểm. Đổi điểm lấy ưu đãi và tự động nâng hạng thành viên.',
-    badge: 'from-purple-400 to-fuchsia-500',
+    badge: 'from-primary to-primary',
   },
 ];
 
@@ -42,23 +42,23 @@ export function HowItWorksSection() {
       {/* Decorative background waves */}
       <div className='pointer-events-none absolute inset-0'>
         <div className='absolute -top-32 -left-24 w-md h-112 rounded-full bg-primary/25 blur-3xl' />
-        <div className='absolute -bottom-32 -right-24 w-md h-112 rounded-full bg-fuchsia-400/25 blur-3xl' />
-        <div className='absolute top-1/3 left-1/2 -translate-x-1/2 w-88 h-88 rounded-full bg-purple-300/20 blur-3xl' />
+        <div className='absolute -bottom-32 -right-24 w-md h-112 rounded-full bg-primary/10 blur-3xl' />
+        <div className='absolute top-1/3 left-1/2 -translate-x-1/2 w-88 h-88 rounded-full bg-primary/10 blur-3xl' />
         {/* Dot grid */}
         <div className='absolute inset-0 bg-[radial-gradient(circle_at_center,var(--primary)_1px,transparent_1px)] bg-size-[28px_28px] opacity-[0.07]' />
       </div>
       {/* Top & bottom accent lines */}
       <div className='absolute top-0 left-0 w-full h-px bg-linear-to-r from-transparent via-primary/30 to-transparent' />
-      <div className='absolute bottom-0 left-0 w-full h-px bg-linear-to-r from-transparent via-fuchsia-400/30 to-transparent' />
+      <div className='absolute bottom-0 left-0 w-full h-px bg-linear-to-r from-transparent via-primary/20 to-transparent' />
 
       <div className='max-w-5xl mx-auto relative z-10'>
         <div className='text-center mb-12'>
-          <div className='inline-flex items-center gap-2 bg-primary/10 text-primary text-[10px] font-black px-4 py-2 rounded-full mb-5 uppercase tracking-[0.2em]'>
+          <div className='inline-flex items-center gap-2 bg-primary/10 text-primary text-[10px] font-bold px-4 py-2 rounded-full mb-5 uppercase tracking-[0.2em]'>
             Bắt đầu dễ dàng
           </div>
           <h1 className='text-[1.75rem] sm:text-4xl lg:text-5xl font-heading text-foreground leading-[1.15] mb-4 tracking-tight animate-fade-in-up [animation-delay:200ms] opacity-0 fill-mode-forwards'>
             Chỉ 3 bước để{' '}
-            <span className='bg-gradient-to-r from-primary via-purple-500 to-fuchsia-500 bg-clip-text text-transparent'>
+            <span className='text-primary'>
               bắt đầu
             </span>
           </h1>
@@ -100,11 +100,11 @@ export function HowItWorksSection() {
                     />
                   </div>
                   {/* Numbered badge */}
-                  <span className='absolute -top-2 -right-2 w-9 h-9 rounded-full bg-background text-foreground text-xs font-black flex items-center justify-center shadow-md ring-2 ring-primary/30'>
+                  <span className='absolute -top-2 -right-2 w-9 h-9 rounded-full bg-background text-foreground text-xs font-bold flex items-center justify-center shadow-md ring-2 ring-primary/30'>
                     {s.step}
                   </span>
                 </div>
-                <h3 className='font-heading text-foreground font-black text-lg mb-2 tracking-tight'>
+                <h3 className='font-heading text-foreground font-bold text-lg mb-2 tracking-tight'>
                   {s.title}
                 </h3>
                 <p className='text-muted-foreground text-sm font-medium leading-relaxed max-w-xs'>
@@ -118,7 +118,7 @@ export function HowItWorksSection() {
         <div className='text-center mt-12 flex flex-col items-center gap-3'>
           <button
             onClick={() => router.push('/register')}
-            className='group relative inline-flex items-center gap-2.5 px-7 h-12 rounded-full text-white text-sm font-semibold bg-linear-to-r from-blue-500 via-purple-500 to-fuchsia-500 shadow-[0_10px_30px_-10px_rgba(168,85,247,0.7)] hover:shadow-[0_15px_40px_-10px_rgba(168,85,247,0.9)] hover:scale-[1.02] active:scale-95 transition-all'
+            className='group relative inline-flex items-center gap-2.5 px-7 h-12 rounded-full text-primary-foreground text-sm font-semibold bg-primary hover:bg-primary/90 transition-colors'
           >
             <Rocket className='w-4 h-4' />
             <span>Đăng ký miễn phí ngay</span>
