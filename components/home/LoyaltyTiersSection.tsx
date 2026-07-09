@@ -3,12 +3,11 @@
 import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
-import { Check, Crown, Star, CalendarDays, Sparkles } from 'lucide-react';
+import { Check, Crown, Star, CalendarDays, Sparkles, Gift } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getTierConfigs } from '@/lib/customer-api';
 import { formatNumber } from '@/lib/format';
 
-/** Shape thật của GET /tier-configs (xem BE tier-config). */
 interface TierConfig {
   id: string;
   tierName: string; // None | Bronze | Silver | Gold
@@ -19,15 +18,37 @@ interface TierConfig {
   isActive: boolean;
 }
 
-// Nhãn tiếng Việt + tông màu cho từng hạng. "None" là hạng khởi điểm.
 const TIER_META: Record<
   string,
-  { label: string; icon: typeof Star; highlight?: boolean }
+  { label: string; icon: typeof Star; accent: string; highlight?: boolean }
 > = {
-  None: { label: 'Cơ bản', icon: Star },
-  Bronze: { label: 'Bronze', icon: Star },
-  Silver: { label: 'Silver', icon: Star },
-  Gold: { label: 'Gold', icon: Crown, highlight: true },
+  None: {
+    label: 'Basic',
+    icon: Star,
+    accent: 'bg-muted text-muted-foreground',
+  },
+  Bronze: {
+    label: 'Bronze',
+    icon: Star,
+    accent: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
+  },
+  Silver: {
+    label: 'Silver',
+    icon: Star,
+    accent: 'bg-slate-400/15 text-slate-500 dark:text-slate-300',
+  },
+  Gold: {
+    label: 'Gold',
+    icon: Crown,
+    accent: 'bg-primary/10 text-primary',
+    highlight: true,
+  },
+};
+
+const DEFAULT_META = {
+  icon: Star,
+  accent: 'bg-muted text-muted-foreground',
+  highlight: false,
 };
 
 export function LoyaltyTiersSection() {
@@ -48,77 +69,93 @@ export function LoyaltyTiersSection() {
   return (
     <section
       id='loyalty'
-      className='py-12 sm:py-16 bg-background px-4 relative overflow-hidden'
+      className='relative overflow-hidden bg-background px-4 py-12 sm:py-16'
     >
-      <div className='max-w-7xl mx-auto relative z-10'>
-        <div className='text-center mb-12'>
-          <div className='inline-flex items-center gap-2 bg-primary/10 text-primary text-xs font-semibold px-4 py-2 rounded-full mb-6 uppercase tracking-[0.08em]'>
-            <Crown className='w-4 h-4' />
+      {/* Vệt sáng nền, thuần trang trí */}
+      <div
+        aria-hidden
+        className='pointer-events-none absolute -top-24 left-1/2 h-72 w-2xl -translate-x-1/2 rounded-full bg-primary/5 blur-3xl'
+      />
+
+      <div className='relative z-10 mx-auto max-w-7xl'>
+        <div className='mb-12 text-center'>
+          <div className='mb-6 inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-2 text-xs font-semibold tracking-[0.08em] text-primary uppercase'>
+            <Crown className='size-4' />
             Chương trình thành viên
           </div>
-          <h2 className='text-[1.75rem] sm:text-4xl lg:text-5xl font-heading font-semibold text-foreground leading-[1.15] mb-4 tracking-tight'>
+          <h2 className='mb-4 font-heading text-[1.75rem] leading-[1.15] font-semibold tracking-tight text-foreground sm:text-4xl lg:text-5xl'>
             Hạng thành viên & <span className='text-primary'>đặc quyền</span>
           </h2>
-          <p className='text-muted-foreground max-w-2xl mx-auto text-base sm:text-lg'>
-            Tích điểm qua mỗi lần rửa để tự động lên hạng. Hạng càng cao,
-            ưu đãi giờ vàng và cửa sổ đặt lịch càng lớn.
+          <p className='mx-auto max-w-2xl text-base text-muted-foreground sm:text-lg'>
+            Tích điểm qua mỗi lần rửa để tự động lên hạng. Hạng càng cao, ưu đãi
+            giờ vàng và cửa sổ đặt lịch càng lớn.
           </p>
         </div>
 
         {isLoading ? (
-          <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6'>
+          <div className='grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 lg:gap-6'>
             {Array.from({ length: 4 }).map((_, i) => (
               <div
                 key={i}
-                className='h-80 rounded-xl border border-border bg-muted/40 animate-pulse'
+                className='h-104 animate-pulse rounded-2xl border border-border bg-muted/40'
               />
             ))}
           </div>
         ) : isError || tiers.length === 0 ? (
-          <div className='text-center py-12 border border-dashed border-border rounded-xl bg-muted/30 max-w-md mx-auto'>
+          <div className='mx-auto max-w-md rounded-2xl border border-dashed border-border bg-muted/30 py-12 text-center'>
             <p className='text-sm text-muted-foreground'>
               Chưa tải được thông tin hạng thành viên. Vui lòng thử lại sau.
             </p>
           </div>
         ) : (
-          <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6'>
+          <div className='grid grid-cols-1 items-stretch gap-5 sm:grid-cols-2 lg:grid-cols-4 lg:gap-6'>
             {tiers.map((tier) => {
               const meta = TIER_META[tier.tierName] ?? {
+                ...DEFAULT_META,
                 label: tier.tierName,
-                icon: Star,
               };
               const Icon = meta.icon;
               const highlight = meta.highlight;
+
               return (
-                <div
+                <article
                   key={tier.id}
                   className={cn(
-                    'relative rounded-xl border flex flex-col overflow-hidden transition-colors bg-card',
+                    'group relative flex flex-col overflow-hidden rounded-2xl border bg-card transition-all duration-200 hover:-translate-y-1',
                     highlight
-                      ? 'border-primary ring-1 ring-primary'
-                      : 'border-border',
+                      ? 'border-primary shadow-lg shadow-primary/10 ring-1 ring-primary/20'
+                      : 'border-border shadow-xs hover:border-primary/30 hover:shadow-md',
                   )}
                 >
+                  {/* Nền loang nhẹ cho hạng cao nhất */}
                   {highlight && (
-                    <div className='absolute top-3 right-3 text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-primary text-primary-foreground'>
-                      Hạng cao nhất
-                    </div>
+                    <div
+                      aria-hidden
+                      className='pointer-events-none absolute inset-x-0 top-0 h-40 bg-linear-to-b from-primary/8 to-transparent'
+                    />
                   )}
 
                   {/* Header */}
-                  <div className='p-6 border-b border-border'>
-                    <div className='flex items-center gap-2 mb-3'>
-                      <Icon
-                        className={cn(
-                          'w-5 h-5',
-                          highlight ? 'text-primary' : 'text-muted-foreground',
-                        )}
-                      />
-                      <h3 className='font-heading text-xl font-semibold text-foreground'>
-                        {meta.label}
-                      </h3>
+                  <div className='relative border-b border-border p-6 pb-5'>
+                    {highlight && (
+                      <div className='absolute top-6 right-6 rounded-full bg-primary px-2.5 py-1 text-[11px] leading-none font-semibold text-primary-foreground shadow-sm'>
+                        Hạng cao nhất
+                      </div>
+                    )}
+
+                    <div
+                      className={cn(
+                        'mb-4 flex size-11 items-center justify-center rounded-xl',
+                        meta.accent,
+                      )}
+                    >
+                      <Icon className='size-5' />
                     </div>
-                    <p className='text-sm text-muted-foreground'>
+
+                    <h3 className='font-heading text-xl font-semibold text-foreground'>
+                      {meta.label}
+                    </h3>
+                    <p className='mt-1 text-sm text-muted-foreground'>
                       {tier.minLoyaltyPoints === 0
                         ? 'Áp dụng ngay khi đăng ký'
                         : `Từ ${formatNumber(tier.minLoyaltyPoints)} điểm tích lũy`}
@@ -126,44 +163,82 @@ export function LoyaltyTiersSection() {
                   </div>
 
                   {/* Perks — chỉ nêu đúng cơ chế BE */}
-                  <div className='flex-1 p-5 flex flex-col gap-4'>
-                    <ul className='space-y-2.5 flex-1 text-sm text-foreground'>
-                      <li className='flex items-start gap-2'>
-                        <Check className='w-4 h-4 shrink-0 mt-0.5 text-primary' />
-                        Tích {tier.pointsPer1000Vnd} điểm / 1.000đ chi tiêu
+                  <div className='relative flex flex-1 flex-col gap-5 p-6'>
+                    <ul className='flex-1 space-y-3.5 text-sm text-foreground/90'>
+                      <li className='flex items-start gap-3'>
+                        <span className='mt-px flex size-5 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary'>
+                          <Check
+                            className='size-3'
+                            strokeWidth={3}
+                          />
+                        </span>
+                        <span>
+                          Tích{' '}
+                          <span className='font-semibold text-foreground'>
+                            {tier.pointsPer1000Vnd} điểm
+                          </span>{' '}
+                          / 1.000đ chi tiêu
+                        </span>
                       </li>
-                      <li className='flex items-start gap-2'>
-                        <Sparkles className='w-4 h-4 shrink-0 mt-0.5 text-warning' />
-                        Giảm {tier.discountPercent}% khi đặt khung giờ vàng
+                      <li className='flex items-start gap-3'>
+                        <span className='mt-px flex size-5 shrink-0 items-center justify-center rounded-md bg-warning/15 text-warning'>
+                          <Sparkles className='size-3' />
+                        </span>
+                        <span>
+                          Giảm{' '}
+                          <span className='font-semibold text-foreground'>
+                            {tier.discountPercent}%
+                          </span>{' '}
+                          khi đặt khung giờ vàng
+                        </span>
                       </li>
-                      <li className='flex items-start gap-2'>
-                        <CalendarDays className='w-4 h-4 shrink-0 mt-0.5 text-primary' />
-                        Đặt lịch trước tối đa {tier.bookingWindowDays} ngày
+                      <li className='flex items-start gap-3'>
+                        <span className='mt-px flex size-5 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary'>
+                          <CalendarDays className='size-3' />
+                        </span>
+                        <span>
+                          Đặt lịch trước tối đa{' '}
+                          <span className='font-semibold text-foreground'>
+                            {tier.bookingWindowDays} ngày
+                          </span>
+                        </span>
                       </li>
-                      <li className='flex items-start gap-2 text-muted-foreground'>
-                        <Check className='w-4 h-4 shrink-0 mt-0.5 text-primary' />
-                        Voucher rửa miễn phí sau mỗi 10 lượt rửa hợp lệ
+                      <li className='flex items-start gap-3 text-muted-foreground'>
+                        <span className='mt-px flex size-5 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground'>
+                          <Gift className='size-3' />
+                        </span>
+                        <span>
+                          Voucher rửa miễn phí sau mỗi 10 lượt rửa hợp lệ
+                        </span>
                       </li>
                     </ul>
 
                     <Button
                       onClick={() => router.push('/register')}
                       variant={highlight ? 'default' : 'outline'}
-                      className='w-full rounded-lg text-sm font-semibold'
+                      className='h-10 w-full rounded-full text-sm font-semibold'
                     >
                       Bắt đầu ngay
                     </Button>
                   </div>
-                </div>
+                </article>
               );
             })}
           </div>
         )}
 
-        <p className='text-center text-sm text-muted-foreground mt-10'>
-          Hạng thành viên tự động nâng theo tổng điểm tích lũy. Ưu đãi giảm giá
-          chỉ áp dụng trong khung giờ vàng.
-        </p>
+        <div className='mt-12 flex justify-center'>
+          <p className='inline-flex items-center gap-2.5 text-muted-foreground'>
+            <Sparkles className='size-4 text-amber-500' />
+            <span>
+              Ưu đãi giảm giá được áp dụng trong{' '}
+              <span className='font-semibold text-foreground'>
+                khung giờ vàng
+              </span>
+              .
+            </span>
+          </p>
+        </div>
       </div>
     </section>
   );
