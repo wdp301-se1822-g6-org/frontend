@@ -59,8 +59,11 @@ export function FeaturesSection() {
             <ShieldCheck className='w-4 h-4' />
             Platform Excellence
           </div>
-          <h1 className='text-[1.75rem] sm:text-4xl lg:text-5xl font-heading text-foreground leading-[1.15] mb-4 tracking-tight animate-fade-in-up [animation-delay:200ms] opacity-0 fill-mode-forwards'>
-            Giải pháp <span className='text-primary'>Toàn diện</span>
+          <h1 className='text-[1.75rem] sm:text-4xl lg:text-5xl font-heading text-foreground leading-[1.15] mb-4 animate-fade-in-up [animation-delay:200ms] opacity-0 fill-mode-forwards'>
+            Giải pháp{' '}
+            <span className='bg-linear-to-r from-primary via-purple-500 to-fuchsia-500 bg-clip-text text-transparent'>
+              toàn diện
+            </span>
           </h1>
           <p className='text-foreground/50 max-w-2xl mx-auto text-base sm:text-lg lg:text-xl font-medium leading-relaxed animate-fade-in-up [animation-delay:400ms] opacity-0 fill-mode-forwards'>
             Tích hợp công nghệ AI và quy trình tự động hóa để mang lại trải
@@ -77,7 +80,7 @@ export function FeaturesSection() {
                 <div className='w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center text-primary mb-4 group-hover:scale-110 group-hover:rotate-6 transition-transform'>
                   <CalendarCheck className='w-8 h-8' />
                 </div>
-                <h3 className='font-heading text-2xl sm:text-3xl font-semibold text-foreground mb-4 tracking-tight'>
+                <h3 className='font-heading text-2xl sm:text-3xl font-semibold text-foreground mb-4'>
                   {features[0].title}
                 </h3>
               </div>
@@ -119,7 +122,7 @@ export function FeaturesSection() {
                 <div className='w-14 h-14 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform'>
                   <Car className='w-7 h-7' />
                 </div>
-                <h3 className='font-heading text-2xl lg:text-3xl font-semibold mb-3 tracking-tight'>
+                <h3 className='font-heading text-2xl lg:text-3xl font-semibold mb-3'>
                   {features[2].title}
                 </h3>
               </div>
@@ -132,10 +135,10 @@ export function FeaturesSection() {
           {/* Small Cards - Bottom */}
           <div className='bg-white rounded-[2rem] sm:rounded-[2.5rem] p-6 sm:p-8 shadow-xl shadow-primary/5 border border-border/50 group hover:-translate-y-2 transition-all duration-500 animate-fade-in-up [animation-delay:700ms] opacity-0 fill-mode-forwards relative overflow-hidden flex flex-col'>
             <div className='flex items-center gap-4 mb-4'>
-              <div className='w-12 h-12 bg-secondary/10 rounded-xl flex items-center justify-center text-secondary group-hover:scale-110 transition-transform'>
+              <div className='w-12 h-12 bg-pink-50 rounded-xl flex items-center justify-center text-pink-400 group-hover:scale-110 transition-transform'>
                 <History className='w-6 h-6' />
               </div>
-              <h3 className='font-heading text-lg font-semibold text-foreground tracking-tight'>
+              <h3 className='font-heading text-lg font-semibold text-foreground'>
                 {features[1].title}
               </h3>
             </div>
@@ -158,7 +161,7 @@ export function FeaturesSection() {
               <div className='w-12 h-12 bg-yellow-500/10 rounded-xl flex items-center justify-center text-yellow-600 group-hover:scale-110 transition-transform'>
                 <Gift className='w-6 h-6' />
               </div>
-              <h3 className='font-heading text-lg font-semibold text-foreground tracking-tight'>
+              <h3 className='font-heading text-lg font-semibold text-foreground '>
                 {features[3].title}
               </h3>
             </div>

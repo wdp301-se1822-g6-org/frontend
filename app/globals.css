@@ -116,7 +116,7 @@
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.21 0.02 256);
   /* Single brand color - confident, not neon */
-  --primary: oklch(0.52 0.13 252);
+  --primary: oklch(49.732% 0.18551 265.978);
   --primary-foreground: oklch(0.99 0.005 255);
   /* Secondary is a neutral surface, not a second loud color */
   --secondary: oklch(0.968 0.004 255);

@@ -1,13 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import {
-  CheckCircle2,
-  Leaf,
-  Zap,
-  Headphones,
-  Award,
-} from 'lucide-react';
+import { Leaf, Zap, Headphones, Award, Check } from 'lucide-react';
 import { useRef } from 'react';
 
 export function AboutSection() {
@@ -97,9 +91,9 @@ export function AboutSection() {
                 </div>
               </div>
 
-              <div className='flex items-start gap-3 bg-secondary/5 rounded-2xl p-4 border border-secondary/10'>
-                <div className='w-9 h-9 rounded-xl bg-secondary/10 flex items-center justify-center shrink-0'>
-                  <Zap className='w-4 h-4 text-secondary' />
+              <div className='flex items-start gap-3 bg-primary/5 rounded-2xl p-4 border border-primary/10'>
+                <div className='w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center shrink-0'>
+                  <Zap className='w-4 h-4 text-primary' />
                 </div>
                 <div>
                   <p className='text-sm font-semibold text-foreground'>
@@ -124,7 +118,7 @@ export function AboutSection() {
                   key={item}
                   className='flex items-center gap-3'
                 >
-                  <CheckCircle2 className='w-5 h-5 text-primary shrink-0' />
+                  <Check className='w-5 h-5 text-primary shrink-0' />
                   <span className='text-sm font-semibold text-foreground/70'>
                     {item}
                   </span>

@@ -8,23 +8,24 @@ import { HowItWorksSection } from '@/components/home/HowItWorksSection';
 import { HomeGuard } from '@/components/home/HomeGuard';
 import { Footer } from '@/components/home/Footer';
 import { ScrollToTop } from '@/components/home/ScrollToTop';
+import { ShowcaseSection } from '@/components/home/ShowcaseSection';
+import { BeforeAfterSection } from '@/components/home/BeforeAfterSection';
+import { BrandMarquee } from '@/components/home/BrandMarquee';
 
-// Landing chỉ giữ các section phản ánh dữ liệu/dịch vụ có thật.
-// Đã bỏ các section dựng nội dung không có nguồn: BrandMarquee (logo xe sang
-// "trusted by"), TestimonialsSection (review + số liệu 4.9/10K/50K bịa),
-// AmenitiesSection (tiện ích không tồn tại), BeforeAfterSection, ShowcaseSection,
-// ContactSection (4 chi nhánh + form gửi giả). Liên hệ nay nằm ở Footer.
 export default function HomePage() {
   return (
     <main className='flex flex-col'>
       <HomeGuard />
       <Navbar />
       <HeroSection />
+      <BrandMarquee />
       <AboutSection />
       <MembershipBanner />
+      <BeforeAfterSection />
       <LoyaltyTiersSection />
       <FeaturesSection />
       <HowItWorksSection />
+      <ShowcaseSection />
       <Footer />
       <ScrollToTop />
     </main>

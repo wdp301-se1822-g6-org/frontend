@@ -1,8 +1,4 @@
-/**
- * Hạng thành viên loyalty. Gom logic màu/nhãn đang lặp trong `Navbar.tsx`.
- * Màu kim loại (slate cho Silver, amber cho Gold) là lựa chọn thiết kế có chủ đích
- * cho hạng thành viên - giữ tập trung tại đây, không rải rác trong page.
- */
+
 export const TIERS = {
   MEMBER: 'member',
   SILVER: 'silver',
