@@ -83,10 +83,10 @@ export function LoyaltyTiersSection() {
             <Crown className='size-4' />
             Chương trình thành viên
           </div>
-          <h2 className='mb-4 font-heading text-[1.75rem] leading-[1.15] font-semibold tracking-tight text-foreground sm:text-4xl lg:text-5xl'>
+          <h1 className='font-heading text-[1.75rem] sm:text-4xl lg:text-5xl text-foreground leading-tight tracking-tight'>
             Hạng thành viên & <span className='text-primary'>đặc quyền</span>
-          </h2>
-          <p className='mx-auto max-w-2xl text-base text-muted-foreground sm:text-lg'>
+          </h1>
+          <p className='mx-auto max-w-2xl text-base text-muted-foreground sm:text-lg pt-5'>
             Tích điểm qua mỗi lần rửa để tự động lên hạng. Hạng càng cao, ưu đãi
             giờ vàng và cửa sổ đặt lịch càng lớn.
           </p>

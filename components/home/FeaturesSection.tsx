@@ -60,7 +60,10 @@ export function FeaturesSection() {
             Platform Excellence
           </div>
           <h1 className='text-[1.75rem] sm:text-4xl lg:text-5xl font-heading text-foreground leading-[1.15] mb-4 animate-fade-in-up [animation-delay:200ms] opacity-0 fill-mode-forwards'>
-            Giải pháp <span className='text-primary'>Toàn diện</span>
+            Giải pháp{' '}
+            <span className='bg-linear-to-r from-primary via-purple-500 to-fuchsia-500 bg-clip-text text-transparent'>
+              toàn diện
+            </span>
           </h1>
           <p className='text-foreground/50 max-w-2xl mx-auto text-base sm:text-lg lg:text-xl font-medium leading-relaxed animate-fade-in-up [animation-delay:400ms] opacity-0 fill-mode-forwards'>
             Tích hợp công nghệ AI và quy trình tự động hóa để mang lại trải
