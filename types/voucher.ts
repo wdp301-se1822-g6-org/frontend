@@ -4,7 +4,8 @@ export type VoucherStatus = 'unused' | 'used' | 'expired';
 
 export interface Voucher {
   id: string;
-  customerId: string;
+  /** Trống/không có = voucher pool chưa ai nhận. */
+  customerId?: string;
   customerName?: string;
   customerEmail?: string;
   code: string;

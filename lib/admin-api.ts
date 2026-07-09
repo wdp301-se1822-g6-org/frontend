@@ -138,21 +138,59 @@ export const adminAssignWasher = (id: string, washerId: string) =>
 // ─── Vouchers (Admin / Manager) ────────────────────────
 export interface GrantVoucherPayload {
   customerId: string;
-  reason: string;
   discountCapVnd?: number;
   expiresAt?: string;
   /** Mã tuỳ chỉnh (để trống = BE tự sinh). */
   code?: string;
 }
 
+/** Tạo 1 lô voucher pool (khách tự nhận bằng mã) — POST /admin/vouchers/bulk. */
+export interface BulkCreateVoucherPayload {
+  quantity: number;
+  /** Tiền tố mã (1-15 ký tự A-Z/0-9). Mã sinh ra: PREFIX-YYYYMMDD-NNNN. */
+  prefix?: string;
+  discountCapVnd?: number;
+  expiresAt?: string;
+}
+
+export interface VoucherBatch {
+  batchKey: string;
+  prefix: string;
+  createdAt: string;
+  expiresAt: string;
+  discountCapVnd: number;
+  total: number;
+  inPool: number;
+  claimed: number;
+  used: number;
+  expired: number;
+}
+
+export interface VoucherStats {
+  total: number;
+  inPool: number;
+  claimed: number;
+  used: number;
+  expired: number;
+}
+
 export const adminGetVouchers = (params?: Record<string, unknown>) =>
   axiosInstance.get('/admin/vouchers', { params });
+
+export const adminGetVoucherStats = () =>
+  axiosInstance.get<VoucherStats>('/admin/vouchers/stats');
+
+export const adminGetVoucherBatches = () =>
+  axiosInstance.get<{ batches: VoucherBatch[] }>('/admin/vouchers/batches');
 
 export const adminGetVoucher = (id: string) =>
   axiosInstance.get(`/admin/vouchers/${id}`);
 
 export const adminGrantVoucher = (data: GrantVoucherPayload) =>
   axiosInstance.post('/admin/vouchers', data);
+
+export const adminBulkCreateVouchers = (data: BulkCreateVoucherPayload) =>
+  axiosInstance.post('/admin/vouchers/bulk', data);
 
 export const adminRevokeVoucher = (id: string, reason: string) =>
   axiosInstance.patch(`/admin/vouchers/${id}/revoke`, { reason });
