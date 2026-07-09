@@ -3,13 +3,15 @@
 import { AdminTopbar } from '@/components/admin/AdminTopbar';
 import { adminGetOrders, adminMarkOrderPaid, adminUpdateOrderStatus, adminCreateWorkOrder } from '@/lib/admin-api';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
   CreditCard, Search, RefreshCw, CheckCircle2,
   DollarSign, QrCode, AlertCircle, ShoppingBag,
   Camera, Plus, Trash2, Eye, X
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { StatusBadge } from '@/components/shared/StatusBadge';
+import { Pagination } from '@/components/shared/Pagination';
 
 interface OrderData {
   _id: string;
@@ -108,6 +110,16 @@ export default function CashierPOSPage() {
     return customer.toLowerCase().includes(term) || plate.toLowerCase().includes(term);
   });
 
+  // Phân trang phía client cho danh sách chờ thu.
+  const PER_PAGE = 10;
+  const [page, setPage] = useState(1);
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PER_PAGE));
+  const safePage = Math.min(page, totalPages);
+  const pagedOrders = useMemo(
+    () => filtered.slice((safePage - 1) * PER_PAGE, safePage * PER_PAGE),
+    [filtered, safePage],
+  );
+
   const handleOpenPay = (order: OrderData) => {
     setPayTarget(order);
     setIsPayOpen(true);
@@ -117,98 +129,100 @@ export default function CashierPOSPage() {
   return (
     <>
       <AdminTopbar title='Quầy Thu Ngân (POS)' subtitle='Tiếp nhận thanh toán trực tiếp tại quầy nhanh chóng' />
-      <main className='flex-1 p-8 overflow-y-auto bg-slate-50/50 flex flex-col lg:flex-row gap-8'>
-        
+      <main className='flex-1 p-8 overflow-y-auto bg-background flex flex-col lg:flex-row gap-8'>
+
         {/* Main Area: Pending Orders list */}
         <div className='flex-1 flex flex-col gap-6'>
           {/* Filter Bar */}
           <div className='flex gap-3 items-center'>
             <div className='relative flex-1 max-w-md'>
-              <Search className='absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500' />
+              <Search className='absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground' />
               <input
                 type='text'
-                placeholder='Tìm khách hàng hoặc biển số xe để thanh toán...'
+                placeholder='Tìm khách hàng hoặc biển số xe...'
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className='w-full pl-9 pr-4 py-2.5 rounded-xl bg-white border border-slate-200 text-sm focus:outline-none focus:border-emerald-500/50 transition-all shadow-sm'
+                onChange={(e) => {
+                  setSearch(e.target.value);
+                  setPage(1);
+                }}
+                className='w-full pl-9 pr-4 py-2.5 rounded-lg bg-background border border-input text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-colors'
               />
             </div>
-            
+
             <button
               onClick={() => refetch()}
-              className='flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-slate-200 text-sm font-bold bg-white text-slate-600 hover:border-slate-300 transition-all shadow-sm'
+              className='flex items-center gap-1.5 px-4 py-2.5 rounded-lg border border-border text-sm font-medium bg-card text-foreground hover:bg-muted transition-colors'
             >
-              <RefreshCw className={`w-4 h-4 text-slate-500 ${isRefetching ? 'animate-spin' : ''}`} />
+              <RefreshCw className={`w-4 h-4 text-muted-foreground ${isRefetching ? 'animate-spin' : ''}`} />
               Làm mới
             </button>
           </div>
 
           {/* Table list */}
-          <div className='bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden flex-1'>
+          <div className='bg-card rounded-xl border border-border shadow-xs overflow-hidden flex-1'>
             <div className='overflow-x-auto h-full max-h-[calc(100vh-270px)]'>
-              <table className='w-full text-sm text-slate-600'>
-                <thead className='sticky top-0 bg-slate-50 border-b border-slate-100 z-10'>
+              <table className='w-full text-sm'>
+                <thead className='sticky top-0 bg-muted/50 border-b border-border z-10'>
                   <tr>
                     {['Mã đơn', 'Khách hàng', 'Biển số xe', 'Gói dịch vụ', 'Số tiền cần thu', 'Trạng thái', 'Hành động'].map((h) => (
-                      <th key={h} className='text-left px-5 py-4 text-[11px] font-black uppercase tracking-widest text-slate-500'>
+                      <th key={h} className='text-left px-5 py-4 text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground'>
                         {h}
                       </th>
                     ))}
                   </tr>
                 </thead>
-                <tbody className='divide-y divide-slate-100'>
+                <tbody className='divide-y divide-border'>
                   {isLoading ? (
                     Array.from({ length: 5 }).map((_, i) => (
                       <tr key={i}>
                         {Array.from({ length: 7 }).map((__, j) => (
                           <td key={j} className='px-5 py-4.5'>
-                            <div className='h-4 bg-slate-100 animate-pulse rounded-lg' />
+                            <div className='h-4 bg-muted animate-pulse rounded-md' />
                           </td>
                         ))}
                       </tr>
                     ))
                   ) : filtered.length === 0 ? (
                     <tr>
-                      <td colSpan={7} className='px-5 py-24 text-center text-slate-500 font-semibold'>
-                        <div className='w-12 h-12 rounded-xl bg-slate-50 flex items-center justify-center mx-auto mb-4 text-slate-300'>
+                      <td colSpan={7} className='px-5 py-24 text-center text-muted-foreground'>
+                        <div className='w-12 h-12 rounded-lg bg-muted flex items-center justify-center mx-auto mb-4 text-placeholder'>
                           <ShoppingBag className='w-6 h-6' />
                         </div>
-                        Không có đơn hàng nào chờ thanh toán tại quầy.
+                        Chưa có đơn nào chờ thanh toán tại quầy. Đơn tiền mặt
+                        mới sẽ hiện ở đây.
                       </td>
                     </tr>
                   ) : (
-                    filtered.map((o: OrderData) => {
+                    pagedOrders.map((o: OrderData) => {
                       const orderId = o._id ?? o.id;
                       const amount = o.amount ?? o.totalPrice ?? 0;
                       return (
-                        <tr key={orderId} className='hover:bg-slate-50/20 transition-colors'>
-                          <td className='px-5 py-4.5 font-mono text-xs text-slate-500'>
+                        <tr key={orderId} className='hover:bg-muted/40 transition-colors'>
+                          <td className='px-5 py-4.5 font-mono text-xs text-muted-foreground'>
                             {orderId.slice(-6).toUpperCase()}
                           </td>
                           <td className='px-5 py-4.5'>
-                            <div className='font-bold text-slate-800'>{o.userId?.fullName ?? o.customerName ?? '-'}</div>
-                            <div className='text-slate-500 text-xs'>{o.userId?.email ?? o.customerEmail ?? '-'}</div>
+                            <div className='font-semibold text-foreground'>{o.userId?.fullName ?? o.customerName ?? '-'}</div>
+                            <div className='text-muted-foreground text-xs'>{o.userId?.email ?? o.customerEmail ?? '-'}</div>
                           </td>
                           <td className='px-5 py-4.5'>
-                            <span className='font-mono font-black text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded text-xs'>
+                            <span className='font-mono font-semibold text-foreground bg-muted px-2 py-0.5 rounded text-xs'>
                               {o.vehicleId?.licensePlate ?? o.licensePlate ?? '-'}
                             </span>
                           </td>
-                          <td className='px-5 py-4.5 text-slate-600 font-medium'>
+                          <td className='px-5 py-4.5 text-foreground'>
                             {o.serviceTypeId?.name ?? o.serviceName ?? '-'}
                           </td>
-                          <td className='px-5 py-4.5 font-black text-slate-900 text-base'>
+                          <td className='px-5 py-4.5 font-bold text-foreground text-base tabular-nums'>
                             {Number(amount).toLocaleString('vi-VN')}đ
                           </td>
                           <td className='px-5 py-4.5'>
-                            <span className='inline-flex px-2 py-0.5 rounded-lg text-xs font-bold bg-amber-50 text-amber-700 border border-amber-100'>
-                              Chờ thanh toán
-                            </span>
+                            <StatusBadge label='Chờ thanh toán' tone='warning' />
                           </td>
                           <td className='px-5 py-4.5'>
                             <button
                               onClick={() => handleOpenPay(o)}
-                              className='flex items-center gap-1 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition-all shadow-sm shadow-emerald-600/10'
+                              className='flex items-center gap-1 px-4 py-2 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground font-semibold text-xs transition-colors'
                             >
                               <CreditCard className='w-3.5 h-3.5' />
                               Thu tiền
@@ -222,33 +236,38 @@ export default function CashierPOSPage() {
               </table>
             </div>
           </div>
+          <Pagination
+            page={safePage}
+            totalPages={totalPages}
+            onPageChange={setPage}
+          />
         </div>
 
         {/* Sidebar: POS statistics */}
         <div className='w-full lg:w-80 flex flex-col gap-6 shrink-0'>
-          <div className='bg-white rounded-2xl border border-slate-100 p-6 shadow-sm flex flex-col gap-5'>
-            <h3 className='font-heading font-black text-slate-800 text-base border-b border-slate-100 pb-3'>Thống kê quầy thu ngân</h3>
-            
+          <div className='bg-card rounded-xl border border-border p-6 shadow-xs flex flex-col gap-5'>
+            <h3 className='font-heading font-semibold tracking-tight text-foreground text-base border-b border-border pb-3'>Thống kê quầy thu ngân</h3>
+
             <div className='flex flex-col gap-4'>
               <div className='flex justify-between items-center'>
-                <span className='text-sm text-slate-500 font-medium'>Chờ thu tiền</span>
-                <span className='font-bold text-slate-800 text-base'>{orders.length} đơn</span>
+                <span className='text-sm text-muted-foreground'>Chờ thu tiền</span>
+                <span className='font-semibold text-foreground text-base tabular-nums'>{orders.length} đơn</span>
               </div>
-              
-              <div className='flex justify-between items-center border-t border-slate-100 pt-4'>
-                <span className='text-sm text-slate-500 font-medium'>Tổng số tiền chờ thu</span>
-                <span className='font-black text-indigo-600 text-lg'>
+
+              <div className='flex justify-between items-center border-t border-border pt-4'>
+                <span className='text-sm text-muted-foreground'>Tổng số tiền chờ thu</span>
+                <span className='font-bold text-foreground text-lg tabular-nums'>
                   {orders.reduce((sum, o) => sum + Number(o.amount ?? o.totalPrice ?? 0), 0).toLocaleString('vi-VN')}đ
                 </span>
               </div>
             </div>
-            
-            <div className='mt-2 bg-emerald-50/40 border border-emerald-100 p-4 rounded-2xl flex items-start gap-3 text-xs text-emerald-800'>
-              <AlertCircle className='w-4 h-4 text-emerald-600 shrink-0 mt-0.5' />
+
+            <div className='mt-2 bg-accent border border-primary/20 p-4 rounded-lg flex items-start gap-3 text-xs'>
+              <AlertCircle className='w-4 h-4 text-primary shrink-0 mt-0.5' />
               <div>
-                <p className='font-bold'>Hướng dẫn POS:</p>
-                <p className='text-slate-500 mt-1 leading-relaxed'>
-                  Khi khách hàng thanh toán tại quầy (tiền mặt / chuyển khoản), click nút <b>Thu tiền</b> để hoàn tất hóa đơn và duyệt xe vào bãi rửa.
+                <p className='font-semibold text-accent-foreground'>Hướng dẫn POS</p>
+                <p className='text-muted-foreground mt-1 leading-relaxed'>
+                  Khi khách thanh toán tại quầy (tiền mặt / chuyển khoản), bấm <b>Thu tiền</b> để hoàn tất hóa đơn và cho xe vào bãi rửa.
                 </p>
               </div>
             </div>
@@ -258,32 +277,32 @@ export default function CashierPOSPage() {
 
       {/* ── DIALOG: Hóa đơn & Phương thức thanh toán ── */}
       {isPayOpen && payTarget && (
-        <div className='fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4'>
-          <div className='bg-white rounded-3xl border border-slate-100 shadow-2xl p-6 max-w-md w-full animate-in fade-in zoom-in-95 duration-150'>
-            <div className='flex items-center gap-3 mb-5 text-emerald-600'>
-              <div className='w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center'>
+        <div className='fixed inset-0 bg-foreground/50 z-50 flex items-center justify-center p-4'>
+          <div className='bg-card rounded-xl border border-border shadow-lg p-6 max-w-md w-full motion-safe:animate-in motion-safe:fade-in motion-safe:zoom-in-95 duration-150'>
+            <div className='flex items-center gap-3 mb-5'>
+              <div className='w-10 h-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center'>
                 <CreditCard className='w-5 h-5' />
               </div>
               <div>
-                <h3 className='font-heading font-black text-slate-800 text-base'>Thu tiền hóa đơn</h3>
-                <p className='text-xs text-slate-500'>Xác nhận thanh toán cho khách hàng {payTarget.userId?.fullName ?? payTarget.customerName}</p>
+                <h3 className='font-heading font-semibold tracking-tight text-foreground text-base'>Thu tiền hóa đơn</h3>
+                <p className='text-xs text-muted-foreground'>Xác nhận thanh toán cho khách hàng {payTarget.userId?.fullName ?? payTarget.customerName}</p>
               </div>
             </div>
 
             {/* Bill Summary */}
-            <div className='bg-slate-50 border border-slate-100 rounded-2xl p-4 mb-5 flex flex-col gap-2.5 text-sm'>
+            <div className='bg-muted/50 border border-border rounded-lg p-4 mb-5 flex flex-col gap-2.5 text-sm'>
               <div className='flex justify-between'>
-                <span className='text-slate-500'>Biển số xe:</span>
-                <span className='font-mono font-bold text-slate-800'>{payTarget.vehicleId?.licensePlate ?? payTarget.licensePlate}</span>
+                <span className='text-muted-foreground'>Biển số xe</span>
+                <span className='font-mono font-semibold text-foreground'>{payTarget.vehicleId?.licensePlate ?? payTarget.licensePlate}</span>
               </div>
               <div className='flex justify-between'>
-                <span className='text-slate-500'>Dịch vụ rửa xe:</span>
-                <span className='font-semibold text-slate-800'>{payTarget.serviceTypeId?.name ?? payTarget.serviceName}</span>
+                <span className='text-muted-foreground'>Dịch vụ rửa xe</span>
+                <span className='font-medium text-foreground'>{payTarget.serviceTypeId?.name ?? payTarget.serviceName}</span>
               </div>
-              <div className='border-t border-slate-200/60 my-1' />
+              <div className='border-t border-border my-1' />
               <div className='flex justify-between items-baseline'>
-                <span className='font-bold text-slate-800'>Tổng tiền cần thu:</span>
-                <span className='font-black text-lg text-emerald-600'>
+                <span className='font-semibold text-foreground'>Tổng tiền cần thu</span>
+                <span className='font-bold text-lg text-foreground tabular-nums'>
                   {Number(payTarget.amount ?? payTarget.totalPrice ?? 0).toLocaleString('vi-VN')}đ
                 </span>
               </div>
@@ -291,47 +310,47 @@ export default function CashierPOSPage() {
 
             {/* Payment Method Option */}
             <div className='mb-6'>
-              <label className='block text-xs font-bold text-slate-500 uppercase mb-3 tracking-wider'>Phương thức thanh toán trực tiếp</label>
+              <label className='block text-xs font-medium text-muted-foreground mb-3'>Phương thức thanh toán trực tiếp</label>
               <div className='grid grid-cols-2 gap-3'>
                 <button
                   type='button'
                   onClick={() => setPayMethod('cash')}
-                  className={`py-4 rounded-xl border flex flex-col items-center gap-1.5 transition-all font-bold ${
+                  className={`py-4 rounded-lg border flex flex-col items-center gap-1.5 transition-colors ${
                     payMethod === 'cash'
-                      ? 'border-emerald-600 bg-emerald-50/20 text-emerald-700 shadow-sm'
-                      : 'border-slate-200 text-slate-500 hover:bg-slate-50/50'
+                      ? 'border-primary bg-accent ring-1 ring-primary text-foreground'
+                      : 'border-border text-muted-foreground hover:border-primary/40'
                   }`}
                 >
-                  <DollarSign className='w-5 h-5 text-emerald-500' />
-                  <span className='text-xs'>TIỀN MẶT</span>
+                  <DollarSign className={`w-5 h-5 ${payMethod === 'cash' ? 'text-primary' : 'text-muted-foreground'}`} />
+                  <span className='text-xs font-semibold'>Tiền mặt</span>
                 </button>
                 <button
                   type='button'
                   onClick={() => setPayMethod('qr')}
-                  className={`py-4 rounded-xl border flex flex-col items-center gap-1.5 transition-all font-bold ${
+                  className={`py-4 rounded-lg border flex flex-col items-center gap-1.5 transition-colors ${
                     payMethod === 'qr'
-                      ? 'border-emerald-600 bg-emerald-50/20 text-emerald-700 shadow-sm'
-                      : 'border-slate-200 text-slate-500 hover:bg-slate-50/50'
+                      ? 'border-primary bg-accent ring-1 ring-primary text-foreground'
+                      : 'border-border text-muted-foreground hover:border-primary/40'
                   }`}
                 >
-                  <QrCode className='w-5 h-5 text-emerald-500' />
-                  <span className='text-xs'>CHUYỂN KHOẢN QR</span>
+                  <QrCode className={`w-5 h-5 ${payMethod === 'qr' ? 'text-primary' : 'text-muted-foreground'}`} />
+                  <span className='text-xs font-semibold'>Chuyển khoản QR</span>
                 </button>
               </div>
             </div>
 
             {/* Thêm phần Chụp ảnh hiện trạng xe khi Check-in */}
             <div className='mb-6'>
-              <label className='block text-xs font-bold text-slate-500 uppercase mb-3 tracking-wider flex items-center gap-1.5'>
-                <Camera className='w-4 h-4 text-indigo-500' />
-                Ảnh hiện trạng xe trước khi rửa (Không bắt buộc)
+              <label className='text-xs font-medium text-muted-foreground mb-3 flex items-center gap-1.5'>
+                <Camera className='w-4 h-4' />
+                Ảnh hiện trạng xe trước khi rửa (không bắt buộc)
               </label>
-              
+
               <div className='grid grid-cols-4 gap-3'>
                 {checkInPhotos.map((photo, idx) => (
                   <div
                     key={idx}
-                    className='group relative aspect-square rounded-xl overflow-hidden border border-slate-200 shadow-sm bg-slate-50'
+                    className='group relative aspect-square rounded-lg overflow-hidden border border-border bg-muted'
                   >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={photo} alt='Hiện trạng xe' className='w-full h-full object-cover' />
@@ -339,24 +358,24 @@ export default function CashierPOSPage() {
                       <button
                         type='button'
                         onClick={() => setPreviewPhoto(photo)}
-                        className='w-7 h-7 bg-white/90 hover:bg-white text-slate-700 rounded-lg flex items-center justify-center'
+                        className='w-7 h-7 bg-white/90 hover:bg-white text-slate-700 rounded-md flex items-center justify-center'
                       >
                         <Eye className='w-4 h-4' />
                       </button>
                       <button
                         type='button'
                         onClick={() => setCheckInPhotos((prev) => prev.filter((_, i) => i !== idx))}
-                        className='w-7 h-7 bg-rose-500/90 hover:bg-rose-500 text-white rounded-lg flex items-center justify-center'
+                        className='w-7 h-7 bg-destructive/90 hover:bg-destructive text-destructive-foreground rounded-md flex items-center justify-center'
                       >
                         <Trash2 className='w-4 h-4' />
                       </button>
                     </div>
                   </div>
                 ))}
-                
-                <label className='aspect-square rounded-xl border border-dashed border-slate-300 hover:border-emerald-500 bg-slate-50/50 hover:bg-emerald-50/30 cursor-pointer flex flex-col items-center justify-center gap-1 transition-all'>
-                  <Plus className='w-5 h-5 text-slate-400' />
-                  <span className='text-[10px] font-bold text-slate-500 uppercase tracking-wider'>
+
+                <label className='aspect-square rounded-lg border border-dashed border-border hover:border-primary bg-muted/40 hover:bg-accent cursor-pointer flex flex-col items-center justify-center gap-1 transition-colors'>
+                  <Plus className='w-5 h-5 text-muted-foreground' />
+                  <span className='text-[10px] font-medium text-muted-foreground'>
                     Chụp/Thêm
                   </span>
                   <input
@@ -376,14 +395,14 @@ export default function CashierPOSPage() {
             <div className='flex gap-3 justify-end'>
               <button
                 onClick={() => { setIsPayOpen(false); setPayTarget(null); }}
-                className='px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-500 hover:bg-slate-50 transition-all'
+                className='px-4 py-2.5 rounded-lg border border-border text-xs font-medium text-foreground hover:bg-muted transition-colors'
               >
                 Hủy bỏ
               </button>
               <button
                 disabled={payMutation.isPending || isUploading}
                 onClick={() => payMutation.mutate({ orderId: payTarget._id ?? payTarget.id ?? '', photos: checkInPhotos })}
-                className='px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-bold text-xs transition-all shadow-md shadow-emerald-600/10 flex items-center gap-1.5'
+                className='px-5 py-2.5 rounded-lg bg-primary hover:bg-primary/90 disabled:opacity-50 text-primary-foreground font-semibold text-xs transition-colors flex items-center gap-1.5'
               >
                 <CheckCircle2 className='w-4 h-4' />
                 Xác nhận thu tiền & check-in
@@ -396,7 +415,7 @@ export default function CashierPOSPage() {
       {/* Lightbox xem ảnh phóng to */}
       {previewPhoto && (
         <div
-          className='fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-[60] flex items-center justify-center p-4'
+          className='fixed inset-0 bg-black/80 z-60 flex items-center justify-center p-4'
           onClick={() => setPreviewPhoto(null)}
         >
           <div className='relative max-w-3xl w-full max-h-[85vh] flex items-center justify-center'>
@@ -404,7 +423,7 @@ export default function CashierPOSPage() {
             <img
               src={previewPhoto}
               alt='Xem ảnh'
-              className='max-w-full max-h-[80vh] object-contain rounded-2xl shadow-2xl'
+              className='max-w-full max-h-[80vh] object-contain rounded-xl'
             />
             <button
               onClick={() => setPreviewPhoto(null)}

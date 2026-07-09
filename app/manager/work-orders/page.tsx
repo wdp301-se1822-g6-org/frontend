@@ -4,14 +4,14 @@ import { AdminTopbar } from '@/components/admin/AdminTopbar';
 import {
   adminGetWorkOrders,
   adminAssignWasher,
-  adminUpdateOrderStatus,
   adminGetWorkOrdersQueue,
   adminGetShiftStaff
 } from '@/lib/admin-api';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState, useMemo } from 'react';
+import { Pagination } from '@/components/shared/Pagination';
 import {
-  Wrench, Users, CheckCircle2,
+  Wrench, Users,
   Clock, ChevronDown, RefreshCw,
   Camera, Eye
 } from 'lucide-react';
@@ -47,9 +47,8 @@ interface WorkOrderData {
     fullName?: string;
     name?: string;
   };
-  status: 'waiting' | 'assigned' | 'in_progress' | 'quality_check' | 'returned' | 'done';
-  qcPassed?: boolean | null;
-  qcNote?: string;
+  // BE đã bỏ luồng QC: done là trạng thái kết thúc, order tự complete.
+  status: 'waiting' | 'assigned' | 'in_progress' | 'done';
   createdAt?: string;
   vehicleSnapshot?: {
     plate?: string;
@@ -143,16 +142,14 @@ export default function ManagerWorkOrdersPage() {
     }
   };
 
-  // Thợ đang bận = đang được giao việc hoặc đang rửa (kể cả rửa lại sau QC).
+  // Thợ đang bận = đang được giao việc hoặc đang rửa.
   // Những thợ này không hiện trong danh sách để gán tiếp.
   const availableWashers = useMemo(() => {
     const busyIds = new Set(
       allWorkOrders
         .filter(
           (wo) =>
-            wo.status === 'assigned' ||
-            wo.status === 'in_progress' ||
-            wo.status === 'returned',
+            wo.status === 'assigned' || wo.status === 'in_progress',
         )
         .map((wo) => wo.assignedWasherId)
         .filter((id): id is string => Boolean(id)),
@@ -175,11 +172,21 @@ export default function ManagerWorkOrdersPage() {
         return wo.status === 'waiting' || wo.status === 'assigned';
       }
       if (statusFilter === 'in_progress') {
-        return wo.status === 'in_progress' || wo.status === 'returned';
+        return wo.status === 'in_progress';
       }
       return true;
     });
   }, [allWorkOrders, statusFilter, fifoQueue]);
+
+  // Phân trang phía client cho lưới phiếu rửa xe.
+  const PER_PAGE = 9;
+  const [page, setPage] = useState(1);
+  const totalPages = Math.max(1, Math.ceil(workOrders.length / PER_PAGE));
+  const safePage = Math.min(page, totalPages);
+  const pagedWorkOrders = useMemo(
+    () => workOrders.slice((safePage - 1) * PER_PAGE, safePage * PER_PAGE),
+    [workOrders, safePage],
+  );
 
   // Mutation giao việc cho thợ
   const assignWasherMutation = useMutation({
@@ -200,54 +207,29 @@ export default function ManagerWorkOrdersPage() {
     }
   });
 
-  // Mutation hoàn thành đơn (hoàn thành trực tiếp, không qua QC phức tạp)
-  const qcMutation = useMutation({
-    mutationFn: async ({ targetWo }: { woId?: string; targetWo: WorkOrderData }) => {
-      const oId = typeof targetWo.orderId === 'string'
-        ? targetWo.orderId
-        : (targetWo.orderId as { _id?: string; id?: string })?._id || (targetWo.orderId as { _id?: string; id?: string })?.id;
-      if (oId) {
-        await adminUpdateOrderStatus(oId, 'completed');
-      }
-    },
-    onSuccess: () => {
-      toast.success('Đã hoàn thành và đóng đơn hàng rửa xe thành công!');
-      qc.invalidateQueries({ queryKey: ['manager-work-orders'] });
-      qc.invalidateQueries({ queryKey: ['manager-dashboard-workorders'] });
-      qc.invalidateQueries({ queryKey: ['manager-orders'] });
-    },
-    onError: (err) => {
-      const errMsg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message ?? 'Không thể hoàn tất đơn hàng.';
-      toast.error(`Lỗi: ${errMsg}`);
-    }
-  });
-
   const handleOpenAssign = (wo: WorkOrderData) => {
     setAssignTarget(wo);
     setIsAssignOpen(true);
   };
 
-  const handleConfirmComplete = (wo: WorkOrderData) => {
-    if (confirm('Xác nhận xe đã rửa sạch đẹp và hoàn thành đơn hàng này?')) {
-      qcMutation.mutate({ woId: wo.id, targetWo: wo });
-    }
-  };
-
   return (
     <>
-      <AdminTopbar title='Vận hành Rửa xe' subtitle='Giao việc cho nhân viên và đánh giá chất lượng xe sau khi rửa (QC)' />
-      <main className='flex-1 p-8 overflow-y-auto bg-slate-50/50'>
+      <AdminTopbar title='Vận hành Rửa xe' subtitle='Giao việc cho thợ và theo dõi các xe đang rửa. Đơn tự hoàn thành khi thợ rửa xong.' />
+      <main className='flex-1 p-8 overflow-y-auto bg-muted/40'>
         <div className='max-w-7xl mx-auto'>
 
           {/* Status Tabs Filter */}
-          <div className='flex items-center justify-between mb-8 border-b border-slate-200 pb-2'>
+          <div className='flex items-center justify-between mb-8 border-b border-border pb-2'>
             <div className='flex gap-6'>
               {(['all', 'pending', 'in_progress', 'fifo'] as const).map((tab) => (
                 <button
                   key={tab}
-                  onClick={() => setStatusFilter(tab)}
+                  onClick={() => {
+                    setStatusFilter(tab);
+                    setPage(1);
+                  }}
                   className={`pb-3 text-sm font-bold transition-all relative ${
-                    statusFilter === tab ? 'text-indigo-600' : 'text-slate-500 hover:text-slate-600'
+                    statusFilter === tab ? 'text-primary' : 'text-muted-foreground hover:text-muted-foreground'
                   }`}
                 >
                   {tab === 'all' && 'Tất cả phiếu'}
@@ -256,7 +238,7 @@ export default function ManagerWorkOrdersPage() {
                   {tab === 'fifo' && 'Hàng đợi FIFO (Hôm nay)'}
                   
                   {statusFilter === tab && (
-                    <div className='absolute bottom-0 left-0 right-0 h-0.5 bg-indigo-600 rounded-full' />
+                    <div className='absolute bottom-0 left-0 right-0 h-0.5 bg-primary rounded-full' />
                   )}
                 </button>
               ))}
@@ -264,7 +246,7 @@ export default function ManagerWorkOrdersPage() {
             
             <button
               onClick={() => refetch()}
-              className='flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-500 bg-white hover:border-slate-300 transition-all shadow-sm'
+              className='flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-border text-xs font-bold text-muted-foreground bg-card hover:border-border transition-all shadow-xs'
             >
               <RefreshCw className='w-3.5 h-3.5' /> Làm mới
             </button>
@@ -274,22 +256,22 @@ export default function ManagerWorkOrdersPage() {
           {isPageLoading ? (
             <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
               {Array.from({ length: 3 }).map((_, i) => (
-                <div key={i} className='bg-white rounded-2xl p-6 border border-slate-100 shadow-sm animate-pulse h-48' />
+                <div key={i} className='bg-card rounded-xl p-6 border border-border shadow-xs animate-pulse h-48' />
               ))}
             </div>
           ) : workOrders.length === 0 ? (
-            <div className='bg-white rounded-3xl p-16 text-center border border-slate-100 shadow-sm max-w-lg mx-auto mt-12'>
-              <div className='w-16 h-16 rounded-2xl bg-indigo-50 flex items-center justify-center mx-auto mb-6 text-indigo-600'>
+            <div className='bg-card rounded-xl p-16 text-center border border-border shadow-xs max-w-lg mx-auto mt-12'>
+              <div className='w-16 h-16 rounded-xl bg-accent flex items-center justify-center mx-auto mb-6 text-primary'>
                 <Wrench className='w-8 h-8' />
               </div>
-              <h3 className='font-heading text-lg font-black text-slate-800 mb-2'>Không tìm thấy phiếu rửa xe nào</h3>
-              <p className='text-slate-500 text-sm leading-relaxed'>
+              <h3 className='font-heading text-lg font-semibold text-foreground mb-2'>Không tìm thấy phiếu rửa xe nào</h3>
+              <p className='text-muted-foreground text-sm leading-relaxed'>
                 Hiện tại không có xe nào ở trạng thái này. Vui lòng kiểm tra mục &quot;Đơn đặt lịch&quot; để tiến hành Check-in nhận xe mới.
               </p>
             </div>
           ) : (
             <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
-              {workOrders.map((wo) => {
+              {pagedWorkOrders.map((wo) => {
                 const customer = `Mã phiếu: ${wo.code || wo.id.slice(-6).toUpperCase()}`;
                 const plate = wo.vehicleSnapshot?.plate ?? '-';
                 const service = wo.serviceName ?? '-';
@@ -309,66 +291,65 @@ export default function ManagerWorkOrdersPage() {
                   (wo.assignedWasherId ? 'Đã giao (Chờ nhận)' : undefined);
 
                 const isPending = wo.status === 'waiting' || wo.status === 'assigned';
-                const isInProgress = wo.status === 'in_progress' || wo.status === 'returned';
-                const isCompleted = wo.status === 'quality_check';
+                const isInProgress = wo.status === 'in_progress';
 
                 return (
                   <div
                     key={wo.id}
-                    className={`bg-white rounded-2xl border transition-all duration-200 shadow-sm hover:shadow-md flex flex-col p-6 relative overflow-hidden ${
-                      isPending ? 'border-amber-100 hover:border-amber-200' :
-                      isInProgress ? 'border-indigo-100 hover:border-indigo-200 ring-2 ring-indigo-500/5' :
-                      'border-emerald-100 hover:border-emerald-200'
+                    className={`bg-card rounded-xl border transition-all duration-200 shadow-xs hover:shadow-md flex flex-col p-6 relative overflow-hidden ${
+                      isPending ? 'border-warning/30 hover:border-warning/30' :
+                      isInProgress ? 'border-primary/30 hover:border-primary ring-2 ring-primary/20' :
+                      'border-success/30 hover:border-success/30'
                     }`}
                   >
                     {/* Header: License Plate & Status Badge */}
                     <div className='flex items-center justify-between mb-4'>
-                      <span className='font-mono font-black text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-xl text-xs border border-indigo-100 shadow-sm'>
+                      <span className='font-mono font-semibold text-primary bg-accent px-2.5 py-1 rounded-xl text-xs border border-primary/30 shadow-xs'>
                         {plate}
                       </span>
                       <span className={`inline-flex px-2.5 py-0.5 rounded-lg text-xs font-bold ${
-                        isPending ? 'bg-amber-50 text-amber-700 border border-amber-100' :
-                        isInProgress ? 'bg-blue-50 text-blue-700 border border-blue-100 animate-pulse' :
-                        'bg-emerald-50 text-emerald-700 border border-emerald-100'
+                        isPending ? 'bg-warning/10 text-warning-foreground border border-warning/30' :
+                        isInProgress ? 'bg-info/10 text-info border border-info/30' :
+                        'bg-success/10 text-success border border-success/30'
                       }`}>
                         {wo.status === 'waiting' && 'Chờ giao thợ'}
                         {wo.status === 'assigned' && 'Đã giao thợ'}
-                        {isInProgress && (wo.status === 'returned' ? 'QC Không đạt (Rửa lại)' : 'Đang rửa xe')}
-                        {isCompleted && 'Chờ QC'}
+                        {isInProgress && 'Đang rửa xe'}
+                        {wo.status === 'done' && 'Hoàn thành'}
                       </span>
                     </div>
 
                     {/* Customer & Service info */}
                     <div className='flex-1 flex flex-col gap-2.5 mb-6'>
                       <div>
-                        <p className='text-slate-500 text-[10px] uppercase font-bold tracking-wider'>Định danh phiếu</p>
-                        <p className='font-bold text-slate-800 text-sm'>{customer}</p>
+                        <p className='text-muted-foreground text-[10px] uppercase font-bold tracking-wider'>Định danh phiếu</p>
+                        <p className='font-bold text-foreground text-sm'>{customer}</p>
                       </div>
                       <div>
-                        <p className='text-slate-500 text-[10px] uppercase font-bold tracking-wider'>Gói dịch vụ</p>
-                        <p className='font-bold text-slate-700 text-sm'>{service}</p>
+                        <p className='text-muted-foreground text-[10px] uppercase font-bold tracking-wider'>Gói dịch vụ</p>
+                        <p className='font-bold text-foreground text-sm'>{service}</p>
                       </div>
                       
                       {/* Thợ phụ trách */}
-                      <div className='mt-2 border-t border-slate-100 pt-3'>
-                        <p className='text-slate-500 text-[10px] uppercase font-bold tracking-wider mb-1'>Thợ phụ trách</p>
+                      <div className='mt-2 border-t border-border pt-3'>
+                        <p className='text-muted-foreground text-[10px] uppercase font-bold tracking-wider mb-1'>Thợ phụ trách</p>
                         {washer ? (
-                          <div className='flex items-center gap-1.5 text-slate-700 text-sm font-semibold'>
-                            <Users className='w-4 h-4 text-slate-500' />
+                          <div className='flex items-center gap-1.5 text-foreground text-sm font-semibold'>
+                            <Users className='w-4 h-4 text-muted-foreground' />
                             {washer}
                           </div>
                         ) : (
-                          <span className='text-amber-500 font-bold text-xs italic flex items-center gap-1 bg-amber-50 px-2 py-0.5 rounded-lg border border-amber-100 w-fit'>
+                          <span className='text-warning font-bold text-xs italic flex items-center gap-1 bg-warning/10 px-2 py-0.5 rounded-lg border border-warning/30 w-fit'>
                             <Clock className='w-3.5 h-3.5' /> Đang đợi phân công thợ
                           </span>
                         )}
                       </div>
                       {/* Ảnh kiểm định xe (CHỈ XEM) */}
-                      <div className='mt-3 space-y-3.5 border-t border-slate-100 pt-3'>
+                      <div className='mt-3 space-y-3.5 border-t border-border pt-3'>
                         {/* Trước khi rửa (Check-in) */}
                         <div>
-                          <p className='text-[10px] font-black text-slate-500 uppercase tracking-wider mb-1.5 flex items-center gap-1'>
-                            <Camera className='w-3.5 h-3.5 text-indigo-500' />
+                          <p className='text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5 flex items-center gap-1'>
+                            <Camera className='w-3.5 h-3.5 text-primary' />
                             Ảnh trước khi rửa (Thu ngân chụp)
                           </p>
                           {((wo.checkinPhotos && (wo.checkinPhotos as string[]).length > 0) || (inspectionPhotos[woOrderId]?.preWash && inspectionPhotos[woOrderId].preWash.length > 0)) ? (
@@ -377,7 +358,7 @@ export default function ManagerWorkOrdersPage() {
                                 <div
                                   key={pIdx}
                                   onClick={() => setPreviewPhoto(photo)}
-                                  className='relative w-12 h-12 rounded-lg overflow-hidden border border-slate-200 shadow-sm bg-slate-50 cursor-pointer hover:border-indigo-500 transition-all shrink-0 group'
+                                  className='relative w-12 h-12 rounded-lg overflow-hidden border border-border shadow-xs bg-muted/40 cursor-pointer hover:border-primary transition-all shrink-0 group'
                                 >
                                   {/* eslint-disable-next-line @next/next/no-img-element */}
                                   <img src={photo} alt='Pre-wash' className='w-full h-full object-cover group-hover:scale-105 transition-transform' />
@@ -388,14 +369,14 @@ export default function ManagerWorkOrdersPage() {
                               ))}
                             </div>
                           ) : (
-                            <p className='text-xs italic text-slate-500 font-medium pl-1'>Chưa có ảnh trước khi rửa.</p>
+                            <p className='text-xs italic text-muted-foreground font-medium pl-1'>Chưa có ảnh trước khi rửa.</p>
                           )}
                         </div>
 
                         {/* Sau khi rửa */}
                         <div>
-                          <p className='text-[10px] font-black text-slate-500 uppercase tracking-wider mb-1.5 flex items-center gap-1'>
-                            <Camera className='w-3.5 h-3.5 text-emerald-500' />
+                          <p className='text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5 flex items-center gap-1'>
+                            <Camera className='w-3.5 h-3.5 text-success' />
                             Ảnh sau khi rửa (Nghiệm thu sạch đẹp)
                           </p>
                           {(inspectionPhotos[woOrderId]?.postWash && inspectionPhotos[woOrderId].postWash.length > 0) ? (
@@ -404,7 +385,7 @@ export default function ManagerWorkOrdersPage() {
                                 <div
                                   key={pIdx}
                                   onClick={() => setPreviewPhoto(photo)}
-                                  className='relative w-12 h-12 rounded-lg overflow-hidden border border-slate-200 shadow-sm bg-slate-50 cursor-pointer hover:border-emerald-500 transition-all shrink-0 group'
+                                  className='relative w-12 h-12 rounded-lg overflow-hidden border border-border shadow-xs bg-muted/40 cursor-pointer hover:border-success transition-all shrink-0 group'
                                 >
                                   {/* eslint-disable-next-line @next/next/no-img-element */}
                                   <img src={photo} alt='Post-wash' className='w-full h-full object-cover group-hover:scale-105 transition-transform' />
@@ -415,18 +396,18 @@ export default function ManagerWorkOrdersPage() {
                               ))}
                             </div>
                           ) : (
-                            <p className='text-xs italic text-slate-500 font-medium pl-1'>Chưa có ảnh sau khi rửa.</p>
+                            <p className='text-xs italic text-muted-foreground font-medium pl-1'>Chưa có ảnh sau khi rửa.</p>
                           )}
                         </div>
                       </div>
                     </div>
 
                     {/* Operational Action Buttons */}
-                    <div className='mt-auto pt-4 border-t border-slate-100'>
+                    <div className='mt-auto pt-4 border-t border-border'>
                       {isPending && (
                         <button
                           onClick={() => handleOpenAssign(wo)}
-                          className='w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm transition-all shadow-md shadow-indigo-600/10 flex items-center justify-center gap-1.5'
+                          className='w-full py-2.5 rounded-xl bg-primary hover:bg-primary/90 text-white font-bold text-sm transition-all shadow-md flex items-center justify-center gap-1.5'
                         >
                           <Users className='w-4 h-4' />
                           {wo.status === 'assigned' ? 'Đổi thợ phụ trách' : 'Giao thợ rửa xe'}
@@ -437,25 +418,14 @@ export default function ManagerWorkOrdersPage() {
                         <div className='flex gap-2 w-full'>
                           <button
                             onClick={() => handleOpenAssign(wo)}
-                            className='flex-1 py-2 rounded-xl border border-slate-200 hover:border-slate-300 text-slate-600 font-bold text-xs transition-all flex items-center justify-center gap-1'
+                            className='flex-1 py-2 rounded-xl border border-border hover:border-border text-muted-foreground font-bold text-xs transition-all flex items-center justify-center gap-1'
                           >
                             <Users className='w-3.5 h-3.5' /> Đổi thợ
                           </button>
-                          <div className='flex-[1.5] bg-slate-50 border border-slate-100 rounded-xl px-3 py-2 flex items-center justify-center gap-2 text-xs font-semibold text-indigo-600'>
-                            <Clock className='w-4 h-4 animate-spin' /> {wo.status === 'returned' ? 'Đang rửa lại...' : 'Đang rửa...'}
+                          <div className='flex-[1.5] bg-muted/40 border border-border rounded-xl px-3 py-2 flex items-center justify-center gap-2 text-xs font-semibold text-primary'>
+                            <Clock className='w-4 h-4 animate-spin' /> Đang rửa...
                           </div>
                         </div>
-                      )}
-
-                      {isCompleted && (
-                        <button
-                          disabled={qcMutation.isPending}
-                          onClick={() => handleConfirmComplete(wo)}
-                          className='w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm transition-all shadow-md shadow-emerald-600/10 flex items-center justify-center gap-1.5 disabled:opacity-50'
-                        >
-                          <CheckCircle2 className='w-4 h-4' />
-                          Xác nhận hoàn thành
-                        </button>
                       )}
                     </div>
                   </div>
@@ -463,31 +433,39 @@ export default function ManagerWorkOrdersPage() {
               })}
             </div>
           )}
+          {!isPageLoading && workOrders.length > 0 && (
+            <Pagination
+              page={safePage}
+              totalPages={totalPages}
+              onPageChange={setPage}
+              className='mt-8'
+            />
+          )}
         </div>
       </main>
 
       {/* ── DIALOG: Giao việc thợ rửa xe ── */}
       {isAssignOpen && assignTarget && (
-        <div className='fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4'>
-          <div className='bg-white rounded-3xl border border-slate-100 shadow-2xl p-6 max-w-md w-full animate-in fade-in zoom-in-95 duration-150'>
-            <div className='flex items-center gap-3 mb-4 text-indigo-600'>
-              <div className='w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center'>
+        <div className='fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4'>
+          <div className='bg-card rounded-xl border border-border shadow-2xl p-6 max-w-md w-full animate-in fade-in zoom-in-95 duration-150'>
+            <div className='flex items-center gap-3 mb-4 text-primary'>
+              <div className='w-10 h-10 rounded-xl bg-accent flex items-center justify-center'>
                 <Users className='w-5 h-5' />
               </div>
               <div>
-                <h3 className='font-heading font-black text-slate-800 text-base'>Phân công thợ rửa xe</h3>
-                <p className='text-xs text-slate-500'>Chọn thợ rửa xe phụ trách cho xe {assignTarget.vehicleSnapshot?.plate ?? ''}</p>
+                <h3 className='font-heading font-semibold text-foreground text-base'>Phân công thợ rửa xe</h3>
+                <p className='text-xs text-muted-foreground'>Chọn thợ rửa xe phụ trách cho xe {assignTarget.vehicleSnapshot?.plate ?? ''}</p>
               </div>
             </div>
 
             <div className='mb-6'>
-              <label className='block text-xs font-bold text-slate-500 uppercase mb-2 tracking-wider'>Chọn nhân viên rửa xe</label>
+              <label className='block text-xs font-bold text-muted-foreground uppercase mb-2 tracking-wider'>Chọn nhân viên rửa xe</label>
               <div className='relative'>
                 <select
                   value={selectedWasherId}
                   onChange={(e) => setSelectedWasherId(e.target.value)}
                   disabled={availableWashers.length === 0}
-                  className='w-full appearance-none bg-white border border-slate-200 rounded-xl px-4 py-3 pr-10 text-sm font-semibold text-slate-700 focus:outline-none focus:border-indigo-500 transition-all disabled:bg-slate-50 disabled:text-slate-400'
+                  className='w-full appearance-none bg-card border border-border rounded-xl px-4 py-3 pr-10 text-sm font-semibold text-foreground focus:outline-none focus:border-primary transition-all disabled:bg-muted/40 disabled:text-placeholder'
                 >
                   <option value=''>-- Chọn nhân viên đang rảnh --</option>
                   {availableWashers.map((w) => {
@@ -499,10 +477,10 @@ export default function ManagerWorkOrdersPage() {
                     );
                   })}
                 </select>
-                <ChevronDown className='absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none' />
+                <ChevronDown className='absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none' />
               </div>
               {availableWashers.length === 0 && (
-                <p className='mt-2 flex items-center gap-1.5 text-xs font-semibold text-amber-600'>
+                <p className='mt-2 flex items-center gap-1.5 text-xs font-semibold text-warning'>
                   <Clock className='w-3.5 h-3.5 shrink-0' />
                   Tất cả thợ đang bận (được giao việc hoặc đang rửa). Vui lòng đợi
                   thợ hoàn thành.
@@ -513,14 +491,14 @@ export default function ManagerWorkOrdersPage() {
             <div className='flex gap-3 justify-end'>
               <button
                 onClick={() => { setIsAssignOpen(false); setAssignTarget(null); }}
-                className='px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-500 hover:bg-slate-50 transition-all'
+                className='px-4 py-2.5 rounded-xl border border-border text-xs font-bold text-muted-foreground hover:bg-muted/50 transition-all'
               >
                 Hủy bỏ
               </button>
               <button
                 disabled={!selectedWasherId || assignWasherMutation.isPending}
                 onClick={() => assignWasherMutation.mutate({ woId: assignTarget.id, washerId: selectedWasherId })}
-                className='px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-bold text-xs transition-all shadow-md shadow-indigo-600/10'
+                className='px-4 py-2.5 rounded-xl bg-primary hover:bg-primary/90 disabled:opacity-50 text-white font-bold text-xs transition-all shadow-md'
               >
                 Xác nhận giao việc
               </button>
@@ -529,14 +507,13 @@ export default function ManagerWorkOrdersPage() {
         </div>
       )}
 
-      {/* Đã gỡ bỏ Dialog QC kiểm định phức tạp */}
 
       {/* Lightbox Preview Modal */}
       {previewPhoto && (
-        <div className='fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4' onClick={() => setPreviewPhoto(null)}>
+        <div className='fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4' onClick={() => setPreviewPhoto(null)}>
           <div className='relative max-w-3xl w-full max-h-[85vh] flex items-center justify-center animate-in fade-in zoom-in-95 duration-150'>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={previewPhoto} alt='Enlarged Preview' className='rounded-2xl max-w-full max-h-[80vh] object-contain shadow-2xl border border-white/10' />
+            <img src={previewPhoto} alt='Enlarged Preview' className='rounded-xl max-w-full max-h-[80vh] object-contain shadow-2xl border border-white/10' />
             <button 
               onClick={() => setPreviewPhoto(null)} 
               className='absolute top-3 right-3 bg-black/50 hover:bg-black text-white text-xs font-bold px-3 py-1.5 rounded-xl shadow-lg border border-white/10 animate-pulse'

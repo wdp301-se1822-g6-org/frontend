@@ -16,6 +16,7 @@ import {
   X
 } from 'lucide-react';
 import { Spinner } from '@/components/ui/spinner';
+import { Pagination } from '@/components/shared/Pagination';
 import { toast } from 'sonner';
 import { socket } from '@/lib/socket';
 import { Card, CardContent } from '@/components/ui/card';
@@ -97,29 +98,26 @@ export default function MyOrdersPage() {
     }).catch(err => console.error(err));
   }, []);
 
-  // Listen to WebSocket status changes
+  // Nghe realtime tiến trình rửa xe (tên sự kiện khớp BE: wash:started/completed).
+  // KHÔNG tự connect/disconnect socket ở đây — NotificationSocketBridge quản lý
+  // vòng đời kết nối chung; ở đây chỉ đăng ký/gỡ listener.
   useEffect(() => {
-    socket.connect();
-
-    const handleStatusUpdate = (data: { orderId: string; status: OrderStatus }) => {
-      const target = (orders as Order[]).find((o: Order) => o.id === data.orderId || o._id === data.orderId);
-      if (target) {
-        toast.info(`Trạng thái đơn hàng #${(data.orderId).slice(-6).toUpperCase()} của bạn đã chuyển sang: ${data.status === 'in_progress' ? 'Đang rửa xe' : data.status === 'completed' ? 'Hoàn thành' : data.status}`);
-        refetch();
-      }
-    };
-
-    socket.on('order_status_updated', handleStatusUpdate);
-    socket.on('work_order_updated', () => {
+    const onStarted = () => {
+      toast.info('Xe của bạn đang được rửa.');
       refetch();
-    });
+    };
+    const onCompleted = () => {
+      toast.success('Xe của bạn đã rửa xong.');
+      refetch();
+    };
+    socket.on('wash:started', onStarted);
+    socket.on('wash:completed', onCompleted);
 
     return () => {
-      socket.off('order_status_updated', handleStatusUpdate);
-      socket.off('work_order_updated');
-      socket.disconnect();
+      socket.off('wash:started', onStarted);
+      socket.off('wash:completed', onCompleted);
     };
-  }, [orders, refetch]);
+  }, [refetch]);
 
   // Alert success booking if redirect from flow - chỉ bắn 1 lần rồi xoá query
   // (tránh chồng toast do React strict mode double-invoke / re-render).
@@ -178,6 +176,23 @@ export default function MyOrdersPage() {
       }
     });
   }, [orders, activeTab]);
+
+  // Phân trang phía client (BE trả toàn bộ đơn của khách).
+  const ORDERS_PER_PAGE = 8;
+  const [page, setPage] = useState(1);
+  const totalPages = Math.max(
+    1,
+    Math.ceil(filteredOrders.length / ORDERS_PER_PAGE),
+  );
+  const safePage = Math.min(page, totalPages);
+  const pagedOrders = useMemo(
+    () =>
+      filteredOrders.slice(
+        (safePage - 1) * ORDERS_PER_PAGE,
+        safePage * ORDERS_PER_PAGE,
+      ),
+    [filteredOrders, safePage],
+  );
 
   // Fetch slots for reschedule
   const slotQueryParams = useMemo(() => {
@@ -340,43 +355,43 @@ export default function MyOrdersPage() {
     switch (status) {
       case 'pending_payment':
         return (
-          <span className="inline-flex items-center gap-1 text-xs bg-amber-50 text-amber-600 font-extrabold px-2.5 py-1 rounded-full shadow-xs border border-amber-200/50">
+          <span className="inline-flex items-center gap-1 text-xs bg-warning/10 text-warning font-semibold px-2.5 py-1 rounded-full shadow-xs border border-warning/30/50">
             <Clock className="w-3 h-3 animate-pulse" /> Chờ thanh toán
           </span>
         );
       case 'confirmed':
         return (
-          <span className="inline-flex items-center gap-1 text-xs bg-blue-50 text-blue-600 font-extrabold px-2.5 py-1 rounded-full border border-blue-200/50">
+          <span className="inline-flex items-center gap-1 text-xs bg-info/10 text-blue-600 font-semibold px-2.5 py-1 rounded-full border border-blue-200/50">
             <CheckCircle className="w-3 h-3" /> Đã xác nhận
           </span>
         );
       case 'checked_in':
         return (
-          <span className="inline-flex items-center gap-1 text-xs bg-sky-50 text-sky-600 font-extrabold px-2.5 py-1 rounded-full border border-sky-200/50">
+          <span className="inline-flex items-center gap-1 text-xs bg-info/10 text-sky-600 font-semibold px-2.5 py-1 rounded-full border border-sky-200/50">
             <User2 className="w-3 h-3" /> Đã check-in
           </span>
         );
       case 'in_progress':
         return (
-          <span className="inline-flex items-center gap-1 text-xs bg-indigo-50 text-indigo-600 font-extrabold px-2.5 py-1 rounded-full border border-indigo-200/50">
+          <span className="inline-flex items-center gap-1 text-xs bg-accent text-primary font-semibold px-2.5 py-1 rounded-full border border-primary/30/50">
             <RefreshCw className="w-3 h-3 animate-spin" /> Đang rửa xe
           </span>
         );
       case 'completed':
         return (
-          <span className="inline-flex items-center gap-1 text-xs bg-emerald-50 text-emerald-600 font-extrabold px-2.5 py-1 rounded-full border border-emerald-200/50">
+          <span className="inline-flex items-center gap-1 text-xs bg-success/10 text-success font-semibold px-2.5 py-1 rounded-full border border-success/30/50">
             <CheckCircle className="w-3 h-3" /> Hoàn thành
           </span>
         );
       case 'cancelled':
         return (
-          <span className="inline-flex items-center gap-1 text-xs bg-rose-50 text-rose-600 font-extrabold px-2.5 py-1 rounded-full border border-rose-200/50">
+          <span className="inline-flex items-center gap-1 text-xs bg-destructive/10 text-destructive font-semibold px-2.5 py-1 rounded-full border border-destructive/30/50">
             <XCircle className="w-3 h-3" /> Đã hủy
           </span>
         );
       case 'no_show':
         return (
-          <span className="inline-flex items-center gap-1 text-xs bg-slate-100 text-slate-500 font-extrabold px-2.5 py-1 rounded-full">
+          <span className="inline-flex items-center gap-1 text-xs bg-muted text-muted-foreground font-semibold px-2.5 py-1 rounded-full">
             <AlertCircle className="w-3 h-3" /> Vắng mặt (No show)
           </span>
         );
@@ -388,9 +403,9 @@ export default function MyOrdersPage() {
   const renderLicensePlate = (plate: string) => {
     if (!plate) return null;
     return (
-      <div className="inline-flex flex-col items-center justify-center border border-slate-300 rounded-md px-2.5 py-0.5 bg-slate-50 font-mono shadow-xs text-[10px] leading-none shrink-0 scale-95 origin-left">
-        <div className="text-[7px] text-slate-400 font-sans pb-0.5 leading-none">VIỆT NAM</div>
-        <span className="font-bold text-slate-800 tracking-wide leading-none">{plate}</span>
+      <div className="inline-flex flex-col items-center justify-center border border-border rounded-md px-2.5 py-0.5 bg-muted/40 font-mono shadow-xs text-[10px] leading-none shrink-0 scale-95 origin-left">
+        <div className="text-[7px] text-placeholder font-sans pb-0.5 leading-none">VIỆT NAM</div>
+        <span className="font-bold text-foreground tracking-wide leading-none">{plate}</span>
       </div>
     );
   };
@@ -406,7 +421,7 @@ export default function MyOrdersPage() {
         </div>
         <Button
           onClick={() => router.push('/booking')}
-          className="bg-primary hover:bg-primary/95 text-white rounded-xl px-5 py-2.5 font-bold shadow-lg shadow-primary/20 transition-all hover:scale-102 flex items-center gap-1.5"
+          className="bg-primary hover:bg-primary/95 text-white rounded-xl px-5 py-2.5 font-bold shadow-lg transition-all hover:scale-102 flex items-center gap-1.5"
         >
           Đặt lịch ngay
         </Button>
@@ -417,12 +432,15 @@ export default function MyOrdersPage() {
         {TABS.map(tab => (
           <button
             key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
+            onClick={() => {
+              setActiveTab(tab.id);
+              setPage(1);
+            }}
             className={cn(
               "text-xs font-bold px-4 py-2 rounded-xl transition-all whitespace-nowrap cursor-pointer shrink-0 border border-transparent",
               activeTab === tab.id
-                ? "bg-primary text-white shadow-md shadow-primary/15"
-                : "text-muted-foreground hover:bg-slate-100 hover:text-foreground"
+                ? "bg-primary text-white shadow-md"
+                : "text-muted-foreground hover:bg-muted hover:text-foreground"
             )}
           >
             {tab.label}
@@ -437,9 +455,9 @@ export default function MyOrdersPage() {
           <span className="text-sm text-muted-foreground">Đang tải danh sách lịch đặt...</span>
         </div>
       ) : filteredOrders.length === 0 ? (
-        <Card className="border-2 border-dashed border-border py-16 text-center rounded-2xl bg-white/40">
+        <Card className="border-2 border-dashed border-border py-16 text-center rounded-xl bg-white/40">
           <CardContent className="flex flex-col items-center justify-center gap-3">
-            <Calendar className="w-12 h-12 text-slate-300" />
+            <Calendar className="w-12 h-12 text-placeholder" />
             <p className="font-bold text-foreground">Không tìm thấy lịch hẹn nào</p>
             <p className="text-xs text-muted-foreground max-w-xs">
               Bạn chưa có lịch hẹn nào tương ứng với trạng thái lọc này.
@@ -448,7 +466,7 @@ export default function MyOrdersPage() {
         </Card>
       ) : (
         <div className="space-y-4">
-          {filteredOrders.map(order => {
+          {pagedOrders.map(order => {
             const vInfo = getVehicleInfo(order.vehicleId);
             const isPendingPayment = order.status === 'pending_payment';
             const isCancellable = order.status === 'confirmed' || order.status === 'pending_payment';
@@ -469,7 +487,7 @@ export default function MyOrdersPage() {
               <Card
                 key={order.id}
                 className={cn(
-                  "border-none rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all bg-white/95 backdrop-blur-md relative",
+                  "border-none rounded-xl overflow-hidden shadow-xs hover:shadow-md transition-all bg-white/95 backdrop-blur-md relative",
                   isPendingPayment ? "ring-1 ring-amber-500/20" : ""
                 )}
               >
@@ -478,14 +496,14 @@ export default function MyOrdersPage() {
 
                     {/* Header: Service Name & Status Badge */}
                     <div className="flex flex-wrap items-center justify-between sm:justify-start gap-3">
-                      <span className="font-black text-base text-foreground tracking-tight">
+                      <span className="font-semibold text-base text-foreground tracking-tight">
                         {getServiceName(order.serviceTypeId)}
                       </span>
                       {getStatusBadge(order.status)}
                     </div>
 
                     {/* Middle info */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 text-xs font-semibold text-slate-500">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 text-xs font-semibold text-muted-foreground">
 
                       {/* Vehicle */}
                       <div className="flex items-center gap-2">
@@ -508,12 +526,12 @@ export default function MyOrdersPage() {
                         <span className="text-foreground font-bold">
                           {order.paymentMethod === 'online' ? 'Chuyển khoản' : 'Tiền mặt'} •
                           <span className={cn(
-                            "ml-1 font-extrabold",
+                            "ml-1 font-semibold",
                             order.paymentStatus === 'paid'
-                              ? "text-emerald-500"
+                              ? "text-success"
                               : Number(order.amount) === 0
-                                ? "text-emerald-600"
-                                : "text-amber-500"
+                                ? "text-success"
+                                : "text-warning"
                           )}>
                             {order.paymentStatus === 'paid'
                               ? 'Đã trả'
@@ -526,7 +544,7 @@ export default function MyOrdersPage() {
                     </div>
 
                     {order.note && (
-                      <div className="bg-slate-50 p-2.5 rounded-lg text-xs font-medium text-slate-500 flex items-start gap-1.5 border border-slate-100 max-w-2xl">
+                      <div className="bg-muted/40 p-2.5 rounded-lg text-xs font-medium text-muted-foreground flex items-start gap-1.5 border border-border max-w-2xl">
                         <Info className="w-4 h-4 text-primary shrink-0 mt-0.5" />
                         <span>Ghi chú: {order.note}</span>
                       </div>
@@ -537,29 +555,29 @@ export default function MyOrdersPage() {
                       const washer = getWasherInfo(order);
                       if (!washer) {
                         return (
-                          <div className="mt-3 bg-slate-50 border border-slate-200/50 p-3 rounded-xl flex items-center justify-between gap-3 max-w-2xl">
+                          <div className="mt-3 bg-muted/40 border border-border p-3 rounded-xl flex items-center justify-between gap-3 max-w-2xl">
                             <div className="flex items-center gap-3">
-                              <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center font-bold text-slate-400 text-xs border border-slate-200">
+                              <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center font-bold text-placeholder text-xs border border-border">
                                 ?
                               </div>
                               <div>
-                                <p className="text-[10px] text-muted-foreground uppercase font-black tracking-wider">Thợ rửa xe</p>
-                                <p className="font-bold text-amber-600 text-xs">Đang chờ phân công thợ</p>
+                                <p className="text-[10px] text-muted-foreground uppercase font-semibold tracking-wider">Thợ rửa xe</p>
+                                <p className="font-bold text-warning text-xs">Đang chờ phân công thợ</p>
                               </div>
                             </div>
                           </div>
                         );
                       }
                       return (
-                        <div className="mt-3 bg-indigo-50/30 border border-indigo-100/30 p-3 rounded-xl flex items-center justify-between gap-3 max-w-2xl">
+                        <div className="mt-3 bg-accent border border-primary/30/30 p-3 rounded-xl flex items-center justify-between gap-3 max-w-2xl">
                           <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center font-bold text-indigo-600 text-xs border border-indigo-200">
+                            <div className="w-8 h-8 rounded-full bg-primary/15 flex items-center justify-center font-bold text-primary text-xs border border-primary/30">
                               {washer.name[0]}
                             </div>
                             <div>
-                              <p className="text-[10px] text-muted-foreground uppercase font-black tracking-wider">Thợ rửa xe</p>
-                              <p className="font-bold text-slate-800 text-xs">{washer.name}</p>
-                              <p className="text-[10px] text-amber-600 font-bold">⭐ {washer.rating}</p>
+                              <p className="text-[10px] text-muted-foreground uppercase font-semibold tracking-wider">Thợ rửa xe</p>
+                              <p className="font-bold text-foreground text-xs">{washer.name}</p>
+                              <p className="text-[10px] text-warning font-bold">⭐ {washer.rating}</p>
                             </div>
                           </div>
                         </div>
@@ -568,10 +586,10 @@ export default function MyOrdersPage() {
                   </div>
 
                   {/* Actions right panel */}
-                  <div className="flex flex-row md:flex-col items-center md:items-end justify-between md:justify-center border-t md:border-t-0 md:border-l border-slate-100 pt-4 md:pt-0 md:pl-5 shrink-0 gap-3">
+                  <div className="flex flex-row md:flex-col items-center md:items-end justify-between md:justify-center border-t md:border-t-0 md:border-l border-border pt-4 md:pt-0 md:pl-5 shrink-0 gap-3">
                     <div className="flex flex-col md:items-end">
                       <span className="text-[10px] text-muted-foreground uppercase font-bold block">Tổng thanh toán</span>
-                      <span className="text-base font-black text-primary tracking-tight">
+                      <span className="text-base font-semibold text-primary tracking-tight">
                         {formatCurrency(order.amount)}
                       </span>
                     </div>
@@ -581,7 +599,7 @@ export default function MyOrdersPage() {
                         <Button
                           size="sm"
                           onClick={() => window.location.href = order.payosCheckoutUrl!}
-                          className="bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-bold h-8 px-3 cursor-pointer"
+                          className="bg-warning hover:bg-amber-600 text-white rounded-xl text-xs font-bold h-8 px-3 cursor-pointer"
                         >
                           Thanh toán
                         </Button>
@@ -591,14 +609,14 @@ export default function MyOrdersPage() {
                         <Button
                           size="sm"
                           onClick={() => setFeedbackOrder(order)}
-                          className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold h-8 px-3 cursor-pointer"
+                          className="bg-success hover:bg-success/90 text-white rounded-xl text-xs font-bold h-8 px-3 cursor-pointer"
                         >
                           Đánh giá thợ
                         </Button>
                       )}
 
                       {order.status === 'completed' && submittedFeedbacks[order.id] && (
-                        <span className="text-xs font-semibold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-100 flex items-center gap-1 w-fit">
+                        <span className="text-xs font-semibold text-success bg-success/10 px-2.5 py-1 rounded-lg border border-success/30 flex items-center gap-1 w-fit">
                           Đã đánh giá
                         </span>
                       )}
@@ -623,7 +641,7 @@ export default function MyOrdersPage() {
                           size="sm"
                           variant="ghost"
                           onClick={() => setCancellingOrder(order)}
-                          className="rounded-xl text-xs font-semibold h-8 px-3 text-red-500 hover:text-red-600 hover:bg-red-50 cursor-pointer"
+                          className="rounded-xl text-xs font-semibold h-8 px-3 text-destructive hover:text-destructive hover:bg-destructive/10 cursor-pointer"
                         >
                           Hủy
                         </Button>
@@ -635,16 +653,22 @@ export default function MyOrdersPage() {
               </Card>
             );
           })}
+          <Pagination
+            page={safePage}
+            totalPages={totalPages}
+            onPageChange={setPage}
+            className="pt-2"
+          />
         </div>
       )}
 
       {/* ─── MODAL ĐỔI LỊCH (RESCHEDULE DIALOG) ─── */}
       {reschedulingOrder && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
-          <Card className="w-full max-w-lg border-none shadow-2xl rounded-2xl overflow-hidden bg-white/95 backdrop-blur-md animate-in zoom-in-95 duration-200">
+          <Card className="w-full max-w-lg border-none shadow-2xl rounded-xl overflow-hidden bg-white/95 backdrop-blur-md animate-in zoom-in-95 duration-200">
             <CardContent className="p-6">
 
-              <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-5">
+              <div className="flex items-center justify-between border-b border-border pb-3 mb-5">
                 <h3 className="font-heading text-base font-bold text-foreground flex items-center gap-2">
                   <Calendar className="w-5 h-5 text-primary" /> Đổi lịch hẹn rửa xe
                 </h3>
@@ -654,33 +678,33 @@ export default function MyOrdersPage() {
                     setRescheduleSlot('');
                     setRescheduleDate('');
                   }}
-                  className="p-1 text-slate-400 hover:text-slate-600 cursor-pointer"
+                  className="p-1 text-placeholder hover:text-muted-foreground cursor-pointer"
                 >
                   <XCircle className="w-5 h-5" />
                 </button>
               </div>
 
               <div className="space-y-4">
-                <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 space-y-1">
+                <div className="bg-muted/40 p-3 rounded-xl border border-border space-y-1">
                   <span className="text-[10px] text-muted-foreground font-bold uppercase block">Gói rửa xe đang đổi</span>
-                  <span className="font-extrabold text-sm text-foreground block">
+                  <span className="font-semibold text-sm text-foreground block">
                     {getServiceName(reschedulingOrder.serviceTypeId)}
                   </span>
-                  <span className="text-[10px] text-slate-400 font-semibold block">
+                  <span className="text-[10px] text-placeholder font-semibold block">
                     Lịch cũ: {new Date(reschedulingOrder.scheduledAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })} ngày {new Date(reschedulingOrder.scheduledAt).toLocaleDateString('vi-VN')}
                   </span>
                 </div>
 
                 {/* Date Picker select */}
                 <div className="space-y-1.5">
-                  <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider block">Chọn ngày mới</Label>
+                  <Label className="text-xs font-bold text-muted-foreground uppercase tracking-wider block">Chọn ngày mới</Label>
                   <select
                     value={rescheduleDate}
                     onChange={e => {
                       setRescheduleDate(e.target.value);
                       setRescheduleSlot('');
                     }}
-                    className="w-full h-10 px-3 rounded-xl border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                    className="w-full h-10 px-3 rounded-xl border border-border bg-card text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
                   >
                     {dateOptions.map(d => (
                       <option key={d.value} value={d.value}>
@@ -692,14 +716,14 @@ export default function MyOrdersPage() {
 
                 {/* Slots Grid */}
                 <div className="space-y-2 pt-1">
-                  <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider block">Chọn giờ còn trống</Label>
+                  <Label className="text-xs font-bold text-muted-foreground uppercase tracking-wider block">Chọn giờ còn trống</Label>
 
                   {isLoadingSlots ? (
                     <div className="flex justify-center items-center py-8">
                       <Spinner className="size-6 text-primary" />
                     </div>
                   ) : availableSlots.length === 0 ? (
-                    <p className="text-xs text-amber-500 font-bold bg-amber-50 p-3 border border-amber-200 rounded-xl text-center">
+                    <p className="text-xs text-warning font-bold bg-warning/10 p-3 border border-warning/30 rounded-xl text-center">
                       Không có ca trống nào vào ngày này. Vui lòng chọn ngày khác.
                     </p>
                   ) : (
@@ -724,12 +748,12 @@ export default function MyOrdersPage() {
                               isSelected
                                 ? "border-primary bg-primary/5 ring-1 ring-primary/20"
                                 : isFull
-                                  ? "border-border bg-slate-100 text-slate-400 cursor-not-allowed"
-                                  : "border-border bg-card hover:bg-slate-50"
+                                  ? "border-border bg-muted text-placeholder cursor-not-allowed"
+                                  : "border-border bg-card hover:bg-muted/50"
                             )}
                           >
-                            <span className="font-extrabold text-xs text-foreground">{timeStr}</span>
-                            <span className="text-[8px] font-bold mt-0.5 text-emerald-500">Trống {slot.remainingCapacity}</span>
+                            <span className="font-semibold text-xs text-foreground">{timeStr}</span>
+                            <span className="text-[8px] font-bold mt-0.5 text-success">Trống {slot.remainingCapacity}</span>
                           </button>
                         );
                       })}
@@ -738,7 +762,7 @@ export default function MyOrdersPage() {
                 </div>
               </div>
 
-              <div className="flex justify-end gap-3 pt-5 border-t border-slate-100 mt-6">
+              <div className="flex justify-end gap-3 pt-5 border-t border-border mt-6">
                 <Button
                   type="button"
                   variant="outline"
@@ -768,11 +792,11 @@ export default function MyOrdersPage() {
       {/* ─── MODAL HỦY LỊCH (CANCEL CONFIRM DIALOG) ─── */}
       {cancellingOrder && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
-          <Card className="w-full max-w-md border-none shadow-2xl rounded-2xl overflow-hidden bg-white/95 backdrop-blur-md animate-in zoom-in-95 duration-200">
+          <Card className="w-full max-w-md border-none shadow-2xl rounded-xl overflow-hidden bg-white/95 backdrop-blur-md animate-in zoom-in-95 duration-200">
             <CardContent className="p-6">
 
               <div className="flex items-start gap-3 mb-4">
-                <div className="p-2.5 rounded-full bg-red-50 text-red-500 mt-0.5">
+                <div className="p-2.5 rounded-full bg-destructive/10 text-destructive mt-0.5">
                   <AlertCircle className="w-5 h-5" />
                 </div>
                 <div className="space-y-1">
@@ -786,7 +810,7 @@ export default function MyOrdersPage() {
               </div>
 
               <div className="space-y-2 mb-6">
-                <Label htmlFor="cancel-reason" className="text-xs font-bold text-slate-500 uppercase tracking-wider block">
+                <Label htmlFor="cancel-reason" className="text-xs font-bold text-muted-foreground uppercase tracking-wider block">
                   Lý do hủy lịch (không bắt buộc)
                 </Label>
                 <Input
@@ -794,11 +818,11 @@ export default function MyOrdersPage() {
                   placeholder="VD: Thay đổi kế hoạch đột xuất, có việc bận..."
                   value={cancelReason}
                   onChange={e => setCancelReason(e.target.value)}
-                  className="rounded-xl border-border/50 bg-white/50 focus:bg-white transition-all text-xs"
+                  className="rounded-xl border-border/50 bg-white/50 focus:bg-card transition-all text-xs"
                 />
               </div>
 
-              <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
+              <div className="flex justify-end gap-3 pt-4 border-t border-border">
                 <Button
                   type="button"
                   variant="outline"
@@ -813,7 +837,7 @@ export default function MyOrdersPage() {
                 </Button>
                 <Button
                   onClick={handleCancelSubmit}
-                  className="bg-red-500 hover:bg-red-600 text-white rounded-xl text-xs font-bold px-5 h-9 cursor-pointer"
+                  className="bg-destructive/100 hover:bg-red-600 text-white rounded-xl text-xs font-bold px-5 h-9 cursor-pointer"
                   disabled={cancelMutation.isPending}
                 >
                   {cancelMutation.isPending ? <Spinner className="size-4" /> : 'Xác nhận hủy'}
@@ -828,10 +852,10 @@ export default function MyOrdersPage() {
       {/* ─── MODAL ĐÁNH GIÁ DỊCH VỤ (FEEDBACK DIALOG) ─── */}
       {feedbackOrder && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
-          <Card className="w-full max-w-md border-none shadow-2xl rounded-2xl overflow-hidden bg-white/95 backdrop-blur-md animate-in zoom-in-95 duration-200">
+          <Card className="w-full max-w-md border-none shadow-2xl rounded-xl overflow-hidden bg-white/95 backdrop-blur-md animate-in zoom-in-95 duration-200">
             <CardContent className="p-6">
 
-              <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-5">
+              <div className="flex items-center justify-between border-b border-border pb-3 mb-5">
                 <h3 className="font-heading text-base font-bold text-foreground">Đánh giá chất lượng rửa xe</h3>
                 <button
                   onClick={() => {
@@ -839,7 +863,7 @@ export default function MyOrdersPage() {
                     setFeedbackRating(5);
                     setFeedbackComment('');
                   }}
-                  className="p-1 text-slate-400 hover:text-slate-600 cursor-pointer"
+                  className="p-1 text-placeholder hover:text-muted-foreground cursor-pointer"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -847,19 +871,19 @@ export default function MyOrdersPage() {
 
               <div className="space-y-4">
                 {/* Thợ được đánh giá */}
-                <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-full bg-indigo-100 flex items-center justify-center font-bold text-indigo-600 text-sm">
+                <div className="bg-muted/40 p-3 rounded-xl border border-border flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-full bg-primary/15 flex items-center justify-center font-bold text-primary text-sm">
                     {getWasherInfo(feedbackOrder)?.name[0] || '?'}
                   </div>
                   <div>
                     <span className="text-[10px] text-muted-foreground font-bold uppercase block">Thợ phụ trách</span>
-                    <span className="font-bold text-slate-800 text-xs block">{getWasherInfo(feedbackOrder)?.name || 'Chưa phân công'}</span>
+                    <span className="font-bold text-foreground text-xs block">{getWasherInfo(feedbackOrder)?.name || 'Chưa phân công'}</span>
                   </div>
                 </div>
 
                 {/* Chọn số sao */}
                 <div className="space-y-2 text-center py-2">
-                  <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider block">Chọn mức độ hài lòng</Label>
+                  <Label className="text-xs font-bold text-muted-foreground uppercase tracking-wider block">Chọn mức độ hài lòng</Label>
                   <div className="flex justify-center gap-2">
                     {[1, 2, 3, 4, 5].map((star) => (
                       <button
@@ -872,7 +896,7 @@ export default function MyOrdersPage() {
                       </button>
                     ))}
                   </div>
-                  <span className="text-xs font-extrabold text-amber-500 block">
+                  <span className="text-xs font-semibold text-warning block">
                     {feedbackRating === 5 && 'Rất hài lòng (5 sao)'}
                     {feedbackRating === 4 && 'Hài lòng (4 sao)'}
                     {feedbackRating === 3 && 'Bình thường (3 sao)'}
@@ -883,19 +907,19 @@ export default function MyOrdersPage() {
 
                 {/* Bình luận */}
                 <div className="space-y-1.5">
-                  <Label htmlFor="feedback-comment" className="text-xs font-bold text-slate-500 uppercase tracking-wider block">Nhận xét của bạn</Label>
+                  <Label htmlFor="feedback-comment" className="text-xs font-bold text-muted-foreground uppercase tracking-wider block">Nhận xét của bạn</Label>
                   <textarea
                     id="feedback-comment"
                     placeholder="VD: Thợ rửa rất sạch, nhiệt tình, đúng giờ..."
                     value={feedbackComment}
                     onChange={e => setFeedbackComment(e.target.value)}
                     rows={3}
-                    className="w-full border border-slate-200 rounded-xl p-3 text-xs focus:outline-none focus:border-indigo-500 transition-all resize-none placeholder:text-slate-300"
+                    className="w-full border border-border rounded-xl p-3 text-xs focus:outline-none focus:border-primary transition-all resize-none placeholder:text-placeholder"
                   />
                 </div>
               </div>
 
-              <div className="flex justify-end gap-3 pt-5 border-t border-slate-100 mt-6">
+              <div className="flex justify-end gap-3 pt-5 border-t border-border mt-6">
                 <Button
                   type="button"
                   variant="outline"
@@ -910,7 +934,7 @@ export default function MyOrdersPage() {
                 </Button>
                 <Button
                   onClick={handleFeedbackSubmit}
-                  className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold px-5 h-9 cursor-pointer"
+                  className="bg-success hover:bg-success/90 text-white rounded-xl text-xs font-bold px-5 h-9 cursor-pointer"
                 >
                   Gửi đánh giá
                 </Button>
