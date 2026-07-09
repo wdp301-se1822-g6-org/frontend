@@ -28,7 +28,7 @@ const menuItems = [
     title: 'Thông Báo',
     icon: Bell,
     color: 'text-red-500',
-    href: '/',
+    href: '/profile/notifications',
   },
 
   {

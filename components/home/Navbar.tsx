@@ -20,11 +20,11 @@ import {
   Car,
   LogOut,
   ChevronDown,
-  Bell,
   User2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getTierMeta } from '@/constants';
+import { NotificationBell } from '@/components/notifications/NotificationBell';
 import { getInitials } from '@/lib/format';
 import { useQuery } from '@tanstack/react-query';
 import { useLogout } from '@/hooks/auth/useLogout';
@@ -37,7 +37,6 @@ const WASHES_PER_FREE_VOUCHER = 10;
 const navLinks = [
   { label: 'Đặt lịch', href: '/booking' },
   { label: 'Hạng thành viên', href: '/#loyalty' },
-  { label: 'Khuyến mãi', href: '/#promotions' },
   { label: 'Liên hệ', href: '/#contact' },
 ];
 
@@ -84,7 +83,7 @@ export function Navbar() {
               height={34}
               className='rounded-full object-cover shadow-sm'
             />
-            <span className='font-heading text-foreground font-black text-2xl tracking-tighter'>
+            <span className='font-heading text-foreground font-bold text-2xl tracking-tighter'>
               WAVE
             </span>
           </Link>
@@ -106,11 +105,8 @@ export function Navbar() {
           <div className='hidden md:flex items-center gap-2 sm:gap-4'>
             {authUser ? (
               <div className='flex items-center gap-4'>
-                {/* Notification Bell */}
-                <button className='relative p-2 text-foreground/50 hover:text-primary hover:bg-primary/5 rounded-full transition-all cursor-pointer group'>
-                  <Bell className='w-5 h-5 transition-transform group-hover:rotate-12' />
-                  <span className='absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border-2 border-background' />
-                </button>
+                {/* Notification Bell (realtime + lịch sử) */}
+                <NotificationBell />
 
                 <DropdownMenu modal={false}>
                   <DropdownMenuTrigger asChild>
@@ -132,7 +128,7 @@ export function Navbar() {
                           </div>
                         ) : (
                           <div className='w-8 h-8 rounded-full bg-background flex items-center justify-center border-2 border-background shadow-inner'>
-                            <span className='text-primary text-[10px] font-black tracking-tighter'>
+                            <span className='text-primary text-[10px] font-bold tracking-tighter'>
                               {initials}
                             </span>
                           </div>
@@ -151,11 +147,11 @@ export function Navbar() {
                   >
                     <div className='p-4 mb-2 bg-linear-to-br from-primary/5 to-secondary/5 rounded-xl border border-primary/10'>
                       <div className='flex items-center gap-3 mb-4'>
-                        <div className='w-12 h-12 rounded-full bg-primary flex items-center justify-center text-white text-base font-black shadow-lg'>
+                        <div className='w-12 h-12 rounded-full bg-primary flex items-center justify-center text-white text-base font-bold shadow-lg'>
                           {initials}
                         </div>
                         <div className='flex flex-col'>
-                          <span className='font-heading font-black text-lg text-foreground tracking-tight'>
+                          <span className='font-heading font-bold text-lg text-foreground tracking-tight'>
                             {authUser.name}
                           </span>
                           <span className='text-foreground/50 text-xs font-medium'>
@@ -168,13 +164,13 @@ export function Navbar() {
                         <div className='flex items-center justify-between'>
                           <span
                             className={cn(
-                              'text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-[0.1em] shadow-xs',
+                              'text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-[0.1em] shadow-xs',
                               tierMeta.badgeClass,
                             )}
                           >
                             {tierName}
                           </span>
-                          <span className='text-primary font-black text-xs'>
+                          <span className='text-primary font-bold text-xs'>
                             {points.toLocaleString()}{' '}
                             <span className='text-foreground/40 font-bold'>
                               PTS

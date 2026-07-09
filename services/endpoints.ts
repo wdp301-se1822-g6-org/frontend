@@ -99,6 +99,12 @@ export const ENDPOINTS = {
     byId: (id: string) => `/me/vouchers/${id}`,
     claim: '/me/vouchers/claim',
   },
+  notifications: {
+    list: '/me/notifications',
+    unreadCount: '/me/notifications/unread-count',
+    read: (id: string) => `/me/notifications/${id}/read`,
+    readAll: '/me/notifications/read-all',
+  },
   adminVouchers: {
     list: '/admin/vouchers',
     create: '/admin/vouchers',

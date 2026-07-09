@@ -53,6 +53,23 @@ export const getMyVouchers = (status?: 'unused' | 'used' | 'expired') =>
 export const getMyVoucher = (id: string) =>
   axiosInstance.get(ENDPOINTS.vouchers.byId(id));
 
+/** Khách nhận 1 voucher pool bằng mã — POST /me/vouchers/claim. */
+export const claimVoucher = (code: string) =>
+  axiosInstance.post(ENDPOINTS.vouchers.claim, { code });
+
+// ─── Notifications ─────────────────────────────────────
+export const getNotifications = (page = 1, limit = 20) =>
+  axiosInstance.get(ENDPOINTS.notifications.list, { params: { page, limit } });
+
+export const getUnreadCount = () =>
+  axiosInstance.get(ENDPOINTS.notifications.unreadCount);
+
+export const markNotificationRead = (id: string) =>
+  axiosInstance.patch(ENDPOINTS.notifications.read(id));
+
+export const markAllNotificationsRead = () =>
+  axiosInstance.patch(ENDPOINTS.notifications.readAll);
+
 export const getTierConfigs = () => axiosInstance.get('/tier-configs');
 
 export const getTierConfig = (id: string) =>

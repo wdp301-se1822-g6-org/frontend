@@ -4,6 +4,7 @@ import { useAuthStore } from '@/store/useAuthStore';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useEffect, useRef, type ReactNode } from 'react';
 import { Toaster } from 'sonner';
+import { NotificationSocketBridge } from '@/components/notifications/NotificationSocketBridge';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -47,6 +48,7 @@ export default function AppProvider({ children }: { children: ReactNode }) {
   return (
     <QueryClientProvider client={queryClient}>
       {children}
+      <NotificationSocketBridge />
       <Toaster
         richColors
         position='top-right'
