@@ -1,23 +1,45 @@
 'use client';
 
+/**
+ * Trang tổng quan + báo cáo vận hành của Manager (gộp làm 1).
+ * - Phần trên: thao tác realtime (cần xử lý ngay + xe đang rửa) từ work-orders.
+ * - Phần dưới: báo cáo đầy đủ theo bộ lọc thời gian từ GET /admin/dashboard.
+ */
+
 import { AdminTopbar } from '@/components/admin/AdminTopbar';
 import { DonutChart } from '@/components/admin/dashboard/DonutChart';
+import { CancellationNoShowSection } from '@/components/admin/dashboard/CancellationNoShow';
 import {
-  adminGetDashboard,
-  adminGetWorkOrders,
-} from '@/lib/admin-api';
-import { getThisMonthRange } from '@/lib/date-range';
-import { formatCurrency, formatNumber } from '@/lib/format';
+  BarList,
+  DashboardSection,
+  EmptyBlock,
+  HourStrip,
+  KpiCard,
+  Panel,
+  RankBadge,
+  RankingTable,
+} from '@/components/admin/dashboard/parts';
+import { QueryBoundary } from '@/components/shared/QueryBoundary';
+import { adminGetDashboard, adminGetWorkOrders } from '@/lib/admin-api';
+import { formatCurrency, formatNumber, formatPercent } from '@/lib/format';
 import type { DashboardReport } from '@/types/dashboard';
-import { useQuery } from '@tanstack/react-query';
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import {
+  AlertTriangle,
   ArrowRight,
+  CalendarCheck,
   CheckCircle2,
+  CircleDollarSign,
   ClipboardCheck,
   Clock,
   CreditCard,
+  Gift,
+  Layers,
   RotateCcw,
+  TrendingDown,
+  Undo2,
   UserPlus,
+  Wrench,
 } from 'lucide-react';
 import type { ElementType } from 'react';
 import Link from 'next/link';
@@ -27,20 +49,19 @@ import {
   type DateFilterValue,
 } from '@/components/admin/dashboard/DateRangeFilter';
 import { DEFAULT_PERIOD, getRangeForPeriod } from '@/lib/date-range';
+import { StatusBadge } from '@/components/shared/StatusBadge';
+import type { StatusTone } from '@/constants';
 
 /* Real work-order shape (BE WorkOrderResponseDto). */
 interface WorkOrderRow {
   id?: string;
   _id?: string;
   code?: string;
-  status?: string; // waiting | assigned | in_progress | quality_check | returned | done
+  status?: string; // waiting | assigned | in_progress | done
   serviceName?: string;
   assignedWasherName?: string;
-  qcPassed?: boolean | null;
   vehicleSnapshot?: { plate?: string };
 }
-
-
 
 const STATUS_LABELS: Record<string, string> = {
   pending_payment: 'Chờ thanh toán',
@@ -52,13 +73,12 @@ const STATUS_LABELS: Record<string, string> = {
   no_show: 'Không đến',
 };
 
-const WO_STATUS: Record<string, { label: string; cls: string }> = {
-  waiting: { label: 'Chờ gán thợ', cls: 'bg-amber-50 text-amber-700 border border-amber-100' },
-  assigned: { label: 'Đã gán thợ', cls: 'bg-sky-50 text-sky-700 border border-sky-100' },
-  in_progress: { label: 'Đang rửa', cls: 'bg-blue-50 text-blue-700 border border-blue-100' },
-  quality_check: { label: 'Chờ QC', cls: 'bg-purple-50 text-purple-700 border border-purple-100' },
-  returned: { label: 'QC trả về', cls: 'bg-rose-50 text-rose-700 border border-rose-100' },
-  done: { label: 'Hoàn thành', cls: 'bg-emerald-50 text-emerald-700 border border-emerald-100' },
+// BE đã bỏ luồng QC — work order kết thúc ở "done" ngay khi thợ rửa xong.
+const WO_STATUS: Record<string, { label: string; tone: StatusTone }> = {
+  waiting: { label: 'Chờ gán thợ', tone: 'warning' },
+  assigned: { label: 'Đã gán thợ', tone: 'info' },
+  in_progress: { label: 'Đang rửa', tone: 'primary' },
+  done: { label: 'Hoàn thành', tone: 'success' },
 };
 
 export default function ManagerOverviewPage() {
@@ -67,72 +87,63 @@ export default function ManagerOverviewPage() {
     range: getRangeForPeriod(DEFAULT_PERIOD),
   }));
 
-  const { data: todayReport } = useQuery({
-    queryKey: ['manager-today-report', filter.period, filter.range.from, filter.range.to],
+  // Báo cáo đầy đủ theo kỳ đã chọn.
+  const { data, isLoading, isError, isFetching, refetch } = useQuery({
+    queryKey: [
+      'manager-dashboard',
+      filter.period,
+      filter.range.from,
+      filter.range.to,
+    ],
     queryFn: async () => {
       const res = await adminGetDashboard({
         fromDate: filter.range.from,
         toDate: filter.range.to,
         period: filter.period,
+        topN: 5,
       });
       return res.data as DashboardReport;
     },
+    placeholderData: keepPreviousData,
   });
+  const isRefetching = isFetching && !isLoading;
 
-  const { data: monthReport, isLoading: monthLoading } = useQuery({
-    queryKey: ['manager-month-report'],
-    queryFn: async () => {
-      const r = getThisMonthRange();
-      const res = await adminGetDashboard({
-        fromDate: r.from,
-        toDate: r.to,
-        period: 'month',
-      });
-      return res.data as DashboardReport;
-    },
-  });
-
+  // Phiếu rửa xe realtime (cảnh báo + bảng xe đang rửa) — không theo kỳ.
   const { data: workOrdersData, isLoading: woLoading } = useQuery({
     queryKey: ['manager-overview-workorders'],
     queryFn: () => adminGetWorkOrders({ limit: 100 }),
   });
-
   const workOrders: WorkOrderRow[] =
     workOrdersData?.data?.data ?? workOrdersData?.data ?? [];
 
-  // ── Operational alerts (real-time, not date-bound) ──────────────────────
   const waitingCount = workOrders.filter((w) => w.status === 'waiting').length;
-  const qcPendingCount = workOrders.filter(
-    (w) => w.status === 'quality_check',
+  const assignedCount = workOrders.filter(
+    (w) => w.status === 'assigned',
   ).length;
-  const returnedCount = workOrders.filter(
-    (w) => w.status === 'returned',
+  const inProgressCount = workOrders.filter(
+    (w) => w.status === 'in_progress',
   ).length;
-
   const activeWorkOrders = workOrders.filter((w) => w.status !== 'done');
-
-  const ov = todayReport?.overview;
+  const completedInPeriod = data?.overview.completedBookings ?? 0;
 
   return (
     <>
       <AdminTopbar
         title='Tổng quan vận hành'
-        subtitle='Tình hình vận hành của tiệm hôm nay và những việc cần xử lý.'
+        subtitle='Việc cần xử lý ngay và báo cáo vận hành theo thời gian.'
       />
-      <main className='flex-1 p-6 lg:p-8 overflow-y-auto bg-slate-50/50'>
+      <main className='flex-1 p-6 lg:p-8 overflow-y-auto bg-background'>
         <div className='max-w-7xl mx-auto flex flex-col gap-8'>
-          {/* Bộ lọc ngày tháng năm */}
-          <div className='bg-white rounded-2xl border border-slate-100 p-4 shadow-sm'>
-            <DateRangeFilter
-              value={filter}
-              onChange={setFilter}
-              isFetching={false}
-            />
-          </div>
+          {/* Bộ lọc thời gian (áp cho báo cáo phía dưới) */}
+          <DateRangeFilter
+            value={filter}
+            onChange={setFilter}
+            isFetching={isRefetching}
+          />
 
-          {/* ── Cần xử lý ngay ── */}
+          {/* ── Cần xử lý ngay (realtime) ── */}
           <section className='flex flex-col gap-4'>
-            <h2 className='font-heading text-sm font-black uppercase tracking-widest text-slate-500'>
+            <h2 className='font-heading text-base font-semibold tracking-tight text-foreground'>
               Cần xử lý ngay
             </h2>
             <div className='grid grid-cols-2 lg:grid-cols-4 gap-4'>
@@ -146,163 +157,70 @@ export default function ManagerOverviewPage() {
               />
               <AlertCard
                 icon={ClipboardCheck}
-                count={qcPendingCount}
-                label='Đơn chờ kiểm định QC'
-                sub='Thợ đã rửa xong, chờ duyệt'
+                count={assignedCount}
+                label='Đơn đã gán thợ'
+                sub='Chờ thợ bắt đầu rửa'
                 href='/manager/work-orders'
-                active={qcPendingCount > 0}
+                active={assignedCount > 0}
               />
               <AlertCard
                 icon={RotateCcw}
-                count={returnedCount}
-                label='Đơn bị QC trả về'
-                sub='Cần rửa lại'
+                count={inProgressCount}
+                label='Xe đang rửa'
+                sub='Thợ đang thực hiện'
                 href='/manager/work-orders'
-                active={returnedCount > 0}
-                danger
+                active={inProgressCount > 0}
               />
               <AlertCard
                 icon={CheckCircle2}
-                count={ov ? ov.completedBookings : 0}
+                count={completedInPeriod}
                 label='Số xe đã rửa'
-                sub='Đã rửa hoàn tất'
+                sub='Đã rửa hoàn tất (kỳ đã chọn)'
                 href='/manager/work-orders'
-                active={(ov ? ov.completedBookings : 0) > 0}
+                active={completedInPeriod > 0}
               />
             </div>
           </section>
 
-          {/* ── KPI ── */}
-          <div className='grid grid-cols-1 sm:grid-cols-2 gap-5'>
-            <SlateKpi
-              icon={CreditCard}
-              iconBg='bg-indigo-600'
-              value={ov ? formatCurrency(ov.netRevenue) : '...'}
-              label='Doanh thu thực nhận'
-              sub={ov ? `${formatNumber(ov.completedBookings)} đơn hoàn thành` : 'Đang tải'}
-              badge='Thời kỳ chọn'
-            />
-            <SlateKpi
-              icon={CheckCircle2}
-              iconBg='bg-emerald-600'
-              value={ov ? `${formatNumber(ov.completedBookings)} xe` : '...'}
-              label='Số xe đã rửa'
-              sub='Đã hoàn thành toàn bộ'
-            />
-          </div>
-
-          {/* ── Phân tích nhanh — Tháng này ── */}
-          <section className='flex flex-col gap-4'>
-            <div className='flex items-end justify-between gap-4'>
-              <div>
-                <h2 className='font-heading text-base font-black text-slate-900'>
-                  Phân tích nhanh - Tháng này
-                </h2>
-                <p className='text-xs text-slate-500'>
-                  Tổng hợp theo tháng hiện tại. Xem chi tiết theo kỳ ở Báo cáo
-                  vận hành.
-                </p>
-              </div>
-              <Link
-                href='/manager/dashboard'
-                className='shrink-0 text-xs font-black text-indigo-600 hover:underline flex items-center gap-1'
-              >
-                Xem báo cáo đầy đủ <ArrowRight className='w-3 h-3' />
-              </Link>
-            </div>
-
-            <div className='grid grid-cols-2 gap-4'>
-              <MiniStat
-                label='Doanh thu thực nhận'
-                value={monthReport ? formatCurrency(monthReport.revenue.net) : '...'}
-              />
-              <MiniStat
-                label='Tổng đặt lịch'
-                value={monthReport ? formatNumber(monthReport.overview.totalBookings) : '...'}
-              />
-            </div>
-
-            <div className='grid gap-4 lg:grid-cols-2'>
-              <div className='bg-white rounded-2xl border border-slate-100 shadow-sm p-5'>
-                <h3 className='text-sm font-bold text-slate-800 mb-4'>
-                  Tỷ trọng trạng thái đặt lịch
-                </h3>
-                {monthLoading ? (
-                  <DonutSkeleton />
-                ) : (
-                  <DonutChart
-                    data={Object.entries(
-                      monthReport?.bookings.statusSummary ?? {},
-                    ).map(([key, count]) => ({
-                      label: STATUS_LABELS[key] ?? key,
-                      value: count,
-                    }))}
-                    centerCaption='đơn'
-                    emptyMessage='Chưa có booking nào trong tháng này'
-                  />
-                )}
-              </div>
-              <div className='bg-white rounded-2xl border border-slate-100 shadow-sm p-5'>
-                <h3 className='text-sm font-bold text-slate-800 mb-4'>
-                  Tỷ trọng doanh thu theo dịch vụ
-                </h3>
-                {monthLoading ? (
-                  <DonutSkeleton />
-                ) : (
-                  <DonutChart
-                    data={(monthReport?.revenue.byService ?? []).map((s) => ({
-                      label: s.name,
-                      value: s.revenue,
-                    }))}
-                    formatValue={formatCurrency}
-                    centerCaption='doanh thu'
-                    emptyMessage='Chưa có doanh thu theo dịch vụ trong tháng này'
-                  />
-                )}
-              </div>
-            </div>
-          </section>
-
-          {/* ── Đơn xe đang rửa thực tế ── */}
-          <div className='bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden'>
-            <div className='flex items-center justify-between px-6 py-5 border-b border-slate-100'>
-              <h2 className='font-heading font-black text-slate-900 text-base'>
+          {/* ── Đơn xe đang rửa thực tế (realtime) ── */}
+          <div className='bg-card rounded-xl border border-border shadow-xs overflow-hidden'>
+            <div className='flex items-center justify-between px-6 py-5 border-b border-border'>
+              <h2 className='font-heading font-semibold tracking-tight text-foreground text-base'>
                 Đơn xe đang rửa thực tế
               </h2>
               <Link
                 href='/manager/work-orders'
-                className='text-xs font-black text-indigo-600 hover:underline flex items-center gap-1'
+                className='text-xs font-semibold text-primary hover:underline flex items-center gap-1'
               >
                 Xem tất cả vận hành <ArrowRight className='w-3 h-3' />
               </Link>
             </div>
             <div className='overflow-x-auto'>
-              <table className='w-full text-sm text-slate-600'>
+              <table className='w-full text-sm'>
                 <thead>
-                  <tr className='bg-slate-50/50 border-b border-slate-100'>
-                    <th className='text-left px-6 py-3.5 text-[11px] font-black uppercase tracking-widest text-slate-500'>Mã số</th>
-                    <th className='text-left px-4 py-3.5 text-[11px] font-black uppercase tracking-widest text-slate-500'>Biển số xe</th>
-                    <th className='text-left px-4 py-3.5 text-[11px] font-black uppercase tracking-widest text-slate-500'>Dịch vụ</th>
-                    <th className='text-left px-4 py-3.5 text-[11px] font-black uppercase tracking-widest text-slate-500'>Thợ phụ trách</th>
-                    <th className='text-center px-4 py-3.5 text-[11px] font-black uppercase tracking-widest text-slate-500'>QC</th>
-                    <th className='text-right px-6 py-3.5 text-[11px] font-black uppercase tracking-widest text-slate-500'>Trạng thái</th>
+                  <tr className='bg-muted/50 border-b border-border'>
+                    <th className='text-left px-6 py-3.5 text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground'>Mã số</th>
+                    <th className='text-left px-4 py-3.5 text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground'>Biển số xe</th>
+                    <th className='text-left px-4 py-3.5 text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground'>Dịch vụ</th>
+                    <th className='text-left px-4 py-3.5 text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground'>Thợ phụ trách</th>
+                    <th className='text-right px-6 py-3.5 text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground'>Trạng thái</th>
                   </tr>
                 </thead>
-                <tbody className='divide-y divide-slate-100'>
+                <tbody className='divide-y divide-border'>
                   {woLoading ? (
                     Array.from({ length: 3 }).map((_, i) => (
                       <tr key={i}>
-                        {Array.from({ length: 6 }).map((__, j) => (
+                        {Array.from({ length: 5 }).map((__, j) => (
                           <td key={j} className='px-6 py-4'>
-                            <div className='h-4 bg-slate-100 animate-pulse rounded-lg' />
+                            <div className='h-4 bg-muted animate-pulse rounded-md' />
                           </td>
                         ))}
                       </tr>
                     ))
                   ) : activeWorkOrders.length === 0 ? (
                     <tr>
-                      <td colSpan={6} className='px-6 py-12 text-center text-slate-500 font-semibold'>
-                        Không có chiếc xe nào đang được rửa tại quầy.
+                      <td colSpan={5} className='px-6 py-12 text-center text-muted-foreground'>
+                        Chưa có xe nào đang được rửa. Đơn mới sẽ hiện ở đây.
                       </td>
                     </tr>
                   ) : (
@@ -310,49 +228,30 @@ export default function ManagerOverviewPage() {
                       const id = w.id ?? w._id ?? '';
                       const s = WO_STATUS[w.status ?? ''] ?? {
                         label: w.status ?? '-',
-                        cls: 'bg-slate-100 text-slate-500',
+                        tone: 'muted' as StatusTone,
                       };
                       return (
-                        <tr key={id} className='hover:bg-slate-50/40 transition-colors'>
-                          <td className='px-6 py-4 font-mono text-xs text-slate-500'>
+                        <tr key={id} className='hover:bg-muted/40 transition-colors'>
+                          <td className='px-6 py-4 font-mono text-xs text-muted-foreground'>
                             {w.code ?? (id ? id.slice(-6).toUpperCase() : '-')}
                           </td>
                           <td className='px-4 py-4'>
-                            <span className='text-xs font-mono font-bold text-indigo-600 bg-indigo-50/50 rounded px-2 py-1'>
+                            <span className='text-xs font-mono font-semibold text-foreground bg-muted rounded px-2 py-1'>
                               {w.vehicleSnapshot?.plate ?? '-'}
                             </span>
                           </td>
-                          <td className='px-4 py-4 text-slate-700'>
+                          <td className='px-4 py-4 text-foreground'>
                             {w.serviceName ?? '-'}
                           </td>
-                          <td className='px-4 py-4 text-slate-500 font-medium'>
+                          <td className='px-4 py-4 text-muted-foreground'>
                             {w.assignedWasherName ?? (
-                              <span className='text-amber-500 font-semibold italic flex items-center gap-1'>
+                              <span className='flex items-center gap-1'>
                                 <Clock className='w-3 h-3' /> Chưa phân công
                               </span>
                             )}
                           </td>
-                          <td className='px-4 py-4 text-center'>
-                            <span
-                              className={`inline-flex px-2 py-0.5 rounded-lg text-xs font-bold ${
-                                w.qcPassed === true
-                                  ? 'bg-emerald-50 text-emerald-700 border border-emerald-100'
-                                  : w.qcPassed === false
-                                    ? 'bg-rose-50 text-rose-700 border border-rose-100'
-                                    : 'bg-slate-100 text-slate-500'
-                              }`}
-                            >
-                              {w.qcPassed === true
-                                ? 'Đạt'
-                                : w.qcPassed === false
-                                  ? 'Không đạt'
-                                  : 'Chưa QC'}
-                            </span>
-                          </td>
                           <td className='px-6 py-4 text-right'>
-                            <span className={`inline-flex px-2.5 py-1 rounded-xl text-[11px] font-black uppercase tracking-wider ${s.cls}`}>
-                              {s.label}
-                            </span>
+                            <StatusBadge label={s.label} tone={s.tone} />
                           </td>
                         </tr>
                       );
@@ -362,14 +261,36 @@ export default function ManagerOverviewPage() {
               </table>
             </div>
           </div>
+
+          {/* ── Báo cáo vận hành đầy đủ (theo kỳ) ── */}
+          <QueryBoundary
+            isLoading={isLoading}
+            isError={isError}
+            onRetry={() => refetch()}
+            loading={<DashboardSkeleton />}
+          >
+            {data && (
+              <div className='relative'>
+                {isRefetching && (
+                  <div className='pointer-events-none absolute inset-0 z-10 rounded-xl bg-background/50' />
+                )}
+                {data.overview.totalBookings === 0 && (
+                  <div className='mb-6 rounded-xl border border-dashed border-border bg-muted/30 px-4 py-3 text-sm text-muted-foreground'>
+                    Không có booking nào trong khoảng thời gian đã chọn - các
+                    chỉ số sẽ hiển thị 0.
+                  </div>
+                )}
+                <ManagerReportBody report={data} />
+              </div>
+            )}
+          </QueryBoundary>
         </div>
       </main>
     </>
   );
 }
 
-/* ── Small presentational helpers (slate style to match manager shell) ── */
-
+/* ── Cảnh báo thao tác ── */
 function AlertCard({
   icon: Icon,
   count,
@@ -388,85 +309,404 @@ function AlertCard({
   danger?: boolean;
 }) {
   const accent = !active
-    ? 'text-slate-400 bg-slate-100'
+    ? 'text-muted-foreground bg-muted'
     : danger
-      ? 'text-rose-600 bg-rose-50'
-      : 'text-amber-600 bg-amber-50';
+      ? 'text-destructive bg-destructive/10'
+      : 'text-warning bg-warning/15';
   return (
     <Link
       href={href}
-      className={`group bg-white rounded-2xl p-5 border shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 ${
-        active ? 'border-slate-200' : 'border-slate-100'
-      }`}
+      className='group bg-card rounded-xl p-5 border border-border shadow-xs hover:border-primary/40 transition-colors'
     >
       <div className='flex items-start justify-between mb-3'>
-        <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${accent}`}>
+        <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${accent}`}>
           <Icon className='w-5 h-5' />
         </div>
-        <span className='text-2xl font-black text-slate-900 tabular-nums'>
+        <span className='text-2xl font-bold text-foreground tabular-nums'>
           {formatNumber(count)}
         </span>
       </div>
-      <p className='text-sm font-bold text-slate-800'>{label}</p>
-      <p className='text-xs text-slate-500 mt-0.5'>{sub}</p>
+      <p className='text-sm font-medium text-foreground'>{label}</p>
+      <p className='text-xs text-muted-foreground mt-0.5'>{sub}</p>
     </Link>
   );
 }
 
-function SlateKpi({
-  icon: Icon,
-  iconBg,
-  value,
-  label,
-  sub,
-  badge,
-}: {
-  icon: ElementType;
-  iconBg: string;
-  value: string;
-  label: string;
-  sub: string;
-  badge?: string;
-}) {
+/* ── Thân báo cáo vận hành (đồng bộ bộ lọc thời gian) ── */
+function ManagerReportBody({ report }: { report: DashboardReport }) {
+  const { overview, revenue, bookings, washers, vehicles } = report;
+  const { voucherLoyalty, services, refundDispute, schedule } = report;
+
   return (
-    <div className='bg-white rounded-2xl p-6 border border-slate-100 shadow-sm hover:shadow-md transition-all duration-200'>
-      <div className='flex items-start justify-between mb-4'>
-        <div className={`w-11 h-11 rounded-xl ${iconBg} flex items-center justify-center`}>
-          <Icon className='w-5 h-5 text-white' />
+    <div className='flex flex-col gap-10'>
+      {/* 1 - OVERVIEW */}
+      <DashboardSection
+        title='Tổng quan vận hành'
+        subtitle='Các chỉ số chính trong kỳ đã chọn.'
+        icon={Layers}
+      >
+        <div className='grid grid-cols-2 gap-3 lg:grid-cols-4'>
+          <KpiCard
+            label='Doanh thu thực nhận'
+            value={formatCurrency(overview.netRevenue)}
+            hint='Sau giảm giá & hoàn tiền'
+            icon={CircleDollarSign}
+            tone='success'
+          />
+          <KpiCard
+            label='Tổng đặt lịch'
+            value={formatNumber(overview.totalBookings)}
+            hint={`${formatNumber(overview.completedBookings)} hoàn thành`}
+            icon={CalendarCheck}
+          />
+          <KpiCard
+            label='Đang chờ xử lý'
+            value={formatNumber(overview.pendingBookings)}
+            hint='Chưa hoàn thành'
+            icon={Clock}
+          />
+          <KpiCard
+            label='Huỷ / Không đến'
+            value={`${formatNumber(overview.cancelledBookings)} / ${formatNumber(overview.noShowBookings)}`}
+            icon={TrendingDown}
+            tone='destructive'
+          />
+          <KpiCard
+            label='Giá trị đơn TB'
+            value={formatCurrency(overview.averageOrderValue)}
+            hint='Trên đơn hoàn thành'
+            icon={CreditCard}
+          />
+          <KpiCard
+            label='Thợ đang hoạt động'
+            value={formatNumber(overview.activeWashers)}
+            icon={Wrench}
+          />
+          <KpiCard
+            label='Voucher đã dùng'
+            value={formatNumber(overview.usedVouchers)}
+            icon={Gift}
+          />
         </div>
-        {badge && (
-          <span className='text-xs font-black px-2 py-1 rounded-lg bg-emerald-50 text-emerald-600'>
-            {badge}
-          </span>
-        )}
+
+        <div className='grid gap-4 lg:grid-cols-2'>
+          <Panel title='Tỷ trọng trạng thái đặt lịch'>
+            <DonutChart
+              data={Object.entries(bookings.statusSummary).map(
+                ([key, count]) => ({
+                  label: STATUS_LABELS[key] ?? key,
+                  value: count,
+                }),
+              )}
+              centerCaption='đơn'
+              emptyMessage='Chưa có booking nào trong khoảng thời gian này'
+            />
+          </Panel>
+          <Panel title='Tỷ trọng doanh thu theo dịch vụ'>
+            <DonutChart
+              data={revenue.byService.map((s) => ({
+                label: s.name,
+                value: s.revenue,
+              }))}
+              formatValue={formatCurrency}
+              centerCaption='doanh thu'
+              emptyMessage='Chưa có doanh thu theo dịch vụ trong khoảng thời gian này'
+            />
+          </Panel>
+        </div>
+      </DashboardSection>
+
+      {/* 2 - BOOKING SUMMARY */}
+      <DashboardSection
+        title='Tình hình đặt lịch'
+        subtitle='Tỷ lệ hoàn thành/huỷ/không đến và khung giờ đông khách.'
+        icon={CalendarCheck}
+      >
+        <div className='grid grid-cols-1 sm:grid-cols-3 gap-3'>
+          <KpiCard
+            label='Tỷ lệ huỷ'
+            value={formatPercent(bookings.cancellationRate)}
+            icon={TrendingDown}
+            tone='destructive'
+          />
+          <KpiCard
+            label='Tỷ lệ không đến'
+            value={formatPercent(bookings.noShowRate)}
+            icon={AlertTriangle}
+            tone='warning'
+          />
+          <KpiCard
+            label='Doanh thu kỳ này'
+            value={formatCurrency(revenue.net)}
+            icon={CircleDollarSign}
+          />
+        </div>
+        <Panel
+          title='Khung giờ đông khách'
+          hint='Số đơn theo giờ trong ngày - cột đậm là giờ cao điểm'
+        >
+          <HourStrip
+            data={bookings.byHour}
+            emptyMessage='Chưa có đặt lịch trong khoảng thời gian này'
+          />
+        </Panel>
+      </DashboardSection>
+
+      {/* 3 - WASHER PERFORMANCE */}
+      <DashboardSection
+        title='Hiệu suất thợ rửa'
+        subtitle='Top thợ theo số lượt rửa hoàn thành trong kỳ.'
+        icon={Wrench}
+      >
+        <Panel title='Top thợ rửa'>
+          <RankingTable
+            rows={washers}
+            rowKey={(w) => w.id}
+            emptyMessage='Chưa có thợ nào hoàn thành lượt rửa trong khoảng thời gian này'
+            columns={[
+              { header: '#', cell: (_w, i) => <RankBadge index={i} /> },
+              {
+                header: 'Thợ rửa',
+                cell: (w) => (
+                  <span className='font-medium text-foreground'>{w.name}</span>
+                ),
+              },
+              {
+                header: 'Hoàn thành',
+                align: 'right',
+                cell: (w) => (
+                  <span className='font-semibold tabular-nums'>
+                    {formatNumber(w.completedJobs)}
+                  </span>
+                ),
+              },
+              {
+                header: 'Được giao',
+                align: 'right',
+                cell: (w) => (
+                  <span className='tabular-nums text-muted-foreground'>
+                    {formatNumber(w.assignedJobs)}
+                  </span>
+                ),
+              },
+              {
+                header: 'Thời gian TB',
+                align: 'right',
+                cell: (w) => (
+                  <span className='tabular-nums text-muted-foreground'>
+                    {w.averageServiceMinutes > 0
+                      ? `${formatNumber(w.averageServiceMinutes)} phút`
+                      : 'Chưa có'}
+                  </span>
+                ),
+              },
+              {
+                header: 'Đúng giờ',
+                align: 'right',
+                cell: (w) => (
+                  <span className='tabular-nums'>
+                    {formatPercent(w.onTimeRate)}
+                  </span>
+                ),
+              },
+              {
+                header: 'Đánh giá',
+                align: 'right',
+                cell: (w) => (
+                  <span className='tabular-nums text-muted-foreground'>
+                    {w.averageRating != null && w.feedbackCount > 0
+                      ? `★ ${w.averageRating.toFixed(1)} (${formatNumber(w.feedbackCount)})`
+                      : '-'}
+                  </span>
+                ),
+              },
+            ]}
+          />
+        </Panel>
+      </DashboardSection>
+
+      {/* 4 - SERVICE & VEHICLE */}
+      <DashboardSection
+        title='Dịch vụ & Phương tiện'
+        subtitle='Dịch vụ bán chạy, doanh thu theo dịch vụ và cơ cấu loại xe.'
+        icon={Layers}
+      >
+        <div className='grid gap-4 lg:grid-cols-2'>
+          <Panel title='Dịch vụ được dùng nhiều nhất'>
+            <BarList
+              items={services.mostUsed.map((s) => ({
+                label: s.name,
+                value: s.count,
+              }))}
+              format={(v) => `${formatNumber(v)} đơn`}
+              emptyMessage='Chưa có đặt lịch trong khoảng thời gian này'
+            />
+          </Panel>
+          <Panel title='Doanh thu theo dịch vụ'>
+            <BarList
+              items={services.byRevenue.map((s) => ({
+                label: s.name,
+                value: s.revenue,
+                caption: `${formatNumber(s.orders)} đơn`,
+              }))}
+              format={formatCurrency}
+              emptyMessage='Chưa có doanh thu trong khoảng thời gian này'
+              accent='bg-success'
+            />
+          </Panel>
+        </div>
+        <div className='grid gap-4 lg:grid-cols-2'>
+          <Panel
+            title='Cơ cấu loại xe hiện có'
+            hint='Tổng xe trên hệ thống (không theo kỳ)'
+          >
+            <DonutChart
+              data={vehicles.byType.map((v) => ({
+                label: v.name,
+                value: v.count,
+              }))}
+              formatValue={(v) => `${formatNumber(v)} xe`}
+              centerCaption='xe'
+              emptyMessage='Chưa có phương tiện nào'
+            />
+          </Panel>
+          <Panel title='Doanh thu theo loại xe'>
+            <BarList
+              items={vehicles.revenueByType.map((v) => ({
+                label: v.name,
+                value: v.revenue,
+                caption: `${formatNumber(v.orders)} đơn`,
+              }))}
+              format={formatCurrency}
+              emptyMessage='Chưa có doanh thu trong khoảng thời gian này'
+              accent='bg-success'
+            />
+          </Panel>
+        </div>
+      </DashboardSection>
+
+      {/* 5 - VOUCHER & REFUND SUMMARY */}
+      <DashboardSection
+        title='Voucher & Hoàn tiền (tổng quan)'
+        subtitle='Mức độ sử dụng voucher và hoàn tiền - chỉ ở mức tổng hợp.'
+        icon={Gift}
+      >
+        <div className='grid grid-cols-2 gap-3 lg:grid-cols-4'>
+          <KpiCard
+            label='Voucher đã phát'
+            value={formatNumber(voucherLoyalty.totalIssued)}
+            icon={Gift}
+          />
+          <KpiCard
+            label='Đã dùng'
+            value={formatNumber(voucherLoyalty.used)}
+            hint={`Tỷ lệ ${formatPercent(voucherLoyalty.redemptionRate)}`}
+            icon={Gift}
+            tone='success'
+          />
+          <KpiCard
+            label='Số đơn hoàn tiền'
+            value={formatNumber(refundDispute.refundCount)}
+            hint={`Tổng ${formatCurrency(refundDispute.refundAmount)}`}
+            icon={Undo2}
+            tone='destructive'
+          />
+          <KpiCard
+            label='Đơn hoàn thành'
+            value={formatNumber(refundDispute.completedBookings)}
+            icon={Gift}
+            tone='success'
+          />
+        </div>
+        <Panel title='Tỷ trọng trạng thái voucher'>
+          <DonutChart
+            data={[
+              { label: 'Chưa dùng', value: voucherLoyalty.unused },
+              { label: 'Đã dùng', value: voucherLoyalty.used },
+              { label: 'Hết hạn', value: voucherLoyalty.expired },
+            ]}
+            centerCaption='voucher'
+            emptyMessage='Chưa có voucher nào trong khoảng thời gian này'
+          />
+        </Panel>
+      </DashboardSection>
+
+      {/* 6 - CANCELLATION & NO-SHOW (compact) */}
+      {report.cancellationNoShow && (
+        <CancellationNoShowSection
+          data={report.cancellationNoShow}
+          variant='manager'
+        />
+      )}
+
+      {/* 7 - SCHEDULE */}
+      <DashboardSection
+        title='Lịch & Năng lực'
+        subtitle='Tỷ lệ lấp đầy slot và khung giờ cao điểm.'
+        icon={Clock}
+      >
+        <div className='grid grid-cols-1 sm:grid-cols-3 gap-3'>
+          <KpiCard
+            label='Tổng ca làm'
+            value={formatNumber(schedule.totalShifts)}
+            icon={Clock}
+          />
+          <KpiCard
+            label='Tổng sức chứa'
+            value={formatNumber(schedule.totalCapacity)}
+            hint='Slot tối đa'
+            icon={Layers}
+          />
+          <KpiCard
+            label='Slot đã đặt / trống'
+            value={`${formatNumber(schedule.bookedSlots)} / ${formatNumber(schedule.availableSlots)}`}
+            icon={CalendarCheck}
+          />
+        </div>
+        <Panel title='Khung giờ cao điểm (Top 3)'>
+          {schedule.peakHours.length === 0 ? (
+            <EmptyBlock message='Chưa có đặt lịch trong khoảng thời gian này' />
+          ) : (
+            <ul className='flex flex-wrap gap-3'>
+              {schedule.peakHours.map((h) => (
+                <li
+                  key={h.hour}
+                  className='flex items-center gap-2 rounded-lg border border-border bg-muted/40 px-4 py-2'
+                >
+                  <Clock className='size-4 text-primary' />
+                  <span className='font-semibold text-foreground'>
+                    {h.hour}:00 - {h.hour + 1}:00
+                  </span>
+                  <span className='text-sm text-muted-foreground'>
+                    {formatNumber(h.count)} đơn
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </Panel>
+      </DashboardSection>
+    </div>
+  );
+}
+
+function DashboardSkeleton() {
+  return (
+    <div className='flex flex-col gap-6'>
+      <div className='grid grid-cols-2 gap-3 lg:grid-cols-4'>
+        {Array.from({ length: 8 }).map((_, i) => (
+          <div
+            key={i}
+            className='h-24 animate-pulse rounded-xl border border-border bg-muted/40'
+          />
+        ))}
       </div>
-      <p className='text-2xl font-black text-slate-900 tracking-tight mb-1'>{value}</p>
-      <p className='text-xs font-black text-slate-500 uppercase tracking-widest mb-1'>{label}</p>
-      <p className='text-slate-500 text-xs font-medium'>{sub}</p>
-    </div>
-  );
-}
-
-
-
-function MiniStat({ label, value }: { label: string; value: string }) {
-  return (
-    <div className='bg-white rounded-2xl p-5 border border-slate-100 shadow-sm'>
-      <p className='text-xs font-medium text-slate-500'>{label}</p>
-      <p className='font-heading text-xl font-black text-slate-900 tracking-tight mt-1'>
-        {value}
-      </p>
-    </div>
-  );
-}
-
-function DonutSkeleton() {
-  return (
-    <div className='flex items-center gap-6'>
-      <div className='size-40 rounded-full bg-slate-100 animate-pulse' />
-      <div className='flex-1 space-y-2'>
-        {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className='h-4 bg-slate-100 animate-pulse rounded' />
+      <div className='grid gap-4 lg:grid-cols-2'>
+        {Array.from({ length: 2 }).map((_, i) => (
+          <div
+            key={i}
+            className='h-64 animate-pulse rounded-xl border border-border bg-muted/40'
+          />
         ))}
       </div>
     </div>
