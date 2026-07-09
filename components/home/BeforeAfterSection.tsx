@@ -2,9 +2,13 @@
 
 import { useRef, useState, useCallback, useEffect } from 'react';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 import { ChevronsLeftRight, Sparkles, CheckCircle2 } from 'lucide-react';
+import { useAuthStore } from '@/store/useAuthStore';
 
 export function BeforeAfterSection() {
+  const router = useRouter();
+  const { authUser } = useAuthStore();
   const containerRef = useRef<HTMLDivElement>(null);
   const [sliderPos, setSliderPos] = useState(50); // percentage
   const isDragging = useRef(false);
@@ -234,13 +238,18 @@ export function BeforeAfterSection() {
 
             {/* CTA */}
             <div className='flex items-center gap-4 pt-2'>
-              <a
-                href='#services'
+              <button
+                type='button'
+                onClick={() =>
+                  router.push(
+                    authUser?.role === 'customer' ? '/booking' : '/register',
+                  )
+                }
                 className='inline-flex items-center gap-3 bg-primary text-white font-semibold px-8 py-4 rounded-2xl text-sm uppercase tracking-widest hover:bg-primary/90 hover:-translate-y-1 transition-all duration-300 shadow-lg shadow-primary/30'
               >
                 <Sparkles className='w-4 h-4' />
                 Đặt lịch ngay
-              </a>
+              </button>
               <div className='h-px flex-1 bg-primary/15' />
             </div>
           </div>

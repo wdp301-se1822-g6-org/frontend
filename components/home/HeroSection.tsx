@@ -2,11 +2,13 @@
 
 import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
+import { useAuthStore } from '@/store/useAuthStore';
 
 import Image from 'next/image';
 
 export function HeroSection() {
   const router = useRouter();
+  const { authUser } = useAuthStore();
 
   return (
     <section className='relative flex items-center overflow-hidden bg-background pt-20 pb-10 sm:pt-24 sm:pb-16'>
@@ -42,7 +44,11 @@ export function HeroSection() {
             <div className='flex flex-wrap gap-3 w-full animate-fade-in-up [animation-delay:600ms] opacity-0 fill-mode-forwards'>
               <Button
                 size='xl'
-                onClick={() => router.push('/register')}
+                onClick={() =>
+                  router.push(
+                    authUser?.role === 'customer' ? '/booking' : '/register',
+                  )
+                }
                 className='rounded-xl shadow-lg shadow-primary/15'
               >
                 Đặt lịch ngay
