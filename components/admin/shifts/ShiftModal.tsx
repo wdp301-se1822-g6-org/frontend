@@ -22,6 +22,20 @@ const fieldCls =
   'w-full rounded-lg border border-border bg-card px-3 py-2.5 text-sm text-foreground focus:border-ring focus:outline-none focus:ring-3 focus:ring-ring/30';
 const selectCls = `${fieldCls} cursor-pointer`;
 
+// Giờ cố định của từng block (khớp BUSINESS_HOUR_WINDOWS phía BE).
+const BLOCK_HOURS: Record<'morning' | 'afternoon', { start: number; end: number }> = {
+  morning: { start: 8, end: 12 },
+  afternoon: { start: 14, end: 17 },
+};
+
+/** Block đã kết thúc chưa, tính theo ngày được chọn (giờ máy admin ~ giờ VN). */
+const isBlockEnded = (dateStr: string, block: 'morning' | 'afternoon') => {
+  if (!dateStr) return false;
+  const end = new Date(`${dateStr}T00:00:00`);
+  end.setHours(BLOCK_HOURS[block].end, 0, 0, 0);
+  return end.getTime() <= Date.now();
+};
+
 export function ShiftModal({ item, onClose, onSave, staffList, isPending }: ShiftModalProps) {
   const getBlockFromTimes = (
     startStr?: string,
@@ -48,6 +62,14 @@ export function ShiftModal({ item, onClose, onSave, staffList, isPending }: Shif
     return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
   };
 
+  const today = formatDateForInput(new Date().toISOString());
+  // Ca mới mặc định vào block còn hiệu lực gần nhất của hôm nay.
+  const defaultBlock = item
+    ? getBlockFromTimes(item.startAt, item.endAt)
+    : isBlockEnded(today, 'morning')
+      ? 'afternoon'
+      : 'morning';
+
   const [form, setForm] = useState({
     staffId:
       typeof item?.staffId === 'object'
@@ -55,8 +77,8 @@ export function ShiftModal({ item, onClose, onSave, staffList, isPending }: Shif
         : item?.staffId ?? '',
     shiftType: item?.shiftType ?? 'washer',
     stationName: item?.stationName ?? 'Bay 1',
-    date: formatDateForInput(item?.startAt) || formatDateForInput(new Date().toISOString()),
-    block: getBlockFromTimes(item?.startAt, item?.endAt),
+    date: formatDateForInput(item?.startAt) || today,
+    block: defaultBlock,
     note: item?.note ?? '',
   });
 
@@ -85,6 +107,19 @@ export function ShiftModal({ item, onClose, onSave, staffList, isPending }: Shif
     }
     if (!form.date) {
       toast.error('Vui lòng chọn ngày trực.');
+      return;
+    }
+
+    // Chặn tạo ca cho block đã kết thúc (BE cũng chặn từng block, all-or-nothing).
+    const blocksToCheck: Array<'morning' | 'afternoon'> =
+      form.block === 'fullday' ? ['morning', 'afternoon'] : [form.block];
+    const ended = blocksToCheck.filter((b) => isBlockEnded(form.date, b));
+    if (ended.length > 0) {
+      toast.error(
+        form.block === 'fullday' && ended.length === 1
+          ? 'Ca sáng hôm nay đã kết thúc — hãy chọn riêng ca chiều thay vì cả ngày.'
+          : 'Khung giờ này đã kết thúc. Vui lòng chọn ca còn hiệu lực.',
+      );
       return;
     }
 
@@ -143,19 +178,21 @@ export function ShiftModal({ item, onClose, onSave, staffList, isPending }: Shif
             </select>
           </div>
 
-          {/* Loại ca (Shift Type) */}
+          {/* Loại ca suy ra từ role của nhân viên — khoá để không thể mâu thuẫn */}
           <div>
             <label className={fieldLabelCls}>Loại ca làm việc</label>
             <select
               value={form.shiftType}
-              onChange={(e) =>
-                setForm({ ...form, shiftType: e.target.value as 'washer' | 'cashier' })
-              }
-              className={selectCls}
+              disabled
+              aria-readonly
+              className={`${fieldCls} cursor-not-allowed bg-muted/50 text-muted-foreground`}
             >
               <option value='washer'>Nhân viên rửa xe (Washer)</option>
               <option value='cashier'>Thu ngân (Cashier)</option>
             </select>
+            <p className='mt-1 text-[11px] text-muted-foreground'>
+              Tự chọn theo vai trò của nhân viên đã chọn ở trên.
+            </p>
           </div>
 
           {/* Tên trạm làm việc */}
@@ -195,10 +232,22 @@ export function ShiftModal({ item, onClose, onSave, staffList, isPending }: Shif
               }
               className={selectCls}
             >
-              <option value='morning'>Sáng (Morning)</option>
-              <option value='afternoon'>Chiều (Afternoon)</option>
-              <option value='fullday'>Cả ngày (Full day)</option>
+              <option value='morning' disabled={isBlockEnded(form.date, 'morning')}>
+                Sáng (08:00 – 12:00)
+                {isBlockEnded(form.date, 'morning') ? ' — đã qua' : ''}
+              </option>
+              <option value='afternoon' disabled={isBlockEnded(form.date, 'afternoon')}>
+                Chiều (14:00 – 17:00)
+                {isBlockEnded(form.date, 'afternoon') ? ' — đã qua' : ''}
+              </option>
+              <option value='fullday' disabled={isBlockEnded(form.date, 'morning')}>
+                Cả ngày (08:00 – 12:00 & 14:00 – 17:00)
+                {isBlockEnded(form.date, 'morning') ? ' — sáng đã qua' : ''}
+              </option>
             </select>
+            <p className='mt-1 text-[11px] text-muted-foreground'>
+              Cả ngày tạo 2 ca riêng: sáng và chiều (nghỉ trưa 12:00 – 14:00).
+            </p>
           </div>
 
           {/* Ghi chú */}

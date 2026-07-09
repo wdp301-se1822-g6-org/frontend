@@ -267,6 +267,27 @@ export function getCreatedMs(shift: Shift): number {
   return start ? start.getTime() : 0;
 }
 
+/**
+ * Sắp xếp ca (trả về mảng mới) theo tiêu chí đã chọn. Giữ `Date.now()` trong
+ * helper để component render vẫn "thuần" — với "soonest" ca sắp diễn ra lên
+ * đầu, ca đã qua dồn xuống cuối (ca vừa qua gần nhất trước).
+ */
+export function sortShifts(list: Shift[], sort: SortKey): Shift[] {
+  const now = Date.now();
+  return [...list].sort((a, b) => {
+    if (sort === 'soonest') {
+      const aPast = getStartMs(a) < now;
+      const bPast = getStartMs(b) < now;
+      if (aPast !== bPast) return aPast ? 1 : -1;
+      return aPast
+        ? getStartMs(b) - getStartMs(a)
+        : getStartMs(a) - getStartMs(b);
+    }
+    if (sort === 'newest') return getCreatedMs(b) - getCreatedMs(a);
+    return getCapacity(b).ratio - getCapacity(a).ratio;
+  });
+}
+
 // ─── Lọc theo khoảng ngày (dựa trên startAt) ───────────────────────
 function startOfDay(d: Date): Date {
   return new Date(d.getFullYear(), d.getMonth(), d.getDate());

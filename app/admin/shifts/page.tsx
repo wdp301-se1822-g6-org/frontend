@@ -20,9 +20,7 @@ import {
   getStaffName,
   getRoleLabel,
   getShiftStatus,
-  getStartMs,
-  getCreatedMs,
-  getCapacity,
+  sortShifts,
   isWithinRange,
   STATUS_META,
   type Shift,
@@ -45,6 +43,9 @@ import {
 } from '@/components/admin/shifts/ShiftSkeletons';
 import { ShiftModal } from '@/components/admin/shifts/ShiftModal';
 import { ShiftCancelDialog } from '@/components/admin/shifts/ShiftCancelDialog';
+import { Pagination } from '@/components/shared/Pagination';
+
+const PAGE_SIZE = 10;
 
 export default function AdminShiftsPage() {
   const qc = useQueryClient();
@@ -60,6 +61,7 @@ export default function AdminShiftsPage() {
   const [dateRange, setDateRange] = useState<DateRangeKey>('all');
   const [sort, setSort] = useState<SortKey>('soonest');
   const [view, setView] = useState<ShiftView>('table');
+  const [page, setPage] = useState(1);
 
   // Danh sách Shifts
   const {
@@ -91,8 +93,14 @@ export default function AdminShiftsPage() {
   // ─── Mutations (API contract giữ nguyên) ──────────────────────────
   const createShift = useMutation({
     mutationFn: adminCreateShift,
-    onSuccess: () => {
-      toast.success('Thêm ca trực nhân viên mới thành công!');
+    onSuccess: (res) => {
+      // Fullday tạo 2 bản ghi (sáng + chiều) — nói rõ để admin không tưởng bị double.
+      const count = Array.isArray(res?.data) ? res.data.length : 1;
+      toast.success(
+        count > 1
+          ? `Đã tạo ${count} ca trực: sáng (08:00–12:00) và chiều (14:00–17:00).`
+          : 'Thêm ca trực nhân viên mới thành công!',
+      );
       qc.invalidateQueries({ queryKey: ['admin-shifts'] });
       setEditShift(false);
     },
@@ -189,12 +197,15 @@ export default function AdminShiftsPage() {
       return true;
     });
 
-    return list.sort((a, b) => {
-      if (sort === 'soonest') return getStartMs(a) - getStartMs(b);
-      if (sort === 'newest') return getCreatedMs(b) - getCreatedMs(a);
-      return getCapacity(b).ratio - getCapacity(a).ratio;
-    });
+    return sortShifts(list, sort);
   }, [shifts, staffList, statusFilter, roleFilter, dateRange, search, sort]);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const safePage = Math.min(page, totalPages);
+  const paged = useMemo(
+    () => filtered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE),
+    [filtered, safePage],
+  );
 
   const hasFilters =
     search.trim() !== '' ||
@@ -202,16 +213,40 @@ export default function AdminShiftsPage() {
     roleFilter !== 'all' ||
     dateRange !== 'all';
 
+  // Đổi bộ lọc/sắp xếp thì quay về trang 1 để không rơi vào trang rỗng.
+  // Gộp vào chính handler thay vì useEffect (tránh cascading render).
+  const handleSearch = (v: string) => {
+    setSearch(v);
+    setPage(1);
+  };
+  const handleStatus = (v: StatusFilter) => {
+    setStatusFilter(v);
+    setPage(1);
+  };
+  const handleRole = (v: string) => {
+    setRoleFilter(v);
+    setPage(1);
+  };
+  const handleDateRange = (v: DateRangeKey) => {
+    setDateRange(v);
+    setPage(1);
+  };
+  const handleSort = (v: SortKey) => {
+    setSort(v);
+    setPage(1);
+  };
+
   const resetFilters = () => {
     setSearch('');
     setStatusFilter('all');
     setRoleFilter('all');
     setDateRange('all');
+    setPage(1);
   };
 
   const cardGrid = (
     <div className='grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3'>
-      {filtered.map((shift) => (
+      {paged.map((shift) => (
         <ShiftCard
           key={getShiftId(shift)}
           shift={shift}
@@ -221,6 +256,23 @@ export default function AdminShiftsPage() {
           onSetStatus={handleSetStatus}
         />
       ))}
+    </div>
+  );
+
+  const pagination = (
+    <div className='flex flex-col items-center gap-1.5 pt-1'>
+      <Pagination
+        page={safePage}
+        totalPages={totalPages}
+        onPageChange={setPage}
+      />
+      {filtered.length > PAGE_SIZE && (
+        <p className='text-xs text-muted-foreground tabular-nums'>
+          Hiển thị {(safePage - 1) * PAGE_SIZE + 1}–
+          {Math.min(safePage * PAGE_SIZE, filtered.length)} /{' '}
+          {filtered.length} ca
+        </p>
+      )}
     </div>
   );
 
@@ -265,16 +317,16 @@ export default function AdminShiftsPage() {
           {/* Toolbar */}
           <ShiftToolbar
             search={search}
-            onSearchChange={setSearch}
+            onSearchChange={handleSearch}
             status={statusFilter}
-            onStatusChange={setStatusFilter}
+            onStatusChange={handleStatus}
             role={roleFilter}
-            onRoleChange={setRoleFilter}
+            onRoleChange={handleRole}
             roleOptions={roleOptions}
             dateRange={dateRange}
-            onDateRangeChange={setDateRange}
+            onDateRangeChange={handleDateRange}
             sort={sort}
-            onSortChange={setSort}
+            onSortChange={handleSort}
             view={view}
             onViewChange={setView}
             resultCount={filtered.length}
@@ -337,7 +389,7 @@ export default function AdminShiftsPage() {
               {/* Desktop: bảng — Mobile: thẻ */}
               <div className='hidden md:block'>
                 <ShiftTable
-                  shifts={filtered}
+                  shifts={paged}
                   staffList={staffList}
                   onEdit={(s) => setEditShift(s)}
                   onCancelRequest={(s) => setCancelTarget(s)}
@@ -345,9 +397,13 @@ export default function AdminShiftsPage() {
                 />
               </div>
               <div className='md:hidden'>{cardGrid}</div>
+              {pagination}
             </>
           ) : (
-            cardGrid
+            <>
+              {cardGrid}
+              {pagination}
+            </>
           )}
         </div>
       </main>

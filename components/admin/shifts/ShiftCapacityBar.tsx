@@ -14,9 +14,12 @@ export function ShiftCapacityBar({ shift, className }: ShiftCapacityBarProps) {
   const { current, max, free, ratio, isFull, hasData } = getCapacity(shift);
 
   if (!hasData) {
+    // Ca không đặt giới hạn riêng: hệ thống mặc định mỗi thợ nhận
+    // 1 xe tại một thời điểm (slot 30 phút) — nói đúng bản chất thay
+    // vì "Chưa giới hạn" dễ gây hiểu nhầm là nhận vô hạn xe.
     return (
       <div className={cn('min-w-[120px]', className)}>
-        <span className='text-sm text-muted-foreground'>Chưa giới hạn</span>
+        <span className='text-sm text-muted-foreground'>1 xe / thời điểm</span>
       </div>
     );
   }
