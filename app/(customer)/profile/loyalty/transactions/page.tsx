@@ -39,10 +39,10 @@ const PAGE_SIZE = 10;
 
 const TYPE_META: Record<string, { label: string; className: string }> = {
   earn_completed: { label: 'Tích điểm', className: 'bg-green-100 text-green-700' },
-  earn_pending: { label: 'Chờ duyệt', className: 'bg-amber-100 text-amber-700' },
+  earn_pending: { label: 'Chờ duyệt', className: 'bg-warning/15 text-warning-foreground' },
   redeem_voucher: { label: 'Đổi voucher', className: 'bg-orange-100 text-orange-700' },
-  tier_change: { label: 'Thăng hạng', className: 'bg-blue-100 text-blue-700' },
-  expire: { label: 'Hết hạn điểm', className: 'bg-red-100 text-red-600' },
+  tier_change: { label: 'Thăng hạng', className: 'bg-blue-100 text-info' },
+  expire: { label: 'Hết hạn điểm', className: 'bg-red-100 text-destructive' },
   adjust: { label: 'Điều chỉnh', className: 'bg-zinc-100 text-zinc-600' },
 };
 
@@ -141,7 +141,7 @@ export default function LoyaltyTransactionsPage() {
       {/* Header + Loyalty Card */}
       <div className='flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6'>
         <div>
-          <h1 className='font-heading text-2xl font-black text-foreground flex items-center gap-2'>
+          <h1 className='font-heading text-2xl font-semibold text-foreground flex items-center gap-2'>
             <History className='w-7 h-7 text-primary' /> Lịch sử điểm thưởng
           </h1>
           <p className='text-sm text-muted-foreground max-w-md'>
@@ -155,7 +155,7 @@ export default function LoyaltyTransactionsPage() {
       </div>
 
       {/* Table card */}
-      <div className='rounded-3xl border border-border/60 bg-white shadow-sm p-4 sm:p-6 space-y-4'>
+      <div className='rounded-xl border border-border/60 bg-card shadow-xs p-4 sm:p-6 space-y-4'>
         {/* Toolbar */}
         <div className='flex flex-col sm:flex-row sm:items-center gap-3'>
           <div className='relative flex-1'>
@@ -207,7 +207,7 @@ export default function LoyaltyTransactionsPage() {
             </p>
           </div>
         ) : error ? (
-          <div className='bg-red-50 border border-red-200 rounded-2xl p-6 text-center text-red-600 space-y-2'>
+          <div className='bg-destructive/10 border border-destructive/30 rounded-xl p-6 text-center text-destructive space-y-2'>
             <Info className='w-8 h-8 mx-auto' />
             <h3 className='font-heading font-bold text-lg'>Đã xảy ra lỗi</h3>
             <p className='text-sm'>
@@ -273,7 +273,7 @@ export default function LoyaltyTransactionsPage() {
                             t.pointsDelta > 0
                               ? 'text-green-600'
                               : t.pointsDelta < 0
-                                ? 'text-red-600'
+                                ? 'text-destructive'
                                 : 'text-foreground',
                           )}
                         >
@@ -354,7 +354,7 @@ function InfoCard({
   description: string;
 }) {
   return (
-    <div className='rounded-2xl border border-border/60 bg-white p-5 shadow-sm'>
+    <div className='rounded-xl border border-border/60 bg-card p-5 shadow-xs'>
       <div className='mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary'>
         <Icon className='h-5 w-5' />
       </div>

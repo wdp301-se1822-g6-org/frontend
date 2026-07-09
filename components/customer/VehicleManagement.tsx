@@ -213,9 +213,9 @@ export default function VehicleManagement() {
   // Helper to render beautiful license plate
   const renderLicensePlate = (plate: string) => {
     return (
-      <div className="inline-flex flex-col items-center justify-center border-2 border-slate-300 rounded-lg px-4 py-1.5 bg-slate-50 shadow-sm min-w-[140px] text-center font-mono">
-        <div className="w-full border-b border-slate-200 text-[9px] tracking-wider text-slate-400 font-sans pb-0.5 leading-none">VIỆT NAM</div>
-        <span className="text-sm font-bold text-slate-800 tracking-wide pt-0.5 leading-none">{plate}</span>
+      <div className="inline-flex flex-col items-center justify-center border-2 border-border rounded-lg px-4 py-1.5 bg-muted/40 shadow-xs min-w-[140px] text-center font-mono">
+        <div className="w-full border-b border-border text-[9px] tracking-wider text-placeholder font-sans pb-0.5 leading-none">VIỆT NAM</div>
+        <span className="text-sm font-bold text-foreground tracking-wide pt-0.5 leading-none">{plate}</span>
       </div>
     );
   };
@@ -230,7 +230,7 @@ export default function VehicleManagement() {
         </div>
         <Button 
           onClick={handleOpenAddModal}
-          className='bg-primary hover:bg-primary/90 text-white rounded-xl px-5 py-3 font-semibold shadow-lg shadow-primary/20 transition-all hover:scale-[1.02] flex items-center gap-2'
+          className='bg-primary hover:bg-primary/90 text-white rounded-xl px-5 py-3 font-semibold shadow-lg transition-all hover:scale-[1.02] flex items-center gap-2'
         >
           <Plus className='w-4 h-4' />
           Thêm Phương Tiện
@@ -244,7 +244,7 @@ export default function VehicleManagement() {
           <span className="text-muted-foreground text-sm">Đang tải danh sách xe...</span>
         </div>
       ) : vehicles.length === 0 ? (
-        <Card className='border-2 border-dashed border-border/60 shadow-none rounded-2xl bg-white/40 backdrop-blur-md py-16 text-center'>
+        <Card className='border-2 border-dashed border-border/60 shadow-none rounded-xl bg-white/40 backdrop-blur-md py-16 text-center'>
           <CardContent className="flex flex-col items-center justify-center gap-4">
             <div className="p-4 rounded-full bg-primary/10 text-primary">
               <Car className="w-12 h-12" />
@@ -274,8 +274,8 @@ export default function VehicleManagement() {
             return (
               <Card 
                 key={vId} 
-                className={`relative border-none overflow-hidden rounded-2xl shadow-md transition-all hover:shadow-lg hover:scale-[1.01] bg-white/90 backdrop-blur-sm ${
-                  vehicle.isDefault ? 'ring-2 ring-primary/60 shadow-primary/5 bg-primary/5' : ''
+                className={`relative border-none overflow-hidden rounded-xl shadow-md transition-all hover:shadow-lg hover:scale-[1.01] bg-white/90 backdrop-blur-sm ${
+                  vehicle.isDefault ? 'ring-2 ring-primary/60 bg-primary/5' : ''
                 }`}
               >
                 <CardContent className="p-6 flex flex-col justify-between h-full min-h-[200px]">
@@ -284,7 +284,7 @@ export default function VehicleManagement() {
                     <div className="flex justify-between items-start mb-4">
                       <div className="flex items-center gap-3">
                         <div className={`p-2.5 rounded-xl ${
-                          vehicle.isDefault ? 'bg-primary/20 text-primary' : 'bg-slate-100 text-slate-500'
+                          vehicle.isDefault ? 'bg-primary/20 text-primary' : 'bg-muted text-muted-foreground'
                         }`}>
                           {isMotorbike ? <Bike className="w-5 h-5" /> : <Car className="w-5 h-5" />}
                         </div>
@@ -292,7 +292,7 @@ export default function VehicleManagement() {
                           <h4 className="font-heading font-bold text-foreground text-md flex items-center gap-2">
                             {vehicle.nickname || vehicle.brand || 'Xe của tôi'}
                             {vehicle.isDefault && (
-                              <span className="inline-flex items-center gap-0.5 text-[10px] bg-primary text-white font-bold px-2 py-0.5 rounded-full shadow-sm shadow-primary/10">
+                              <span className="inline-flex items-center gap-0.5 text-[10px] bg-primary text-white font-bold px-2 py-0.5 rounded-full shadow-xs">
                                 <Check className="w-3 h-3" /> Mặc định
                               </span>
                             )}
@@ -311,13 +311,13 @@ export default function VehicleManagement() {
                       <div className="space-y-1 text-xs text-muted-foreground font-medium">
                         {(vehicle.brand || vehicle.model) && (
                           <div>
-                            <span className="text-slate-400">Hiệu xe:</span>{' '}
+                            <span className="text-placeholder">Hiệu xe:</span>{' '}
                             <span className="text-foreground font-bold">{[vehicle.brand, vehicle.model].filter(Boolean).join(' ')}</span>
                           </div>
                         )}
                         {vehicle.color && (
                           <div>
-                            <span className="text-slate-400">Màu sắc:</span>{' '}
+                            <span className="text-placeholder">Màu sắc:</span>{' '}
                             <span className="text-foreground font-bold">{vehicle.color}</span>
                           </div>
                         )}
@@ -326,7 +326,7 @@ export default function VehicleManagement() {
                   </div>
 
                   {/* Actions footer */}
-                  <div className="flex items-center justify-between border-t border-slate-100 pt-4 mt-auto">
+                  <div className="flex items-center justify-between border-t border-border pt-4 mt-auto">
                     {!vehicle.isDefault ? (
                       <button 
                         onClick={() => handleSetDefault(vehicle._id || vehicle.id || '')}
@@ -346,7 +346,7 @@ export default function VehicleManagement() {
                         size="icon"
                         variant="ghost"
                         onClick={() => handleOpenEditModal(vehicle)}
-                        className="w-8 h-8 rounded-lg hover:bg-slate-100 text-slate-500 hover:text-slate-800 transition-all"
+                        className="w-8 h-8 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-all"
                         title="Chỉnh sửa"
                       >
                         <Pencil className="w-4 h-4" />
@@ -355,7 +355,7 @@ export default function VehicleManagement() {
                         size="icon"
                         variant="ghost"
                         onClick={() => handleOpenDeleteModal(vehicle)}
-                        className="w-8 h-8 rounded-lg hover:bg-red-50 text-red-500 hover:text-red-600 transition-all"
+                        className="w-8 h-8 rounded-lg hover:bg-destructive/10 text-destructive hover:text-destructive transition-all"
                         title="Xóa xe"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -372,15 +372,15 @@ export default function VehicleManagement() {
       {/* Add / Edit Form Modal */}
       {isFormOpen && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
-          <Card className="w-full max-w-lg border-none shadow-2xl rounded-2xl overflow-hidden bg-white/95 backdrop-blur-md animate-in zoom-in-95 duration-200">
+          <Card className="w-full max-w-lg border-none shadow-2xl rounded-xl overflow-hidden bg-white/95 backdrop-blur-md animate-in zoom-in-95 duration-200">
             <CardContent className="p-6">
-              <div className="flex items-center justify-between border-b border-slate-100 pb-4 mb-6">
+              <div className="flex items-center justify-between border-b border-border pb-4 mb-6">
                 <h3 className="font-heading text-lg font-bold text-foreground">
                   {selectedVehicle ? 'Cập nhật phương tiện' : 'Thêm phương tiện mới'}
                 </h3>
                 <button 
                   onClick={() => setIsFormOpen(false)}
-                  className="p-1 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors"
+                  className="p-1 rounded-lg hover:bg-muted text-placeholder hover:text-muted-foreground transition-colors"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -389,22 +389,22 @@ export default function VehicleManagement() {
               <form onSubmit={handleFormSubmit} className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1.5 col-span-2 sm:col-span-1">
-                    <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Biển số xe *</Label>
+                    <Label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Biển số xe *</Label>
                     <Input
                       required
                       placeholder="VD: 51A-12345"
                       value={formData.licensePlate}
                       onChange={(e) => setFormData({ ...formData, licensePlate: e.target.value })}
-                      className="rounded-xl border-border/50 bg-white/50 focus:bg-white transition-all uppercase placeholder:normal-case font-mono font-bold"
+                      className="rounded-xl border-border/50 bg-white/50 focus:bg-card transition-all uppercase placeholder:normal-case font-mono font-bold"
                     />
                   </div>
 
                   <div className="space-y-1.5 col-span-2 sm:col-span-1">
-                    <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Loại xe *</Label>
+                    <Label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Loại xe *</Label>
                     <select
                       value={formData.vehicleTypeId}
                       onChange={(e) => setFormData({ ...formData, vehicleTypeId: e.target.value })}
-                      className="w-full h-10 px-3 rounded-xl border border-border/50 bg-white/50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all text-sm"
+                      className="w-full h-10 px-3 rounded-xl border border-border/50 bg-white/50 focus:bg-card focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all text-sm"
                     >
                       {vehicleTypes.map((type) => {
                         const typeId = type._id || type.id;
@@ -419,43 +419,43 @@ export default function VehicleManagement() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Tên gọi / Biệt danh (không bắt buộc)</Label>
+                  <Label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Tên gọi / Biệt danh (không bắt buộc)</Label>
                   <Input
                     placeholder="VD: Xe đi làm, Xe đi phượt..."
                     value={formData.nickname}
                     onChange={(e) => setFormData({ ...formData, nickname: e.target.value })}
-                    className="rounded-xl border-border/50 bg-white/50 focus:bg-white transition-all"
+                    className="rounded-xl border-border/50 bg-white/50 focus:bg-card transition-all"
                   />
                 </div>
 
                 <div className="grid grid-cols-3 gap-4">
                   <div className="space-y-1.5 col-span-3 sm:col-span-1">
-                    <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Hãng xe</Label>
+                    <Label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Hãng xe</Label>
                     <Input
                       placeholder="VD: Honda, Toyota"
                       value={formData.brand}
                       onChange={(e) => setFormData({ ...formData, brand: e.target.value })}
-                      className="rounded-xl border-border/50 bg-white/50 focus:bg-white transition-all"
+                      className="rounded-xl border-border/50 bg-white/50 focus:bg-card transition-all"
                     />
                   </div>
 
                   <div className="space-y-1.5 col-span-3 sm:col-span-1">
-                    <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Dòng xe</Label>
+                    <Label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Dòng xe</Label>
                     <Input
                       placeholder="VD: SH, Wave, Vios"
                       value={formData.model}
                       onChange={(e) => setFormData({ ...formData, model: e.target.value })}
-                      className="rounded-xl border-border/50 bg-white/50 focus:bg-white transition-all"
+                      className="rounded-xl border-border/50 bg-white/50 focus:bg-card transition-all"
                     />
                   </div>
 
                   <div className="space-y-1.5 col-span-3 sm:col-span-1">
-                    <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Màu sắc</Label>
+                    <Label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Màu sắc</Label>
                     <Input
                       placeholder="VD: Đỏ, Trắng, Đen"
                       value={formData.color}
                       onChange={(e) => setFormData({ ...formData, color: e.target.value })}
-                      className="rounded-xl border-border/50 bg-white/50 focus:bg-white transition-all"
+                      className="rounded-xl border-border/50 bg-white/50 focus:bg-card transition-all"
                     />
                   </div>
                 </div>
@@ -467,15 +467,15 @@ export default function VehicleManagement() {
                       id="isDefaultCheckbox"
                       checked={formData.isDefault}
                       onChange={(e) => setFormData({ ...formData, isDefault: e.target.checked })}
-                      className="rounded border-slate-300 text-primary focus:ring-primary w-4 h-4 cursor-pointer"
+                      className="rounded border-border text-primary focus:ring-primary w-4 h-4 cursor-pointer"
                     />
-                    <label htmlFor="isDefaultCheckbox" className="text-sm font-semibold text-slate-600 cursor-pointer select-none">
+                    <label htmlFor="isDefaultCheckbox" className="text-sm font-semibold text-muted-foreground cursor-pointer select-none">
                       Đặt làm phương tiện mặc định
                     </label>
                   </div>
                 )}
 
-                <div className="flex justify-end gap-3 pt-6 border-t border-slate-100 mt-6">
+                <div className="flex justify-end gap-3 pt-6 border-t border-border mt-6">
                   <Button
                     type="button"
                     variant="outline"
@@ -487,7 +487,7 @@ export default function VehicleManagement() {
                   </Button>
                   <Button
                     type="submit"
-                    className="bg-primary hover:bg-primary/90 text-white rounded-xl px-6 py-2.5 font-semibold shadow-lg shadow-primary/15 min-w-[120px]"
+                    className="bg-primary hover:bg-primary/90 text-white rounded-xl px-6 py-2.5 font-semibold shadow-lg min-w-[120px]"
                     disabled={isSubmitLoading}
                   >
                     {isSubmitLoading ? <Spinner className="size-5 mx-auto" /> : 'Lưu lại'}
@@ -502,23 +502,23 @@ export default function VehicleManagement() {
       {/* Delete Confirmation Modal */}
       {isDeleteOpen && selectedVehicle && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
-          <Card className="w-full max-w-md border-none shadow-2xl rounded-2xl overflow-hidden bg-white/95 backdrop-blur-md animate-in zoom-in-95 duration-200">
+          <Card className="w-full max-w-md border-none shadow-2xl rounded-xl overflow-hidden bg-white/95 backdrop-blur-md animate-in zoom-in-95 duration-200">
             <CardContent className="p-6">
               <div className="flex items-start gap-4 mb-4">
-                <div className="p-3 rounded-full bg-red-50 text-red-500">
+                <div className="p-3 rounded-full bg-destructive/10 text-destructive">
                   <AlertTriangle className="w-6 h-6" />
                 </div>
                 <div className="space-y-1 flex-1">
                   <h3 className="font-heading text-lg font-bold text-foreground">Xóa phương tiện</h3>
                   <p className="text-sm text-muted-foreground">
                     Bạn có chắc chắn muốn xóa phương tiện có biển số{' '}
-                    <span className="font-mono font-bold text-slate-800">{selectedVehicle.licensePlate}</span> không?
+                    <span className="font-mono font-bold text-foreground">{selectedVehicle.licensePlate}</span> không?
                   </p>
-                  <p className="text-xs text-red-500 font-medium">Hành động này không thể hoàn tác và phương tiện sẽ không dùng để đặt lịch mới được nữa.</p>
+                  <p className="text-xs text-destructive font-medium">Hành động này không thể hoàn tác và phương tiện sẽ không dùng để đặt lịch mới được nữa.</p>
                 </div>
               </div>
 
-              <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
+              <div className="flex justify-end gap-3 pt-4 border-t border-border">
                 <Button
                   type="button"
                   variant="outline"
@@ -530,7 +530,7 @@ export default function VehicleManagement() {
                 </Button>
                 <Button
                   onClick={handleDelete}
-                  className="bg-red-500 hover:bg-red-600 text-white rounded-xl px-5 py-2 font-semibold shadow-lg shadow-red-500/15 min-w-[100px]"
+                  className="bg-destructive/100 hover:bg-red-600 text-white rounded-xl px-5 py-2 font-semibold shadow-lg shadow-red-500/15 min-w-[100px]"
                   disabled={isSubmitLoading}
                 >
                   {isSubmitLoading ? <Spinner className="size-5 mx-auto" /> : 'Đồng ý xóa'}

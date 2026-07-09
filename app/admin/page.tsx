@@ -447,13 +447,13 @@ function DashboardBody({ report }: { report: DashboardReport }) {
                 ),
               },
               {
-                header: 'QC trả về',
+                header: 'Đánh giá',
                 align: 'right',
                 cell: (w) => (
-                  <span
-                    className={`tabular-nums ${w.reworkCount > 0 ? 'text-warning' : 'text-muted-foreground'}`}
-                  >
-                    {formatNumber(w.reworkCount)}
+                  <span className='tabular-nums text-muted-foreground'>
+                    {w.averageRating != null && w.feedbackCount > 0
+                      ? `★ ${w.averageRating.toFixed(1)} (${formatNumber(w.feedbackCount)})`
+                      : '-'}
                   </span>
                 ),
               },

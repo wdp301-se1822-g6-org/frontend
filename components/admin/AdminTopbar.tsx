@@ -1,7 +1,5 @@
 'use client';
 
-import { Bell } from 'lucide-react';
-
 interface AdminTopbarProps {
   title: string;
   subtitle?: string;
@@ -17,23 +15,15 @@ export function AdminTopbar({ title, subtitle }: AdminTopbarProps) {
     <header className='sticky top-0 z-20 bg-background/95 backdrop-blur-sm border-b border-border flex items-center justify-between px-8 py-4 gap-4'>
       {/* Title */}
       <div>
-        <h1 className='font-heading text-xl font-black text-foreground tracking-tight'>{title}</h1>
-        {subtitle && <p className='text-foreground/60 text-xs font-medium mt-0.5'>{subtitle}</p>}
+        <h1 className='font-heading text-xl font-semibold text-foreground tracking-tight'>{title}</h1>
+        {subtitle && <p className='text-muted-foreground text-xs mt-0.5'>{subtitle}</p>}
       </div>
 
       <div className='flex items-center gap-4 ml-auto'>
         {/* Date */}
-        <span className='hidden sm:block text-xs font-semibold text-foreground/60 uppercase tracking-wider'>
+        <span className='hidden sm:block text-xs font-medium text-muted-foreground'>
           {dateStr}
         </span>
-
-        {/* Notification */}
-        <button className='relative w-9 h-9 rounded-xl bg-muted border border-border flex items-center justify-center hover:border-primary/30 transition-colors'>
-          <Bell className='w-4 h-4 text-foreground/60' />
-          <span className='absolute top-1.5 right-1.5 w-2 h-2 bg-primary rounded-full' />
-        </button>
-
-
       </div>
     </header>
   );

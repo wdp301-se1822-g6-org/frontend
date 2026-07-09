@@ -13,9 +13,6 @@ import {
   Clock,
   CreditCard,
   DollarSign,
-  FileText,
-  ShieldCheck,
-  HelpCircle,
   AlertCircle,
   Ticket,
   Sparkles,
@@ -211,10 +208,8 @@ function BookingFlow() {
       dates.push({
         value: current.toISOString().split('T')[0],
         label,
-        dateFormatted: current.toLocaleDateString('vi-VN', {
-          day: '2-digit',
-          month: '2-digit',
-        }),
+        day: String(current.getDate()).padStart(2, '0'),
+        month: current.getMonth() + 1,
       });
     }
     return dates;
@@ -410,55 +405,77 @@ function BookingFlow() {
       { num: 4, title: 'Xác nhận' },
     ];
     return (
-      <div className='flex items-center justify-between max-w-xl mx-auto mb-6 px-4'>
-        {steps.map((s, idx) => (
-          <div
-            key={s.num}
-            className='flex items-center flex-1 last:flex-initial'
-          >
-            <button
-              onClick={() => step > s.num && setStep(s.num)}
-              disabled={step <= s.num}
-              className={cn(
-                'flex items-center justify-center w-8 h-8 rounded-full text-xs font-black transition-all cursor-pointer',
-                step === s.num
-                  ? 'bg-primary text-white scale-110 shadow-lg shadow-primary/30'
-                  : step > s.num
-                    ? 'bg-emerald-500 text-white hover:bg-emerald-600'
-                    : 'bg-muted text-muted-foreground border border-border',
-              )}
+      <div className='mb-8'>
+        <div className='flex items-center justify-between max-w-xl mx-auto px-4'>
+          {steps.map((s, idx) => (
+            <div
+              key={s.num}
+              className='flex items-center flex-1 last:flex-initial'
             >
-              {step > s.num ? <Check className='w-4 h-4' /> : s.num}
-            </button>
-            <span
-              className={cn(
-                'hidden sm:inline text-xs font-bold ml-2',
-                step === s.num ? 'text-foreground' : 'text-muted-foreground',
-              )}
-            >
-              {s.title}
-            </span>
-            {idx < steps.length - 1 && (
-              <div
+              <button
+                onClick={() => step > s.num && setStep(s.num)}
+                disabled={step <= s.num}
                 className={cn(
-                  'flex-1 h-0.5 mx-4',
-                  step > s.num ? 'bg-emerald-500' : 'bg-border',
+                  'flex items-center justify-center w-7 h-7 rounded-full text-xs font-semibold transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
+                  step === s.num
+                    ? 'bg-primary text-primary-foreground'
+                    : step > s.num
+                      ? 'border border-primary/40 bg-accent text-primary hover:bg-primary/10'
+                      : 'border border-border bg-card text-placeholder',
                 )}
-              />
-            )}
-          </div>
-        ))}
+              >
+                {step > s.num ? <Check className='w-3.5 h-3.5' /> : s.num}
+              </button>
+              <span
+                className={cn(
+                  'hidden sm:inline text-xs ml-2',
+                  step === s.num
+                    ? 'font-semibold text-foreground'
+                    : step > s.num
+                      ? 'font-medium text-muted-foreground'
+                      : 'font-medium text-placeholder',
+                )}
+              >
+                {s.title}
+              </span>
+              {idx < steps.length - 1 && (
+                <div
+                  className={cn(
+                    'flex-1 h-px mx-3',
+                    step > s.num ? 'bg-primary/40' : 'bg-border',
+                  )}
+                />
+              )}
+            </div>
+          ))}
+        </div>
+        <p className='sm:hidden text-center text-xs font-medium text-muted-foreground mt-2'>
+          Bước {step}/4 · {steps[step - 1].title}
+        </p>
       </div>
     );
   };
 
+  // Tiêu đề mỗi bước: eyebrow "Bước N/4" + tên bước, dùng chung cho cả 4 bước.
+  const renderStepTitle = (num: number, title: string) => (
+    <div>
+      <p className='text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground'>
+        Bước {num}/4
+      </p>
+      <h2 className='font-heading text-lg font-semibold tracking-tight text-foreground mt-0.5'>
+        {title}
+      </h2>
+    </div>
+  );
+
+  // Biển số vẽ như vật thể thật: nền trắng cả ở dark mode, chữ mono đen.
   const renderLicensePlate = (plate: string) => {
     return (
-      <div className='inline-flex flex-col items-center justify-center border border-slate-300 rounded-md px-3 py-1 bg-slate-50 font-mono shadow-xs'>
-        <div className='text-[8px] tracking-wider text-slate-400 font-sans leading-none'>
+      <div className='inline-flex flex-col items-center justify-center rounded border-[1.5px] border-slate-500 bg-white px-2.5 py-1 font-mono'>
+        <div className='text-[8px] tracking-[0.2em] text-slate-500 font-sans leading-none'>
           VIỆT NAM
         </div>
-        <span className='text-xs font-bold text-slate-800 tracking-wide pt-0.5 leading-none'>
+        <span className='text-xs font-bold text-slate-900 tracking-wider pt-0.5 leading-none'>
           {plate}
         </span>
       </div>
@@ -466,20 +483,20 @@ function BookingFlow() {
   };
 
   return (
-    <div className='min-h-screen bg-linear-to-b from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-950 pt-8 pb-12'>
+    <div className='min-h-screen bg-background pt-8 pb-12'>
       <div className='max-w-5xl mx-auto px-4 sm:px-6 lg:px-8'>
         {/* Banner header */}
-        <div className='relative mb-5 flex items-center justify-between'>
+        <div className='relative mb-6 flex items-center justify-between'>
           <Button
             variant='ghost'
             onClick={() => router.push('/')}
-            className='text-muted-foreground hover:text-foreground flex items-center gap-1 cursor-pointer rounded-xl px-3 shrink-0'
+            className='text-muted-foreground hover:text-foreground flex items-center gap-1 cursor-pointer px-3 shrink-0'
           >
             <ChevronLeft className='w-4 h-4' />
             <span className='hidden sm:inline'>Về trang chủ</span>
           </Button>
           <div className='text-center'>
-            <h1 className='font-heading text-xl sm:text-2xl font-bold text-foreground tracking-tight'>
+            <h1 className='font-heading text-xl sm:text-2xl font-semibold text-foreground tracking-tight'>
               Đặt lịch rửa xe
             </h1>
             <p className='hidden text-muted-foreground text-[13px] sm:block'>
@@ -496,88 +513,51 @@ function BookingFlow() {
         {/* Steps navigation */}
         {renderStepsIndicator()}
 
-        {/* Tiến độ voucher rửa miễn phí (hiển thị mọi bước) */}
-        {myLoyalty && (
-          <div className='mb-6 rounded-2xl border border-amber-200 bg-amber-50/70 px-4 py-3 flex items-center gap-3'>
-            <div className='shrink-0 w-9 h-9 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center'>
-              <Ticket className='w-5 h-5' />
-            </div>
-            <div className='flex-1 min-w-0'>
-              <div className='flex items-center justify-between gap-2 mb-1'>
-                <p className='text-sm font-bold text-amber-800'>
-                  {washesToVoucher > 0 ? (
-                    <>
-                      Còn <span className='font-black'>{washesToVoucher}</span>{' '}
-                      lượt rửa hợp lệ nữa để nhận voucher thưởng (~5% chi tiêu)!
-                    </>
-                  ) : (
-                    'Tuyệt vời - bạn sắp nhận voucher thưởng!'
-                  )}
-                </p>
-                <span className='text-xs font-black text-amber-700 shrink-0'>
-                  {towardVoucher}/{WASHES_PER_FREE_VOUCHER}
-                </span>
-              </div>
-              <div className='h-2 bg-amber-100 rounded-full overflow-hidden'>
-                <div
-                  className='h-full bg-linear-to-r from-amber-400 to-orange-500 rounded-full transition-all'
-                  style={{
-                    width: `${Math.min((towardVoucher / WASHES_PER_FREE_VOUCHER) * 100, 100)}%`,
-                  }}
-                />
-              </div>
-            </div>
-          </div>
-        )}
-
         {/* Main Step Wrapper */}
         <div className='grid grid-cols-1 lg:grid-cols-3 gap-6 items-start'>
           {/* Step content */}
           <div className='lg:col-span-2 space-y-6'>
-            <Card className='border-none shadow-xl rounded-2xl overflow-hidden bg-white/80 dark:bg-slate-900/80 backdrop-blur-md'>
+            <Card className='border border-border shadow-xs rounded-xl overflow-hidden bg-card'>
               <CardContent className='p-5 sm:p-6'>
                 {/* ──────── STEP 1: CHỌN XE ──────── */}
                 {step === 1 && (
                   <div className='space-y-6'>
-                    <div className='flex justify-between items-center mb-4'>
-                      <h2 className='font-heading text-xl font-bold text-foreground flex items-center gap-2'>
-                        <Car className='w-5 h-5 text-primary' /> Bước 1: Chọn Xe
-                        Của Bạn
-                      </h2>
+                    <div className='flex justify-between items-end mb-4'>
+                      {renderStepTitle(1, 'Chọn xe của bạn')}
                       {!isAddingVehicle && (
                         <Button
                           type='button'
                           variant='ghost'
                           onClick={() => setIsAddingVehicle(true)}
-                          className='text-xs text-primary font-bold flex items-center gap-1 hover:bg-primary/5 rounded-lg px-2.5 py-1.5 cursor-pointer'
+                          className='text-xs text-primary font-semibold flex items-center gap-1 hover:bg-accent rounded-lg px-2.5 py-1.5 cursor-pointer'
                         >
-                          <Plus className='w-3.5 h-3.5' /> Thêm xe nhanh
+                          <Plus className='w-3.5 h-3.5' /> Thêm xe
                         </Button>
                       )}
                     </div>
 
                     {isAddingVehicle ? (
-                      <Card className='border border-primary/20 bg-primary/5 rounded-2xl overflow-hidden p-6 animate-in slide-in-from-top-4 duration-300'>
+                      <Card className='border border-border bg-muted/40 rounded-xl overflow-hidden p-6 motion-safe:animate-in motion-safe:slide-in-from-top-4 duration-300'>
                         <form
                           onSubmit={handleAddVehicle}
                           className='space-y-4'
                         >
-                          <div className='flex items-center justify-between border-b border-primary/10 pb-3 mb-4'>
-                            <span className='font-bold text-primary text-sm'>
+                          <div className='flex items-center justify-between border-b border-border pb-3 mb-4'>
+                            <span className='font-semibold text-foreground text-sm'>
                               Thêm phương tiện mới
                             </span>
                             <button
                               type='button'
                               onClick={() => setIsAddingVehicle(false)}
-                              className='text-xs text-muted-foreground hover:text-foreground font-bold cursor-pointer'
+                              className='text-xs text-muted-foreground hover:text-foreground font-medium cursor-pointer'
                             >
                               Hủy
                             </button>
                           </div>
 
                           <div className='grid grid-cols-2 gap-4'>
-                            <div className='space-y-1'>
-                              <Label className='text-xs font-bold text-slate-500 uppercase tracking-wider'>
+                            <div className='space-y-1.5'>
+                              <Label className='text-xs font-medium text-muted-foreground'>
                                 Biển số *
                               </Label>
                               <Input
@@ -590,11 +570,11 @@ function BookingFlow() {
                                     licensePlate: e.target.value,
                                   })
                                 }
-                                className='bg-white rounded-xl uppercase font-mono font-bold border-slate-200'
+                                className='bg-background uppercase font-mono font-semibold'
                               />
                             </div>
-                            <div className='space-y-1'>
-                              <Label className='text-xs font-bold text-slate-500 uppercase tracking-wider'>
+                            <div className='space-y-1.5'>
+                              <Label className='text-xs font-medium text-muted-foreground'>
                                 Loại xe *
                               </Label>
                               <select
@@ -605,7 +585,7 @@ function BookingFlow() {
                                     vehicleTypeId: e.target.value,
                                   })
                                 }
-                                className='w-full h-10 px-3 rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 text-sm'
+                                className='w-full h-10 px-3 rounded-md border border-input bg-background focus:outline-none focus-visible:ring-2 focus-visible:ring-ring text-sm'
                               >
                                 {vehicleTypes.map((t) => (
                                   <option
@@ -619,9 +599,9 @@ function BookingFlow() {
                             </div>
                           </div>
 
-                          <div className='space-y-1'>
-                            <Label className='text-xs font-bold text-slate-500 uppercase tracking-wider'>
-                              Biệt danh / Tên gọi
+                          <div className='space-y-1.5'>
+                            <Label className='text-xs font-medium text-muted-foreground'>
+                              Biệt danh / tên gọi
                             </Label>
                             <Input
                               placeholder='Xe đi làm, xe ga...'
@@ -632,13 +612,13 @@ function BookingFlow() {
                                   nickname: e.target.value,
                                 })
                               }
-                              className='bg-white rounded-xl border-slate-200'
+                              className='bg-background'
                             />
                           </div>
 
                           <div className='grid grid-cols-3 gap-3'>
-                            <div className='space-y-1'>
-                              <Label className='text-[10px] font-bold text-slate-500 uppercase tracking-wider'>
+                            <div className='space-y-1.5'>
+                              <Label className='text-xs font-medium text-muted-foreground'>
                                 Hãng xe
                               </Label>
                               <Input
@@ -650,11 +630,11 @@ function BookingFlow() {
                                     brand: e.target.value,
                                   })
                                 }
-                                className='bg-white rounded-xl text-xs h-9 border-slate-200'
+                                className='bg-background text-xs h-9'
                               />
                             </div>
-                            <div className='space-y-1'>
-                              <Label className='text-[10px] font-bold text-slate-500 uppercase tracking-wider'>
+                            <div className='space-y-1.5'>
+                              <Label className='text-xs font-medium text-muted-foreground'>
                                 Dòng xe
                               </Label>
                               <Input
@@ -666,11 +646,11 @@ function BookingFlow() {
                                     model: e.target.value,
                                   })
                                 }
-                                className='bg-white rounded-xl text-xs h-9 border-slate-200'
+                                className='bg-background text-xs h-9'
                               />
                             </div>
-                            <div className='space-y-1'>
-                              <Label className='text-[10px] font-bold text-slate-500 uppercase tracking-wider'>
+                            <div className='space-y-1.5'>
+                              <Label className='text-xs font-medium text-muted-foreground'>
                                 Màu sắc
                               </Label>
                               <Input
@@ -682,7 +662,7 @@ function BookingFlow() {
                                     color: e.target.value,
                                   })
                                 }
-                                className='bg-white rounded-xl text-xs h-9 border-slate-200'
+                                className='bg-background text-xs h-9'
                               />
                             </div>
                           </div>
@@ -692,20 +672,20 @@ function BookingFlow() {
                               type='button'
                               variant='outline'
                               onClick={() => setIsAddingVehicle(false)}
-                              className='rounded-xl text-xs h-9 px-4 cursor-pointer'
+                              className='text-xs h-9 px-4 cursor-pointer'
                               disabled={isSavingVehicle}
                             >
                               Quay lại
                             </Button>
                             <Button
                               type='submit'
-                              className='bg-primary hover:bg-primary/95 text-white rounded-xl text-xs h-9 px-5 cursor-pointer'
+                              className='text-xs h-9 px-5 cursor-pointer'
                               disabled={isSavingVehicle}
                             >
                               {isSavingVehicle ? (
                                 <Spinner className='size-4' />
                               ) : (
-                                'Lưu & Chọn'
+                                'Lưu và chọn'
                               )}
                             </Button>
                           </div>
@@ -719,20 +699,19 @@ function BookingFlow() {
                         </span>
                       </div>
                     ) : vehicles.length === 0 ? (
-                      <div className='text-center py-10 border-2 border-dashed border-border rounded-2xl bg-slate-50/50 p-6'>
-                        <Car className='w-12 h-12 text-slate-300 mx-auto mb-3' />
-                        <p className='text-sm font-bold text-foreground mb-1'>
-                          Chưa có phương tiện nào trong garage của bạn
+                      <div className='text-center py-10 border border-dashed border-border rounded-xl bg-muted/30 p-6'>
+                        <Car className='w-12 h-12 text-placeholder mx-auto mb-3' />
+                        <p className='text-sm font-semibold text-foreground mb-1'>
+                          Chưa có xe nào trong garage của bạn
                         </p>
                         <p className='text-xs text-muted-foreground mb-4'>
-                          Bạn cần đăng ký thông tin xe để tiếp tục đặt lịch rửa
-                          xe.
+                          Thêm thông tin xe để tiếp tục đặt lịch rửa xe.
                         </p>
                         <Button
                           onClick={() => setIsAddingVehicle(true)}
-                          className='bg-primary hover:bg-primary/90 text-white rounded-xl text-xs font-semibold px-4 cursor-pointer'
+                          className='text-xs font-semibold px-4 cursor-pointer'
                         >
-                          Thêm Phương Tiện Ngay
+                          Thêm xe ngay
                         </Button>
                       </div>
                     ) : (
@@ -754,20 +733,20 @@ function BookingFlow() {
                                 setSelectedVehicleId(v._id || v.id || '')
                               }
                               className={cn(
-                                'text-left p-4 rounded-2xl border-2 transition-all flex flex-col justify-between min-h-[120px] cursor-pointer hover:shadow-md relative',
+                                'text-left p-4 rounded-lg border transition-colors flex flex-col justify-between min-h-[120px] cursor-pointer relative focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
                                 isSelected
-                                  ? 'border-primary bg-primary/5 ring-1 ring-primary/20 shadow-xs'
-                                  : 'border-border bg-card',
+                                  ? 'border-primary bg-accent ring-1 ring-primary'
+                                  : 'border-border bg-card hover:border-primary/40',
                               )}
                             >
                               <div className='flex justify-between items-start w-full'>
                                 <div className='flex items-center gap-2'>
                                   <div
                                     className={cn(
-                                      'p-1.5 rounded-lg text-xs',
+                                      'p-1.5 rounded-md text-xs',
                                       isSelected
                                         ? 'bg-primary/10 text-primary'
-                                        : 'bg-slate-100 text-slate-500',
+                                        : 'bg-muted text-muted-foreground',
                                     )}
                                   >
                                     {isMotor ? (
@@ -777,16 +756,16 @@ function BookingFlow() {
                                     )}
                                   </div>
                                   <div>
-                                    <span className='font-black text-sm block leading-tight text-foreground truncate max-w-[120px]'>
+                                    <span className='font-semibold text-sm block leading-tight text-foreground truncate max-w-[120px]'>
                                       {v.nickname || v.brand || 'Phương tiện'}
                                     </span>
-                                    <span className='text-[10px] text-muted-foreground block'>
+                                    <span className='text-[11px] text-muted-foreground block'>
                                       {foundType?.name || 'Chưa rõ loại'}
                                     </span>
                                   </div>
                                 </div>
                                 {isSelected && (
-                                  <span className='absolute top-3 right-3 bg-primary text-white p-0.5 rounded-full'>
+                                  <span className='absolute top-3 right-3 bg-primary text-primary-foreground p-0.5 rounded-full'>
                                     <Check className='w-3.5 h-3.5' />
                                   </span>
                                 )}
@@ -794,8 +773,8 @@ function BookingFlow() {
 
                               <div className='mt-4 flex items-center justify-between w-full'>
                                 {renderLicensePlate(v.licensePlate)}
-                                <span className='text-[10px] text-muted-foreground font-semibold'>
-                                  {v.color || 'Màu tùy chọn'}
+                                <span className='text-[11px] text-muted-foreground'>
+                                  {v.color || ''}
                                 </span>
                               </div>
                             </button>
@@ -804,11 +783,11 @@ function BookingFlow() {
                       </div>
                     )}
 
-                    <div className='flex justify-end pt-4 border-t border-slate-100'>
+                    <div className='flex justify-end pt-4 border-t border-border'>
                       <Button
                         disabled={!selectedVehicleId}
                         onClick={() => setStep(2)}
-                        className='bg-primary hover:bg-primary/95 text-white rounded-xl font-bold px-6 py-2.5 shadow-lg shadow-primary/20 cursor-pointer transition-all hover:scale-102 flex items-center gap-1.5'
+                        className='px-6 cursor-pointer flex items-center gap-1.5'
                       >
                         Tiếp theo <ChevronRight className='w-4 h-4' />
                       </Button>
@@ -819,10 +798,9 @@ function BookingFlow() {
                 {/* ──────── STEP 2: CHỌN GÓI DỊCH VỤ ──────── */}
                 {step === 2 && (
                   <div className='space-y-6'>
-                    <h2 className='font-heading text-xl font-bold text-foreground flex items-center gap-2 mb-4'>
-                      <FileText className='w-5 h-5 text-primary' /> Bước 2: Chọn
-                      Gói Dịch Vụ
-                    </h2>
+                    <div className='mb-4'>
+                      {renderStepTitle(2, 'Chọn gói dịch vụ')}
+                    </div>
 
                     {isLoadingServices ? (
                       <div className='flex flex-col items-center justify-center py-10 gap-3'>
@@ -858,24 +836,24 @@ function BookingFlow() {
                                   setSelectedVoucherId('');
                                 }}
                                 className={cn(
-                                  'w-full text-left p-5 rounded-2xl border-2 transition-all flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 cursor-pointer hover:shadow-md relative',
+                                  'w-full text-left p-5 rounded-lg border transition-colors flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 cursor-pointer relative focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
                                   isSelected
-                                    ? 'border-primary bg-primary/5 ring-1 ring-primary/20 shadow-xs'
-                                    : 'border-border bg-card',
+                                    ? 'border-primary bg-accent ring-1 ring-primary'
+                                    : 'border-border bg-card hover:border-primary/40',
                                 )}
                               >
                                 <div className='flex-1 space-y-1 max-w-md'>
                                   <div className='flex items-center gap-2.5'>
-                                    <span className='font-black text-base text-foreground tracking-tight'>
+                                    <span className='font-heading font-semibold text-base text-foreground tracking-tight'>
                                       {service.name}
                                     </span>
                                     {service.pointsMultiplier > 1 && (
-                                      <span className='text-[9px] bg-yellow-400/20 text-yellow-600 font-extrabold px-2 py-0.5 rounded-full'>
-                                        x{service.pointsMultiplier} Điểm
+                                      <span className='text-[10px] bg-primary/10 text-primary font-semibold px-2 py-0.5 rounded-full'>
+                                        Tích điểm ×{service.pointsMultiplier}
                                       </span>
                                     )}
                                   </div>
-                                  <p className='text-xs text-muted-foreground font-medium leading-relaxed'>
+                                  <p className='text-xs text-muted-foreground leading-relaxed'>
                                     {service.description ||
                                       'Dịch vụ chuyên nghiệp toàn diện cho chiếc xe của bạn'}
                                   </p>
@@ -889,15 +867,15 @@ function BookingFlow() {
                                           .map((item: string, i: number) => (
                                             <span
                                               key={i}
-                                              className='text-[10px] text-slate-400 flex items-center gap-1 font-semibold'
+                                              className='text-[11px] text-muted-foreground flex items-center gap-1'
                                             >
-                                              <Check className='w-3 h-3 text-emerald-500' />{' '}
+                                              <Check className='w-3 h-3 text-primary' />{' '}
                                               {item}
                                             </span>
                                           ))}
                                         {service.checklistTemplate.length >
                                           3 && (
-                                          <span className='text-[10px] text-slate-400 font-bold'>
+                                          <span className='text-[11px] text-muted-foreground font-medium'>
                                             +
                                             {service.checklistTemplate.length -
                                               3}{' '}
@@ -908,17 +886,17 @@ function BookingFlow() {
                                     )}
                                 </div>
 
-                                <div className='flex sm:flex-col items-baseline sm:items-end justify-between sm:justify-center border-t sm:border-t-0 sm:border-l border-slate-100 sm:pl-6 pt-3 sm:pt-0 shrink-0'>
-                                  <span className='font-black text-lg text-primary'>
+                                <div className='flex sm:flex-col items-baseline sm:items-end justify-between sm:justify-center border-t sm:border-t-0 sm:border-l border-border sm:pl-6 pt-3 sm:pt-0 shrink-0'>
+                                  <span className='font-semibold text-lg text-foreground tabular-nums'>
                                     {formatCurrency(displayPrice)}
                                   </span>
-                                  <span className='text-[10px] text-muted-foreground font-bold'>
-                                    khoảng {displayMinutes} phút hoàn thành
+                                  <span className='text-[11px] text-muted-foreground'>
+                                    khoảng {displayMinutes} phút
                                   </span>
                                 </div>
 
                                 {isSelected && (
-                                  <span className='absolute top-3 right-3 bg-primary text-white p-0.5 rounded-full'>
+                                  <span className='absolute top-3 right-3 bg-primary text-primary-foreground p-0.5 rounded-full'>
                                     <Check className='w-3.5 h-3.5' />
                                   </span>
                                 )}
@@ -929,18 +907,18 @@ function BookingFlow() {
                       </div>
                     )}
 
-                    <div className='flex justify-between pt-6 border-t border-slate-100'>
+                    <div className='flex justify-between pt-6 border-t border-border'>
                       <Button
                         variant='outline'
                         onClick={() => setStep(1)}
-                        className='rounded-xl font-bold px-6 py-2.5 cursor-pointer flex items-center gap-1.5'
+                        className='px-6 cursor-pointer flex items-center gap-1.5'
                       >
                         <ChevronLeft className='w-4 h-4' /> Quay lại
                       </Button>
                       <Button
                         disabled={!selectedServiceId}
                         onClick={goToStep3}
-                        className='bg-primary hover:bg-primary/95 text-white rounded-xl font-bold px-6 py-2.5 shadow-lg shadow-primary/20 cursor-pointer transition-all hover:scale-102 flex items-center gap-1.5'
+                        className='px-6 cursor-pointer flex items-center gap-1.5'
                       >
                         Tiếp theo <ChevronRight className='w-4 h-4' />
                       </Button>
@@ -951,15 +929,14 @@ function BookingFlow() {
                 {/* ──────── STEP 3: CHỌN NGÀY & GIỜ TRỐNG ──────── */}
                 {step === 3 && (
                   <div className='space-y-6'>
-                    <h2 className='font-heading text-xl font-bold text-foreground flex items-center gap-2 mb-4'>
-                      <Calendar className='w-5 h-5 text-primary' /> Bước 3: Chọn
-                      Ngày & Giờ Rửa Xe
-                    </h2>
+                    <div className='mb-4'>
+                      {renderStepTitle(3, 'Chọn ngày và giờ rửa xe')}
+                    </div>
 
                     {/* Date Horizontal Picker */}
                     <div className='space-y-2'>
-                      <Label className='text-xs font-bold text-slate-500 uppercase tracking-wider block'>
-                        1. Chọn ngày rửa xe
+                      <Label className='text-xs font-medium text-muted-foreground block'>
+                        Ngày rửa xe
                       </Label>
                       <div className='flex gap-2.5 overflow-x-auto pb-2 scrollbar-none'>
                         {dateOptions.map((d) => {
@@ -973,27 +950,27 @@ function BookingFlow() {
                                 setSelectedSlot(''); // reset slot khi đổi ngày
                               }}
                               className={cn(
-                                'flex flex-col items-center justify-center p-3 rounded-xl border-2 transition-all min-w-[85px] cursor-pointer focus:outline-none shrink-0',
+                                'flex flex-col items-center justify-center p-3 rounded-lg border transition-colors min-w-[85px] cursor-pointer shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
                                 isSelected
-                                  ? 'border-primary bg-primary/5 ring-1 ring-primary/20 shadow-xs'
-                                  : 'border-border bg-card hover:bg-slate-50',
+                                  ? 'border-primary bg-accent ring-1 ring-primary'
+                                  : 'border-border bg-card hover:border-primary/40',
                               )}
                             >
                               <span
                                 className={cn(
-                                  'text-[10px] font-bold uppercase',
+                                  'text-[10px] font-semibold uppercase tracking-[0.08em]',
                                   isSelected
                                     ? 'text-primary'
-                                    : 'text-slate-400',
+                                    : 'text-muted-foreground',
                                 )}
                               >
                                 {d.label}
                               </span>
-                              <span className='text-lg font-black text-foreground mt-0.5 tracking-tight'>
-                                {d.dateFormatted.split('/')[0]}
+                              <span className='text-lg font-semibold text-foreground mt-0.5 tracking-tight tabular-nums'>
+                                {d.day}
                               </span>
-                              <span className='text-[10px] text-muted-foreground font-semibold'>
-                                Th. {d.dateFormatted.split('/')[1]}
+                              <span className='text-[10px] text-muted-foreground'>
+                                Thg {d.month}
                               </span>
                             </button>
                           );
@@ -1004,12 +981,12 @@ function BookingFlow() {
                     {/* Available Slots Grid */}
                     <div className='space-y-3 pt-2'>
                       <div className='flex justify-between items-center'>
-                        <Label className='text-xs font-bold text-slate-500 uppercase tracking-wider'>
-                          2. Chọn giờ còn trống
+                        <Label className='text-xs font-medium text-muted-foreground'>
+                          Giờ còn trống
                         </Label>
-                        <span className='text-[10px] text-muted-foreground font-medium flex items-center gap-1'>
-                          <Clock className='w-3.5 h-3.5 text-primary' /> Lưới
-                          giờ chạy cách nhau 30 phút
+                        <span className='text-[11px] text-muted-foreground flex items-center gap-1'>
+                          <Clock className='w-3.5 h-3.5' /> Các khung giờ cách
+                          nhau 30 phút
                         </span>
                       </div>
 
@@ -1021,24 +998,24 @@ function BookingFlow() {
                           </span>
                         </div>
                       ) : availableSlots.length === 0 ? (
-                        <Card className='border border-amber-200 bg-amber-50 rounded-xl p-4 text-center'>
+                        <div className='border border-dashed border-border bg-muted/30 rounded-xl p-6 text-center'>
                           <div className='flex flex-col items-center justify-center gap-2'>
-                            <AlertCircle className='w-8 h-8 text-amber-500' />
-                            <p className='text-sm font-bold text-amber-800'>
-                              Không có ca rửa xe nào trống vào ngày này
+                            <Calendar className='w-8 h-8 text-placeholder' />
+                            <p className='text-sm font-semibold text-foreground'>
+                              Ngày này chưa có giờ trống
                             </p>
-                            <p className='text-xs text-amber-700 max-w-sm'>
-                              Tất cả các ca của nhân viên đều đã kín lịch hoặc
-                              hôm nay không có ca trực. Vui lòng chọn ngày khác.
+                            <p className='text-xs text-muted-foreground max-w-sm'>
+                              Các ca đã kín lịch hoặc chưa có ca trực. Chọn ngày
+                              khác để xem thêm giờ trống.
                             </p>
                           </div>
-                        </Card>
+                        </div>
                       ) : (
                         <>
-                          <div className='flex items-center gap-1.5 mb-3 text-[11px] text-amber-600 font-semibold'>
-                            <Sparkles className='w-3.5 h-3.5 shrink-0' />Ô màu
-                            vàng là Giờ Vàng - đặt vào khung này được giảm giá
-                            theo hạng thành viên.
+                          <div className='flex items-center gap-1.5 mb-3 text-[11px] text-muted-foreground'>
+                            <Sparkles className='w-3.5 h-3.5 shrink-0 text-warning' />
+                            Ô viền vàng là giờ vàng — đặt khung này được giảm
+                            giá theo hạng thành viên.
                           </div>
                           <div className='grid grid-cols-3 sm:grid-cols-4 gap-3'>
                             {availableSlots.map((slot: AvailableSlot) => {
@@ -1066,39 +1043,34 @@ function BookingFlow() {
                                     setSelectedSlot(slot.scheduledAt)
                                   }
                                   className={cn(
-                                    'p-3 rounded-xl border-2 transition-all cursor-pointer flex flex-col items-center justify-center relative focus:outline-none',
+                                    'p-3 rounded-lg border transition-colors cursor-pointer flex flex-col items-center justify-center relative focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
                                     isSelected
-                                      ? 'border-primary bg-primary/5 ring-1 ring-primary/20 shadow-xs'
+                                      ? 'border-primary bg-accent ring-1 ring-primary'
                                       : isFull
-                                        ? 'border-border bg-slate-100 text-slate-400 cursor-not-allowed'
+                                        ? 'border-border bg-muted text-placeholder cursor-not-allowed'
                                         : isGolden
-                                          ? 'border-amber-300 bg-amber-50 hover:bg-amber-100'
-                                          : 'border-border bg-card hover:bg-slate-50',
+                                          ? 'border-warning/60 bg-warning/10 hover:bg-warning/20'
+                                          : 'border-border bg-card hover:border-primary/40',
                                   )}
                                 >
                                   {isGolden && (
-                                    <span className='absolute -top-1.5 -right-1.5 flex items-center gap-0.5 rounded-full bg-amber-400 text-white text-[8px] font-black px-1.5 py-0.5 shadow-sm'>
+                                    <span className='absolute -top-2 -right-1.5 flex items-center gap-0.5 rounded-full bg-warning text-warning-foreground text-[9px] font-semibold px-1.5 py-0.5'>
                                       <Sparkles className='w-2.5 h-2.5' />
                                       {slot.discountPercent > 0
                                         ? `-${slot.discountPercent}%`
                                         : 'Giờ vàng'}
                                     </span>
                                   )}
-                                  <span className='font-extrabold text-sm text-foreground tracking-tight'>
-                                    {timeStr}
-                                  </span>
                                   <span
                                     className={cn(
-                                      'text-[9px] font-bold mt-1',
-                                      isSelected
-                                        ? 'text-primary'
-                                        : isFull
-                                          ? 'text-slate-400'
-                                          : isGolden
-                                            ? 'text-amber-600'
-                                            : 'text-emerald-500',
+                                      'font-semibold text-sm tracking-tight tabular-nums',
+                                      isFull
+                                        ? 'text-placeholder'
+                                        : 'text-foreground',
                                     )}
-                                  ></span>
+                                  >
+                                    {timeStr}
+                                  </span>
                                 </button>
                               );
                             })}
@@ -1107,18 +1079,18 @@ function BookingFlow() {
                       )}
                     </div>
 
-                    <div className='flex justify-between pt-6 border-t border-slate-100'>
+                    <div className='flex justify-between pt-6 border-t border-border'>
                       <Button
                         variant='outline'
                         onClick={() => setStep(2)}
-                        className='rounded-xl font-bold px-6 py-2.5 cursor-pointer flex items-center gap-1.5'
+                        className='px-6 cursor-pointer flex items-center gap-1.5'
                       >
                         <ChevronLeft className='w-4 h-4' /> Quay lại
                       </Button>
                       <Button
                         disabled={!selectedSlot}
                         onClick={() => setStep(4)}
-                        className='bg-primary hover:bg-primary/95 text-white rounded-xl font-bold px-6 py-2.5 shadow-lg shadow-primary/20 cursor-pointer transition-all hover:scale-102 flex items-center gap-1.5'
+                        className='px-6 cursor-pointer flex items-center gap-1.5'
                       >
                         Tiếp theo <ChevronRight className='w-4 h-4' />
                       </Button>
@@ -1129,20 +1101,19 @@ function BookingFlow() {
                 {/* ──────── STEP 4: XÁC NHẬN ĐƠN HÀNG ──────── */}
                 {step === 4 && (
                   <div className='space-y-6'>
-                    <h2 className='font-heading text-xl font-bold text-foreground flex items-center gap-2 mb-4'>
-                      <ShieldCheck className='w-5 h-5 text-primary' /> Bước 4:
-                      Thanh Toán & Xác Nhận Đặt Lịch
-                    </h2>
+                    <div className='mb-4'>
+                      {renderStepTitle(4, 'Thanh toán và xác nhận')}
+                    </div>
 
                     {/* Voucher rửa miễn phí */}
                     {validVouchers.length > 0 && (
                       <div className='space-y-3'>
-                        <Label className='text-xs font-bold text-slate-500 uppercase tracking-wider block'>
+                        <Label className='text-xs font-medium text-muted-foreground block'>
                           Voucher rửa miễn phí ({validVouchers.length})
                         </Label>
 
                         {!serviceVoucherEligible ? (
-                          <div className='flex items-center gap-2 rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-700'>
+                          <div className='flex items-center gap-2 rounded-lg border border-border bg-muted/40 p-3 text-xs text-muted-foreground'>
                             <AlertCircle className='w-4 h-4 shrink-0' />
                             Gói dịch vụ này không áp dụng voucher.
                           </div>
@@ -1159,7 +1130,7 @@ function BookingFlow() {
                                   setVoucherCodeError('');
                                 }}
                                 placeholder='Nhập mã voucher…'
-                                className='flex-1 min-w-0 border border-border rounded-xl px-3.5 py-2.5 text-sm font-mono uppercase focus:outline-none focus:border-primary/50'
+                                className='flex-1 min-w-0 border border-input bg-background rounded-lg px-3.5 py-2.5 text-sm font-mono uppercase focus:outline-none focus-visible:ring-2 focus-visible:ring-ring'
                               />
                               <button
                                 type='button'
@@ -1187,13 +1158,13 @@ function BookingFlow() {
                                     );
                                   }
                                 }}
-                                className='px-4 py-2.5 rounded-xl bg-primary text-white text-sm font-bold hover:bg-primary/90 shrink-0 cursor-pointer'
+                                className='px-4 py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 shrink-0 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background'
                               >
                                 Áp dụng
                               </button>
                             </div>
                             {voucherCodeError && (
-                              <p className='text-[11px] text-red-600 flex items-center gap-1'>
+                              <p className='text-[11px] text-destructive flex items-center gap-1'>
                                 <AlertCircle className='w-3.5 h-3.5 shrink-0' />{' '}
                                 {voucherCodeError}
                               </p>
@@ -1211,24 +1182,24 @@ function BookingFlow() {
                                     setSelectedVoucherId(isSelected ? '' : v.id)
                                   }
                                   className={cn(
-                                    'w-full text-left p-3.5 rounded-xl border-2 transition-all flex items-center gap-3 cursor-pointer focus:outline-none',
+                                    'w-full text-left p-3.5 rounded-lg border transition-colors flex items-center gap-3 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
                                     isSelected
-                                      ? 'border-primary bg-primary/5 ring-1 ring-primary/20'
-                                      : 'border-border bg-card hover:bg-slate-50',
+                                      ? 'border-primary bg-accent ring-1 ring-primary'
+                                      : 'border-border bg-card hover:border-primary/40',
                                   )}
                                 >
                                   <div
                                     className={cn(
-                                      'p-2 rounded-lg shrink-0',
+                                      'p-2 rounded-md shrink-0',
                                       isSelected
-                                        ? 'bg-primary/15 text-primary'
-                                        : 'bg-slate-100 text-slate-500',
+                                        ? 'bg-primary/10 text-primary'
+                                        : 'bg-muted text-muted-foreground',
                                     )}
                                   >
                                     <Ticket className='w-4 h-4' />
                                   </div>
                                   <div className='flex-1 min-w-0'>
-                                    <span className='font-bold text-sm text-foreground block truncate'>
+                                    <span className='font-semibold font-mono text-sm text-foreground block truncate'>
                                       {v.code}
                                     </span>
                                     <span className='text-[11px] text-muted-foreground block'>
@@ -1242,7 +1213,7 @@ function BookingFlow() {
                                   {isSelected ? (
                                     <Check className='w-4 h-4 text-primary shrink-0' />
                                   ) : (
-                                    <span className='text-[11px] font-bold text-primary shrink-0'>
+                                    <span className='text-[11px] font-semibold text-primary shrink-0'>
                                       Áp dụng
                                     </span>
                                   )}
@@ -1262,7 +1233,7 @@ function BookingFlow() {
                         )}
 
                         {preview?.voucherError && selectedVoucherId && (
-                          <div className='flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 p-3 text-xs text-red-600'>
+                          <div className='flex items-center gap-2 rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-xs text-destructive'>
                             <AlertCircle className='w-4 h-4 shrink-0' />{' '}
                             {preview.voucherError}
                           </div>
@@ -1272,8 +1243,8 @@ function BookingFlow() {
 
                     {/* Payment Method Picker */}
                     <div className='space-y-3'>
-                      <Label className='text-xs font-bold text-slate-500 uppercase tracking-wider block'>
-                        Chọn hình thức thanh toán
+                      <Label className='text-xs font-medium text-muted-foreground block'>
+                        Hình thức thanh toán
                       </Label>
                       <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
                         {/* PayOS Online */}
@@ -1284,30 +1255,30 @@ function BookingFlow() {
                             !isFreeOrder && setPaymentMethod('online')
                           }
                           className={cn(
-                            'text-left p-4 rounded-xl border-2 transition-all flex items-center gap-4 focus:outline-none',
+                            'text-left p-4 rounded-lg border transition-colors flex items-center gap-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
                             isFreeOrder
-                              ? 'border-border bg-slate-100 opacity-60 cursor-not-allowed'
+                              ? 'border-border bg-muted opacity-60 cursor-not-allowed'
                               : effectivePaymentMethod === 'online'
-                                ? 'border-primary bg-primary/5 ring-1 ring-primary/20 shadow-xs cursor-pointer'
-                                : 'border-border bg-card hover:bg-slate-50 cursor-pointer',
+                                ? 'border-primary bg-accent ring-1 ring-primary cursor-pointer'
+                                : 'border-border bg-card hover:border-primary/40 cursor-pointer',
                           )}
                         >
                           <div
                             className={cn(
-                              'p-2.5 rounded-lg',
+                              'p-2.5 rounded-md',
                               effectivePaymentMethod === 'online'
-                                ? 'bg-primary/20 text-primary'
-                                : 'bg-slate-100 text-slate-500',
+                                ? 'bg-primary/10 text-primary'
+                                : 'bg-muted text-muted-foreground',
                             )}
                           >
                             <CreditCard className='w-5 h-5' />
                           </div>
                           <div>
-                            <span className='font-extrabold text-sm text-foreground block leading-tight'>
-                              Thanh toán Online (PayOS)
+                            <span className='font-semibold text-sm text-foreground block leading-tight'>
+                              Thanh toán online (PayOS)
                             </span>
-                            <span className='text-[10px] text-muted-foreground'>
-                              Qua mã QR ngân hàng cực kỳ tiện lợi
+                            <span className='text-[11px] text-muted-foreground'>
+                              Quét mã QR ngân hàng
                             </span>
                           </div>
                           {effectivePaymentMethod === 'online' && (
@@ -1320,28 +1291,28 @@ function BookingFlow() {
                           type='button'
                           onClick={() => setPaymentMethod('cash')}
                           className={cn(
-                            'text-left p-4 rounded-xl border-2 transition-all flex items-center gap-4 cursor-pointer focus:outline-none',
+                            'text-left p-4 rounded-lg border transition-colors flex items-center gap-4 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
                             effectivePaymentMethod === 'cash'
-                              ? 'border-primary bg-primary/5 ring-1 ring-primary/20 shadow-xs'
-                              : 'border-border bg-card hover:bg-slate-50',
+                              ? 'border-primary bg-accent ring-1 ring-primary'
+                              : 'border-border bg-card hover:border-primary/40',
                           )}
                         >
                           <div
                             className={cn(
-                              'p-2.5 rounded-lg',
+                              'p-2.5 rounded-md',
                               effectivePaymentMethod === 'cash'
-                                ? 'bg-primary/20 text-primary'
-                                : 'bg-slate-100 text-slate-500',
+                                ? 'bg-primary/10 text-primary'
+                                : 'bg-muted text-muted-foreground',
                             )}
                           >
                             <DollarSign className='w-5 h-5' />
                           </div>
                           <div>
-                            <span className='font-extrabold text-sm text-foreground block leading-tight'>
-                              Thanh toán tại quầy (Tiền mặt)
+                            <span className='font-semibold text-sm text-foreground block leading-tight'>
+                              Tiền mặt tại quầy
                             </span>
-                            <span className='text-[10px] text-muted-foreground'>
-                              Thanh toán sau khi xe của bạn rửa sạch
+                            <span className='text-[11px] text-muted-foreground'>
+                              Thanh toán sau khi rửa xong
                             </span>
                           </div>
                           {effectivePaymentMethod === 'cash' && (
@@ -1352,8 +1323,8 @@ function BookingFlow() {
                       {isFreeOrder && (
                         <p className='text-[11px] text-muted-foreground flex items-center gap-1.5'>
                           <AlertCircle className='w-3.5 h-3.5 text-primary' />
-                          Đơn được voucher giảm về 0đ - chỉ thanh toán tiền mặt
-                          tại quầy.
+                          Đơn được voucher giảm về 0đ — chỉ cần thanh toán tiền
+                          mặt tại quầy.
                         </p>
                       )}
                     </div>
@@ -1362,37 +1333,36 @@ function BookingFlow() {
                     <div className='space-y-2 pt-2'>
                       <Label
                         htmlFor='booking-note'
-                        className='text-xs font-bold text-slate-500 uppercase tracking-wider block'
+                        className='text-xs font-medium text-muted-foreground block'
                       >
-                        Ghi chú yêu cầu thêm (không bắt buộc)
+                        Ghi chú thêm (không bắt buộc)
                       </Label>
                       <Textarea
                         id='booking-note'
                         placeholder='VD: Hút bụi kỹ ghế sau, rửa sạch vết bẩn gầm xe...'
                         value={note}
                         onChange={(e) => setNote(e.target.value)}
-                        className='rounded-xl border-border/50 bg-white/50 focus:bg-white transition-all text-sm resize-none h-24'
+                        className='bg-background text-sm resize-none h-24'
                         maxLength={500}
                       />
                     </div>
 
-                    <div className='flex justify-between pt-6 border-t border-slate-100'>
+                    <div className='flex justify-between pt-6 border-t border-border'>
                       <Button
                         variant='outline'
                         onClick={() => setStep(3)}
-                        className='rounded-xl font-bold px-6 py-2.5 cursor-pointer flex items-center gap-1.5'
+                        className='px-6 cursor-pointer flex items-center gap-1.5'
                       >
                         <ChevronLeft className='w-4 h-4' /> Quay lại
                       </Button>
                       <Button
                         onClick={handleSubmitBooking}
                         disabled={createOrderMutation.isPending}
-                        className='bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-bold px-7 py-2.5 shadow-lg shadow-emerald-500/20 cursor-pointer transition-all hover:scale-102 flex items-center gap-1.5'
+                        className='px-7 cursor-pointer flex items-center gap-1.5'
                       >
                         {createOrderMutation.isPending ? (
                           <>
-                            <Spinner className='size-4' /> Đang
-                            tạo đơn đặt...
+                            <Spinner className='size-4' /> Đang tạo đơn...
                           </>
                         ) : (
                           <>
@@ -1407,99 +1377,100 @@ function BookingFlow() {
             </Card>
           </div>
 
-          {/* ─── SIDEBAR HÓA ĐƠN TÓM TẮT DỊCH VỤ ─── */}
+          {/* ─── SIDEBAR: PHIẾU RỬA XE (tóm tắt đơn) ─── */}
           <div className='space-y-6'>
-            <Card className='border-none shadow-xl rounded-2xl overflow-hidden bg-white/80 dark:bg-slate-900/80 backdrop-blur-md sticky top-6'>
-              <CardContent className='p-6 space-y-5'>
-                <h3 className='font-heading font-black text-lg text-foreground tracking-tight border-b border-slate-100 pb-3'>
-                  Tóm Tắt Đơn Đặt Lịch
-                </h3>
+            <div className='sticky top-6'>
+              <div className='relative rounded-xl border border-border bg-card shadow-xs overflow-hidden'>
+                {/* Đầu phiếu */}
+                <div className='flex items-baseline justify-between px-5 pt-4 pb-3 border-b border-border'>
+                  <h3 className='text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground'>
+                    Phiếu rửa xe
+                  </h3>
+                  <span className='font-heading text-sm font-bold tracking-tight text-primary'>
+                    WAVE
+                  </span>
+                </div>
 
-                <div className='space-y-4 text-sm font-medium'>
+                {/* Thân phiếu */}
+                <div className='px-5 py-4 space-y-3.5 text-sm'>
                   {/* Vehicle Summary */}
-                  {selectedVehicle ? (
-                    <div className='flex items-start gap-3'>
-                      <div className='p-2 bg-slate-100 dark:bg-slate-800 rounded-lg text-slate-500 text-xs shrink-0 mt-0.5'>
-                        <Car className='w-4 h-4' />
-                      </div>
-                      <div className='space-y-1'>
-                        <span className='text-[10px] text-muted-foreground uppercase font-bold block'>
-                          Phương tiện
-                        </span>
-                        <span className='text-foreground font-bold text-sm block'>
+                  <div>
+                    <span className='text-[11px] text-muted-foreground block mb-0.5'>
+                      Phương tiện
+                    </span>
+                    {selectedVehicle ? (
+                      <div className='flex items-center justify-between gap-2'>
+                        <span className='text-foreground font-medium'>
                           {selectedVehicle.nickname ||
                             selectedVehicle.brand ||
                             'Xe của tôi'}
                         </span>
                         {renderLicensePlate(selectedVehicle.licensePlate)}
                       </div>
-                    </div>
-                  ) : (
-                    <div className='text-xs text-muted-foreground/60 italic flex items-center gap-2'>
-                      <HelpCircle className='w-4 h-4' /> Chưa chọn phương tiện
-                    </div>
-                  )}
+                    ) : (
+                      <span className='text-placeholder'>Chưa chọn</span>
+                    )}
+                  </div>
 
                   {/* Service Summary */}
-                  {selectedService ? (
-                    <div className='flex items-start gap-3 border-t border-slate-100 pt-3'>
-                      <div className='p-2 bg-slate-100 dark:bg-slate-800 rounded-lg text-slate-500 text-xs shrink-0 mt-0.5'>
-                        <FileText className='w-4 h-4' />
-                      </div>
-                      <div className='space-y-0.5'>
-                        <span className='text-[10px] text-muted-foreground uppercase font-bold block'>
-                          Dịch vụ
-                        </span>
-                        <span className='text-foreground font-bold text-sm block'>
+                  <div>
+                    <span className='text-[11px] text-muted-foreground block mb-0.5'>
+                      Dịch vụ
+                    </span>
+                    {selectedService ? (
+                      <div className='flex items-baseline justify-between gap-2'>
+                        <span className='text-foreground font-medium'>
                           {selectedService.name}
                         </span>
-                        <span className='text-xs text-muted-foreground block font-bold'>
-                          {selectedService.estimatedMinutes} phút • Gói lẻ
+                        <span className='text-xs text-muted-foreground shrink-0 tabular-nums'>
+                          ~{selectedService.estimatedMinutes} phút
                         </span>
                       </div>
-                    </div>
-                  ) : (
-                    <div className='text-xs text-muted-foreground/60 italic flex items-center gap-2 border-t border-slate-100 pt-3'>
-                      <HelpCircle className='w-4 h-4' /> Chưa chọn gói dịch vụ
-                    </div>
-                  )}
+                    ) : (
+                      <span className='text-placeholder'>Chưa chọn</span>
+                    )}
+                  </div>
 
                   {/* Date & Time Summary */}
-                  {selectedSlot ? (
-                    <div className='flex items-start gap-3 border-t border-slate-100 pt-3'>
-                      <div className='p-2 bg-slate-100 dark:bg-slate-800 rounded-lg text-slate-500 text-xs shrink-0 mt-0.5'>
-                        <Calendar className='w-4 h-4' />
-                      </div>
-                      <div className='space-y-0.5'>
-                        <span className='text-[10px] text-muted-foreground uppercase font-bold block'>
-                          Thời gian hẹn
-                        </span>
-                        <span className='text-foreground font-bold text-sm block'>
+                  <div>
+                    <span className='text-[11px] text-muted-foreground block mb-0.5'>
+                      Thời gian hẹn
+                    </span>
+                    {selectedSlot ? (
+                      <div className='flex items-baseline justify-between gap-2'>
+                        <span className='text-foreground font-medium tabular-nums'>
                           {new Date(selectedSlot).toLocaleTimeString('vi-VN', {
                             hour: '2-digit',
                             minute: '2-digit',
                             hour12: false,
                           })}
                         </span>
-                        <span className='text-xs text-muted-foreground block font-bold'>
+                        <span className='text-xs text-muted-foreground tabular-nums'>
                           {new Date(selectedSlot).toLocaleDateString('vi-VN', {
                             weekday: 'long',
                             day: '2-digit',
                             month: '2-digit',
-                            year: 'numeric',
                           })}
                         </span>
                       </div>
-                    </div>
-                  ) : (
-                    <div className='text-xs text-muted-foreground/60 italic flex items-center gap-2 border-t border-slate-100 pt-3'>
-                      <HelpCircle className='w-4 h-4' /> Chưa chọn thời gian
-                    </div>
-                  )}
+                    ) : (
+                      <span className='text-placeholder'>Chưa chọn</span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Đường răng cưa như phiếu giấy xé */}
+                <div
+                  className='relative py-1'
+                  aria-hidden='true'
+                >
+                  <div className='absolute -left-2 top-1/2 -translate-y-1/2 h-4 w-4 rounded-full bg-background border border-border' />
+                  <div className='absolute -right-2 top-1/2 -translate-y-1/2 h-4 w-4 rounded-full bg-background border border-border' />
+                  <div className='mx-5 border-t border-dashed border-border' />
                 </div>
 
                 {/* Total Payment Details */}
-                <div className='border-t border-slate-100 pt-4 space-y-3'>
+                <div className='px-5 py-4 space-y-2.5'>
                   {(() => {
                     const base = selectedService
                       ? Number(
@@ -1524,27 +1495,31 @@ function BookingFlow() {
                     const total = preview?.amount ?? base - localGoldenDiscount;
                     return (
                       <>
-                        <div className='flex justify-between items-center text-sm font-bold text-muted-foreground'>
+                        <div className='flex justify-between items-center text-sm text-muted-foreground'>
                           <span>Giá niêm yết</span>
-                          <span>{formatCurrency(original)}</span>
+                          <span className='tabular-nums'>
+                            {formatCurrency(original)}
+                          </span>
                         </div>
 
                         {discount > 0 && (
-                          <div className='flex justify-between items-center text-sm font-bold text-emerald-600'>
+                          <div className='flex justify-between items-center text-sm text-success'>
                             <span className='flex items-center gap-1'>
                               <Ticket className='w-3.5 h-3.5' />
                               {selectedVoucherId && !preview?.voucherError
                                 ? 'Giảm giá (voucher)'
                                 : 'Giảm giá'}
                             </span>
-                            <span>− {formatCurrency(discount)}</span>
+                            <span className='tabular-nums'>
+                              − {formatCurrency(discount)}
+                            </span>
                           </div>
                         )}
 
                         {(preview?.isGoldenHour
                           ? preview.tierDiscountPercent > 0
                           : localGoldenDiscount > 0) && (
-                          <p className='text-[10px] text-muted-foreground -mt-1.5'>
+                          <p className='text-[11px] text-muted-foreground -mt-1'>
                             Khung giờ vàng
                             {preview?.tierName
                               ? ` · hạng ${preview.tierName} giảm ${preview.tierDiscountPercent}%`
@@ -1552,9 +1527,11 @@ function BookingFlow() {
                           </p>
                         )}
 
-                        <div className='flex justify-between items-center text-md font-black text-foreground pt-1 border-t border-dashed border-slate-100'>
-                          <span>Tổng thanh toán</span>
-                          <span className='text-xl text-primary font-black'>
+                        <div className='flex justify-between items-baseline pt-1.5'>
+                          <span className='text-sm font-semibold text-foreground'>
+                            Tổng thanh toán
+                          </span>
+                          <span className='font-heading text-xl font-bold tracking-tight text-foreground tabular-nums'>
                             {formatCurrency(total)}
                           </span>
                         </div>
@@ -1562,8 +1539,37 @@ function BookingFlow() {
                     );
                   })()}
                 </div>
-              </CardContent>
-            </Card>
+
+                {/* Tích lũy lượt rửa (thay banner đầu trang) */}
+                {myLoyalty && (
+                  <div className='px-5 pb-5'>
+                    <div className='rounded-lg bg-muted/50 px-3.5 py-3'>
+                      <div className='flex items-center justify-between text-[11px] font-medium mb-1.5'>
+                        <span className='text-muted-foreground'>
+                          Tích lượt rửa nhận voucher
+                        </span>
+                        <span className='tabular-nums text-foreground'>
+                          {towardVoucher}/{WASHES_PER_FREE_VOUCHER}
+                        </span>
+                      </div>
+                      <div className='h-1.5 rounded-full bg-border overflow-hidden'>
+                        <div
+                          className='h-full rounded-full bg-warning transition-all'
+                          style={{
+                            width: `${Math.min((towardVoucher / WASHES_PER_FREE_VOUCHER) * 100, 100)}%`,
+                          }}
+                        />
+                      </div>
+                      <p className='mt-1.5 text-[11px] text-muted-foreground'>
+                        {washesToVoucher > 0
+                          ? `Còn ${washesToVoucher} lượt rửa hợp lệ để nhận voucher ~5% chi tiêu.`
+                          : 'Bạn sắp nhận voucher thưởng!'}
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         </div>
       </div>

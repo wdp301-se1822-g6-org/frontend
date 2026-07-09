@@ -26,13 +26,13 @@ interface OrderData {
 }
 
 const statusConfig: Record<string, { label: string; cls: string }> = {
-  completed:       { label: 'Hoàn thành',       cls: 'bg-emerald-50 text-emerald-700 border border-emerald-100' },
-  in_progress:     { label: 'Đang rửa xe',      cls: 'bg-indigo-50 text-indigo-700 border border-indigo-100' },
-  confirmed:       { label: 'Đã xác nhận',      cls: 'bg-blue-50 text-blue-700 border border-blue-100' },
-  checked_in:      { label: 'Đã check-in',      cls: 'bg-sky-50 text-sky-700 border border-sky-100' },
-  pending_payment: { label: 'Chờ thanh toán',   cls: 'bg-amber-50 text-amber-700 border border-amber-100' },
-  cancelled:       { label: 'Đã hủy',           cls: 'bg-rose-50 text-rose-700 border border-rose-100' },
-  no_show:         { label: 'Vắng mặt',         cls: 'bg-slate-100 text-slate-600' },
+  completed:       { label: 'Hoàn thành',       cls: 'bg-success/10 text-success border border-success/30' },
+  in_progress:     { label: 'Đang rửa xe',      cls: 'bg-accent text-primary border border-primary/30' },
+  confirmed:       { label: 'Đã xác nhận',      cls: 'bg-info/10 text-info border border-info/30' },
+  checked_in:      { label: 'Đã check-in',      cls: 'bg-info/10 text-info border border-info/30' },
+  pending_payment: { label: 'Chờ thanh toán',   cls: 'bg-warning/10 text-warning-foreground border border-warning/30' },
+  cancelled:       { label: 'Đã hủy',           cls: 'bg-destructive/10 text-destructive border border-destructive/30' },
+  no_show:         { label: 'Vắng mặt',         cls: 'bg-muted text-muted-foreground' },
 };
 
 const statusOptions = ['all', 'pending_payment', 'confirmed', 'checked_in', 'in_progress', 'completed', 'cancelled', 'no_show'];
@@ -44,7 +44,7 @@ export default function CashierOrdersPage() {
   const [page, setPage] = useState(1);
 
   // Check-in kèm ảnh hiện trạng: upload qua API rồi gửi kèm khi tạo Work Order
-  // (BE lưu vào checkinPhotos, hiển thị lại ở trang QC). Không dùng localStorage.
+  // (BE lưu vào checkinPhotos, thợ rửa xem lại để đối chiếu). Không dùng localStorage.
   const [checkInTarget, setCheckInTarget] = useState<OrderData | null>(null);
   const [checkInPhotos, setCheckInPhotos] = useState<string[]>([]);
   const [isUploading, setIsUploading] = useState(false);
@@ -117,19 +117,19 @@ export default function CashierOrdersPage() {
   return (
     <>
       <AdminTopbar title='Quản lý Lịch hẹn' subtitle='Xem lịch hẹn đặt trước của khách hàng và tiến hành Check-in xe' />
-      <main className='flex-1 p-8 overflow-y-auto bg-slate-50/50'>
+      <main className='flex-1 p-8 overflow-y-auto bg-muted/40'>
         <div className='max-w-7xl mx-auto'>
 
           {/* Filters */}
           <div className='flex flex-wrap items-center gap-3 mb-6'>
             <div className='relative flex-1 min-w-[200px] max-w-xs'>
-              <Search className='absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500' />
+              <Search className='absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground' />
               <input
                 type='text'
                 placeholder='Tìm kiếm đơn đặt lịch...'
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className='w-full pl-9 pr-4 py-2.5 rounded-xl bg-white border border-slate-200 text-sm focus:outline-none focus:border-emerald-500/50 transition-all shadow-sm'
+                className='w-full pl-9 pr-4 py-2.5 rounded-xl bg-card border border-border text-sm focus:outline-none focus:border-success/50 transition-all shadow-xs'
               />
             </div>
 
@@ -137,7 +137,7 @@ export default function CashierOrdersPage() {
               <select
                 value={statusFilter}
                 onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
-                className='appearance-none bg-white border border-slate-200 rounded-xl px-4 py-2.5 pr-8 text-sm font-semibold focus:outline-none focus:border-emerald-500/50 transition-all cursor-pointer shadow-sm text-slate-700'
+                className='appearance-none bg-card border border-border rounded-xl px-4 py-2.5 pr-8 text-sm font-semibold focus:outline-none focus:border-success/50 transition-all cursor-pointer shadow-xs text-foreground'
               >
                 {statusOptions.map((s) => (
                   <option key={s} value={s}>
@@ -145,55 +145,55 @@ export default function CashierOrdersPage() {
                   </option>
                 ))}
               </select>
-              <ChevronDown className='absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none' />
+              <ChevronDown className='absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none' />
             </div>
 
             <button
               onClick={() => refetch()}
-              className='flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-slate-200 text-sm font-semibold hover:border-emerald-300 transition-all shadow-sm text-slate-600'
+              className='flex items-center gap-2 px-4 py-2.5 rounded-xl bg-card border border-border text-sm font-semibold hover:border-emerald-300 transition-all shadow-xs text-muted-foreground'
             >
-              <RefreshCw className={`w-4 h-4 text-slate-500 ${isRefetching ? 'animate-spin' : ''}`} />
+              <RefreshCw className={`w-4 h-4 text-muted-foreground ${isRefetching ? 'animate-spin' : ''}`} />
               Làm mới
             </button>
 
-            <span className='ml-auto text-xs font-semibold text-slate-500'>
+            <span className='ml-auto text-xs font-semibold text-muted-foreground'>
               Tổng: {total} lịch hẹn
             </span>
           </div>
 
           {/* Table */}
-          <div className='bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden'>
+          <div className='bg-card rounded-xl border border-border shadow-xs overflow-hidden'>
             <div className='overflow-x-auto'>
-              <table className='w-full text-sm text-slate-600'>
+              <table className='w-full text-sm text-muted-foreground'>
                 <thead>
-                  <tr className='bg-slate-50/50 border-b border-slate-100'>
+                  <tr className='bg-muted/40 border-b border-border'>
                     {['ID', 'Khách hàng', 'Biển số', 'Dịch vụ', 'Ca / Ngày hẹn', 'Số tiền', 'Trạng thái', 'Hành động'].map((h) => (
-                      <th key={h} className='text-left px-5 py-3.5 text-[11px] font-black uppercase tracking-widest text-slate-500'>
+                      <th key={h} className='text-left px-5 py-3.5 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground'>
                         {h}
                       </th>
                     ))}
                   </tr>
                 </thead>
-                <tbody className='divide-y divide-slate-100'>
+                <tbody className='divide-y divide-border'>
                   {isLoading ? (
                     Array.from({ length: 5 }).map((_, i) => (
                       <tr key={i}>
                         {Array.from({ length: 8 }).map((__, j) => (
                           <td key={j} className='px-5 py-4'>
-                            <div className='h-4 bg-slate-100 animate-pulse rounded-lg' />
+                            <div className='h-4 bg-muted animate-pulse rounded-lg' />
                           </td>
                         ))}
                       </tr>
                     ))
                   ) : filtered.length === 0 ? (
                     <tr>
-                      <td colSpan={8} className='px-5 py-16 text-center text-slate-500 font-semibold'>
+                      <td colSpan={8} className='px-5 py-16 text-center text-muted-foreground font-semibold'>
                         Không tìm thấy lịch hẹn nào.
                       </td>
                     </tr>
                   ) : (
                     filtered.map((o: OrderData) => {
-                      const s = statusConfig[o.status ?? ''] ?? { label: o.status, cls: 'bg-slate-100 text-slate-500' };
+                      const s = statusConfig[o.status ?? ''] ?? { label: o.status, cls: 'bg-muted text-muted-foreground' };
                       const orderId = o._id ?? o.id ?? '';
                       const isConfirmed = o.status === 'confirmed';
                       const isReceived = o.status === 'checked_in' || o.status === 'in_progress' || o.status === 'completed';
@@ -206,31 +206,31 @@ export default function CashierOrdersPage() {
                       const checkinPhotos = matchingWo?.checkinPhotos || [];
 
                       return (
-                        <tr key={orderId} className='hover:bg-slate-50/20 transition-colors'>
-                          <td className='px-5 py-4 font-mono text-xs text-slate-500'>
+                        <tr key={orderId} className='hover:bg-muted/50 transition-colors'>
+                          <td className='px-5 py-4 font-mono text-xs text-muted-foreground'>
                             {orderId.slice(-6).toUpperCase()}
                           </td>
                           <td className='px-5 py-4'>
                             <div className='flex items-center gap-2.5'>
-                              <div className='w-8 h-8 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-600 font-black text-xs'>
+                              <div className='w-8 h-8 rounded-full bg-success/10 flex items-center justify-center text-success font-semibold text-xs'>
                                 {(o.userId?.fullName ?? o.customerName ?? '?')[0]}
                               </div>
-                              <span className='font-bold text-slate-800'>
+                              <span className='font-bold text-foreground'>
                                 {o.userId?.fullName ?? o.customerName ?? '-'}
                               </span>
                             </div>
                           </td>
-                          <td className='px-5 py-4 text-xs font-mono font-bold text-indigo-600 bg-indigo-50/30 rounded px-2 py-0.5 inline-block mt-4'>
+                          <td className='px-5 py-4 text-xs font-mono font-bold text-primary bg-accent rounded px-2 py-0.5 inline-block mt-4'>
                             {o.vehicleId?.licensePlate ?? o.licensePlate ?? '-'}
                           </td>
-                          <td className='px-5 py-4 text-slate-600 font-medium'>
+                          <td className='px-5 py-4 text-muted-foreground font-medium'>
                             {o.serviceTypeId?.name ?? o.serviceName ?? '-'}
                           </td>
-                          <td className='px-5 py-4 text-slate-500 text-xs'>
-                            <div className='font-semibold text-slate-700'>{o.shiftId?.name ?? '-'}</div>
-                            <div className='text-slate-500'>{(o.scheduledAt ?? o.bookingDate) ? new Date((o.scheduledAt ?? o.bookingDate) as string).toLocaleDateString('vi-VN') : '-'}</div>
+                          <td className='px-5 py-4 text-muted-foreground text-xs'>
+                            <div className='font-semibold text-foreground'>{o.shiftId?.name ?? '-'}</div>
+                            <div className='text-muted-foreground'>{(o.scheduledAt ?? o.bookingDate) ? new Date((o.scheduledAt ?? o.bookingDate) as string).toLocaleDateString('vi-VN') : '-'}</div>
                           </td>
-                          <td className='px-5 py-4 font-black text-slate-800'>
+                          <td className='px-5 py-4 font-semibold text-foreground'>
                             {(o.amount ?? o.totalPrice) != null ? `${Number(o.amount ?? o.totalPrice).toLocaleString('vi-VN')}đ` : '-'}
                           </td>
                           <td className='px-5 py-4'>
@@ -242,14 +242,14 @@ export default function CashierOrdersPage() {
                             {isConfirmed ? (
                               <button
                                 onClick={() => openCheckIn(o)}
-                                className='flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition-all shadow-sm'
+                                className='flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-success hover:bg-success/90 text-white font-bold text-xs transition-all shadow-xs'
                               >
                                 <CheckCircle2 className='w-3.5 h-3.5' />
                                 Check-in xe
                               </button>
                             ) : isReceived ? (
                               <div className='flex flex-col gap-1.5'>
-                                <span className='text-xs font-bold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-100 flex items-center gap-1 w-fit'>
+                                <span className='text-xs font-bold text-success bg-success/10 px-2.5 py-1 rounded-lg border border-success/30 flex items-center gap-1 w-fit'>
                                   <CheckCircle2 className='w-3.5 h-3.5' /> Đã nhận xe
                                 </span>
                                 {checkinPhotos.length > 0 ? (
@@ -258,7 +258,7 @@ export default function CashierOrdersPage() {
                                       <div
                                         key={pIdx}
                                         onClick={() => setPreviewPhoto(photo)}
-                                        className='relative w-8 h-8 rounded-lg overflow-hidden border border-slate-200 shadow-sm bg-slate-50 cursor-pointer hover:border-indigo-500 transition-all shrink-0 group'
+                                        className='relative w-8 h-8 rounded-lg overflow-hidden border border-border shadow-xs bg-muted/40 cursor-pointer hover:border-primary transition-all shrink-0 group'
                                       >
                                         {/* eslint-disable-next-line @next/next/no-img-element */}
                                         <img src={photo} alt='Pre-wash' className='w-full h-full object-cover group-hover:scale-105 transition-transform' />
@@ -269,11 +269,11 @@ export default function CashierOrdersPage() {
                                     ))}
                                   </div>
                                 ) : (
-                                  <span className='text-[10px] text-slate-400 italic pl-1'>Chưa có ảnh check-in</span>
+                                  <span className='text-[10px] text-placeholder italic pl-1'>Chưa có ảnh check-in</span>
                                 )}
                               </div>
                             ) : (
-                              <span className='text-xs font-medium text-slate-500 flex items-center gap-1 italic'>
+                              <span className='text-xs font-medium text-muted-foreground flex items-center gap-1 italic'>
                                 <AlertCircle className='w-3.5 h-3.5' /> Không khả dụng
                               </span>
                             )}
@@ -288,20 +288,20 @@ export default function CashierOrdersPage() {
 
             {/* Pagination */}
             {total > 10 && (
-              <div className='flex items-center justify-between px-5 py-4 border-t border-slate-100 bg-slate-50/20'>
-                <span className='text-xs font-semibold text-slate-500'>
+              <div className='flex items-center justify-between px-5 py-4 border-t border-border bg-muted/40'>
+                <span className='text-xs font-semibold text-muted-foreground'>
                   Trang {page} / {Math.ceil(total / 10)}
                 </span>
                 <div className='flex gap-2'>
                   <button
                     onClick={() => setPage(Math.max(1, page - 1))}
                     disabled={page === 1}
-                    className='px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-semibold disabled:opacity-40 hover:border-emerald-300 transition-all text-slate-600 bg-white'
+                    className='px-3 py-1.5 rounded-lg border border-border text-xs font-semibold disabled:opacity-40 hover:border-emerald-300 transition-all text-muted-foreground bg-card'
                   >Trước</button>
                   <button
                     onClick={() => setPage(page + 1)}
                     disabled={page >= Math.ceil(total / 10)}
-                    className='px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-semibold disabled:opacity-40 hover:border-emerald-300 transition-all text-slate-600 bg-white'
+                    className='px-3 py-1.5 rounded-lg border border-border text-xs font-semibold disabled:opacity-40 hover:border-emerald-300 transition-all text-muted-foreground bg-card'
                   >Sau</button>
                 </div>
               </div>
@@ -316,30 +316,30 @@ export default function CashierOrdersPage() {
         const plate = checkInTarget.vehicleId?.licensePlate ?? checkInTarget.licensePlate ?? '-';
         return (
           <div
-            className='fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4'
+            className='fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4'
             onClick={() => !checkInMutation.isPending && setCheckInTarget(null)}
           >
             <div
-              className='bg-white rounded-3xl border border-slate-100 shadow-2xl p-6 max-w-lg w-full animate-in fade-in zoom-in-95 duration-150'
+              className='bg-card rounded-xl border border-border shadow-2xl p-6 max-w-lg w-full animate-in fade-in zoom-in-95 duration-150'
               onClick={(e) => e.stopPropagation()}
             >
               <div className='flex items-center justify-between mb-4'>
-                <div className='flex items-center gap-3 text-emerald-600'>
-                  <div className='w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center'>
+                <div className='flex items-center gap-3 text-success'>
+                  <div className='w-10 h-10 rounded-xl bg-success/10 flex items-center justify-center'>
                     <Camera className='w-5 h-5' />
                   </div>
                   <div>
-                    <h3 className='font-heading font-black text-slate-800 text-base'>
+                    <h3 className='font-heading font-semibold text-foreground text-base'>
                       Check-in xe
                     </h3>
-                    <p className='text-xs text-slate-500'>
+                    <p className='text-xs text-muted-foreground'>
                       Xe <span className='font-mono font-bold'>{plate}</span> · chụp tình
                       trạng trầy xước/móp méo khi nhận xe
                     </p>
                   </div>
                 </div>
                 <button onClick={() => !checkInMutation.isPending && setCheckInTarget(null)} aria-label='Đóng'>
-                  <X className='w-5 h-5 text-slate-400' />
+                  <X className='w-5 h-5 text-placeholder' />
                 </button>
               </div>
 
@@ -347,7 +347,7 @@ export default function CashierOrdersPage() {
                 {checkInPhotos.map((photo, idx) => (
                   <div
                     key={idx}
-                    className='group relative aspect-square rounded-xl overflow-hidden border border-slate-200 shadow-sm bg-slate-50'
+                    className='group relative aspect-square rounded-xl overflow-hidden border border-border shadow-xs bg-muted/40'
                   >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={photo} alt='Hiện trạng xe' className='w-full h-full object-cover' />
@@ -355,23 +355,23 @@ export default function CashierOrdersPage() {
                       <button
                         type='button'
                         onClick={() => setPreviewPhoto(photo)}
-                        className='w-7 h-7 bg-white/90 hover:bg-white text-slate-700 rounded-lg flex items-center justify-center'
+                        className='w-7 h-7 bg-white/90 hover:bg-card text-foreground rounded-lg flex items-center justify-center'
                       >
                         <Eye className='w-4 h-4' />
                       </button>
                       <button
                         type='button'
                         onClick={() => setCheckInPhotos((prev) => prev.filter((_, i) => i !== idx))}
-                        className='w-7 h-7 bg-rose-500/90 hover:bg-rose-500 text-white rounded-lg flex items-center justify-center'
+                        className='w-7 h-7 bg-destructive hover:bg-destructive text-white rounded-lg flex items-center justify-center'
                       >
                         <Trash2 className='w-4 h-4' />
                       </button>
                     </div>
                   </div>
                 ))}
-                <label className='aspect-square rounded-xl border border-dashed border-slate-300 hover:border-emerald-500 bg-slate-50/50 hover:bg-emerald-50/30 cursor-pointer flex flex-col items-center justify-center gap-1 transition-all'>
-                  <Plus className='w-5 h-5 text-slate-400' />
-                  <span className='text-[10px] font-bold text-slate-500 uppercase tracking-wider'>
+                <label className='aspect-square rounded-xl border border-dashed border-border hover:border-success bg-muted/40 hover:bg-success/10 cursor-pointer flex flex-col items-center justify-center gap-1 transition-all'>
+                  <Plus className='w-5 h-5 text-placeholder' />
+                  <span className='text-[10px] font-bold text-muted-foreground uppercase tracking-wider'>
                     Chụp/Thêm
                   </span>
                   <input
@@ -387,29 +387,29 @@ export default function CashierOrdersPage() {
               </div>
 
               {checkInPhotos.length === 0 && (
-                <p className='text-xs text-slate-500 italic mt-3 text-center'>
+                <p className='text-xs text-muted-foreground italic mt-3 text-center'>
                   Chưa có ảnh. Bấm ô &quot;Chụp/Thêm&quot; để chụp ảnh hiện trạng xe trước khi check-in.
                 </p>
               )}
 
-              <div className='mt-5 flex items-center gap-2 text-[11px] text-slate-500 bg-slate-50 border border-slate-100 rounded-xl p-3'>
-                <AlertCircle className='w-3.5 h-3.5 shrink-0 text-emerald-500' />
-                Ảnh hiện trạng sẽ được lưu vào phiếu rửa và hiển thị lại khi QC. Ảnh sau khi
-                rửa do thợ rửa chụp lúc hoàn thành.
+              <div className='mt-5 flex items-center gap-2 text-[11px] text-muted-foreground bg-muted/40 border border-border rounded-xl p-3'>
+                <AlertCircle className='w-3.5 h-3.5 shrink-0 text-success' />
+                Ảnh hiện trạng sẽ được lưu vào phiếu rửa để thợ đối chiếu. Ảnh sau khi
+                rửa do thợ chụp lúc hoàn thành.
               </div>
 
               <div className='mt-5 flex justify-end gap-2'>
                 <button
                   onClick={() => setCheckInTarget(null)}
                   disabled={checkInMutation.isPending}
-                  className='px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-50 font-bold text-xs'
+                  className='px-4 py-2.5 rounded-xl border border-border text-muted-foreground hover:bg-muted/50 disabled:opacity-50 font-bold text-xs'
                 >
                   Hủy
                 </button>
                 <button
                   onClick={() => checkInMutation.mutate({ orderId: oid, photos: checkInPhotos })}
                   disabled={checkInMutation.isPending || isUploading}
-                  className='flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-bold text-xs transition-all shadow-sm'
+                  className='flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-success hover:bg-success/90 disabled:opacity-50 text-white font-bold text-xs transition-all shadow-xs'
                 >
                   <CheckCircle2 className='w-3.5 h-3.5' />
                   {checkInMutation.isPending ? 'Đang check-in...' : 'Xác nhận check-in'}
@@ -423,7 +423,7 @@ export default function CashierOrdersPage() {
       {/* Lightbox xem ảnh phóng to */}
       {previewPhoto && (
         <div
-          className='fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-[60] flex items-center justify-center p-4'
+          className='fixed inset-0 bg-black/80 backdrop-blur-sm z-[60] flex items-center justify-center p-4'
           onClick={() => setPreviewPhoto(null)}
         >
           <div className='relative max-w-3xl w-full max-h-[85vh] flex items-center justify-center'>
@@ -431,7 +431,7 @@ export default function CashierOrdersPage() {
             <img
               src={previewPhoto}
               alt='Xem ảnh'
-              className='rounded-2xl max-w-full max-h-[80vh] object-contain shadow-2xl border border-white/10'
+              className='rounded-xl max-w-full max-h-[80vh] object-contain shadow-2xl border border-white/10'
             />
             <button
               onClick={() => setPreviewPhoto(null)}

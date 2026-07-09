@@ -82,8 +82,10 @@ export interface WasherRow {
   assignedJobs: number;
   averageServiceMinutes: number;
   revenueHandled: number;
-  reworkCount: number;
   onTimeRate: number;
+  // QC đã bỏ — chất lượng phản ánh qua feedback/rating của khách.
+  averageRating: number | null;
+  feedbackCount: number;
 }
 
 export interface CustomerAnalytics {
@@ -123,10 +125,7 @@ export interface ServiceAnalytics {
 export interface RefundDisputeAnalytics {
   refundCount: number;
   refundAmount: number;
-  qcRejections: number;
   completedBookings: number;
-  reworkRate: number;
-  disputesByWasher: RankRow[];
   notes: string[];
 }
 

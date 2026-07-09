@@ -13,8 +13,6 @@ import {
   CheckCircle2,
   RefreshCw,
   Play,
-  CheckSquare,
-  Square,
   AlertCircle,
   Car,
   Camera,
@@ -26,6 +24,8 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useEffect } from 'react';
+import { StatusBadge } from '@/components/shared/StatusBadge';
+import type { StatusTone } from '@/constants';
 
 function WashTimer({ startedAt }: { startedAt?: string }) {
   const [seconds, setSeconds] = useState(0);
@@ -47,7 +47,7 @@ function WashTimer({ startedAt }: { startedAt?: string }) {
   };
 
   return (
-    <div className='flex items-center gap-1.5 px-3 py-1 bg-indigo-50 border border-indigo-200 text-indigo-700 font-mono font-bold text-xs rounded-xl shadow-xs animate-pulse'>
+    <div className='flex items-center gap-1.5 px-3 py-1 bg-accent border border-primary/30 text-primary font-mono font-semibold text-xs rounded-lg motion-safe:animate-pulse tabular-nums'>
       <span>⏱️ {formatTime(seconds)}</span>
     </div>
   );
@@ -64,9 +64,8 @@ interface WorkOrderData {
     color?: string;
   };
   serviceName?: string;
-  status: 'waiting' | 'assigned' | 'in_progress' | 'quality_check' | 'returned' | 'done';
-  qcPassed?: boolean | null;
-  qcNote?: string;
+  // BE đã bỏ luồng QC: finish là bước cuối, done là trạng thái kết thúc.
+  status: 'waiting' | 'assigned' | 'in_progress' | 'done';
   createdAt?: string;
   [key: string]: unknown;
 }
@@ -82,21 +81,10 @@ interface WasherScheduleItem {
   [key: string]: unknown;
 }
 
-const WASH_STEPS = [
-  'Nhận xe & Kiểm tra trầy xước ban đầu',
-  'Xịt gầm & Vệ sinh bùn đất hốc bánh xe',
-  'Phun bọt tuyết & Chà rửa chi tiết vỏ xe',
-  'Xả nước sạch toàn thân xe',
-  'Lau khô & Hút bụi vệ sinh nội thất',
-  'Dưỡng bóng lốp xe & Kiểm tra tổng thể',
-];
-
 export default function WasherDashboard() {
   const qc = useQueryClient();
   const [activeTab, setActiveTab] = useState<'todo' | 'completed' | 'schedule'>('todo');
-  
-  // Lưu trạng thái checklist của từng Work Order đang rửa xe (ID -> mảng boolean)
-  const [checklists, setChecklists] = useState<Record<string, boolean[]>>({});
+
   const [inspectionPhotos, setInspectionPhotos] = useState<Record<string, { preWash: string[]; postWash: string[] }>>(() => {
     const stored = localStorage.getItem('wave_inspection_photos');
     if (stored) {
@@ -195,9 +183,9 @@ export default function WasherDashboard() {
   const workOrders = useMemo(() => {
     return allWorkOrders.filter((wo) => {
       if (activeTab === 'todo') {
-        return wo.status === 'assigned' || wo.status === 'in_progress' || wo.status === 'returned';
+        return wo.status === 'assigned' || wo.status === 'in_progress';
       }
-      return wo.status === 'quality_check' || wo.status === 'done';
+      return wo.status === 'done';
     });
   }, [allWorkOrders, activeTab]);
 
@@ -206,13 +194,8 @@ export default function WasherDashboard() {
     mutationFn: async (woId: string) => {
       await washerStartWorkOrder(woId);
     },
-    onSuccess: (_, woId) => {
+    onSuccess: () => {
       toast.success('Đã bắt đầu rửa xe! Cố gắng rửa thật sạch nhé bạn.');
-      // Khởi tạo checklist trống cho work order này
-      setChecklists(prev => ({
-        ...prev,
-        [woId]: new Array(WASH_STEPS.length).fill(false)
-      }));
       qc.invalidateQueries({ queryKey: ['washer-work-orders'] });
     },
     onError: (err: unknown) => {
@@ -221,13 +204,9 @@ export default function WasherDashboard() {
     }
   });
 
-  // Mutation Hoàn thành rửa xe
+  // Mutation Hoàn thành rửa xe (bước cuối của luồng — BE đã bỏ QC)
   const finishWashMutation = useMutation({
-    mutationFn: async ({ woId, photoKey, currentStatus }: { woId: string; photoKey: string; currentStatus: string }) => {
-      if (currentStatus === 'returned') {
-        await washerStartWorkOrder(woId);
-        await new Promise((resolve) => setTimeout(resolve, 350));
-      }
+    mutationFn: async ({ woId, photoKey }: { woId: string; photoKey: string }) => {
       const rawWoPhotos = inspectionPhotos[photoKey];
       const postWashPhotos = (rawWoPhotos && typeof rawWoPhotos === 'object' && 'postWash' in rawWoPhotos)
         ? (rawWoPhotos.postWash as string[])
@@ -235,7 +214,7 @@ export default function WasherDashboard() {
       await washerFinishWorkOrder(woId, postWashPhotos);
     },
     onSuccess: () => {
-      toast.success('Tuyệt vời! Đã báo cáo hoàn thành rửa xe. Chờ Cashier kiểm duyệt QC.');
+      toast.success('Đã hoàn thành rửa xe. Xe sẵn sàng bàn giao cho khách.');
       qc.invalidateQueries({ queryKey: ['washer-work-orders'] });
     },
     onError: (err: unknown) => {
@@ -244,67 +223,56 @@ export default function WasherDashboard() {
     }
   });
 
-  // Hàm chuyển đổi trạng thái một mục trong checklist
-  const toggleChecklistItem = (woId: string, index: number) => {
-    const current = checklists[woId] || new Array(WASH_STEPS.length).fill(false);
-    const updated = [...current];
-    updated[index] = !updated[index];
-    setChecklists(prev => ({
-      ...prev,
-      [woId]: updated
-    }));
-  };
-
   return (
     <>
       <AdminTopbar
         title='Lịch rửa xe của tôi'
-        subtitle='Nơi cập nhật trạng thái làm việc, đánh dấu checklist tiêu chuẩn và hoàn thành xe sạch đẹp'
+        subtitle='Nhận xe được giao, chụp ảnh nghiệm thu và hoàn thành xe sạch đẹp'
       />
-      <main className='flex-1 p-4 md:p-8 overflow-y-auto bg-slate-50/50'>
+      <main className='flex-1 p-4 md:p-8 overflow-y-auto bg-background'>
         <div className='max-w-4xl mx-auto'>
-          
+
           {/* Header Controls */}
-          <div className='flex items-center justify-between mb-6 border-b border-slate-200 pb-2'>
+          <div className='flex items-center justify-between mb-6 border-b border-border pb-2'>
             <div className='flex gap-6'>
               <button
                 onClick={() => setActiveTab('todo')}
-                className={`pb-3 text-sm font-bold transition-all relative ${
-                  activeTab === 'todo' ? 'text-indigo-600' : 'text-slate-500 hover:text-slate-600'
+                className={`pb-3 text-sm transition-colors relative ${
+                  activeTab === 'todo' ? 'font-semibold text-primary' : 'font-medium text-muted-foreground hover:text-foreground'
                 }`}
               >
                 Cần xử lý
                 {activeTab === 'todo' && (
-                  <div className='absolute bottom-0 left-0 right-0 h-0.5 bg-indigo-600 rounded-full' />
+                  <div className='absolute bottom-0 left-0 right-0 h-0.5 bg-primary rounded-full' />
                 )}
               </button>
               <button
                 onClick={() => setActiveTab('completed')}
-                className={`pb-3 text-sm font-bold transition-all relative ${
-                  activeTab === 'completed' ? 'text-indigo-600' : 'text-slate-500 hover:text-slate-600'
+                className={`pb-3 text-sm transition-colors relative ${
+                  activeTab === 'completed' ? 'font-semibold text-primary' : 'font-medium text-muted-foreground hover:text-foreground'
                 }`}
               >
                 Đã hoàn thành
                 {activeTab === 'completed' && (
-                  <div className='absolute bottom-0 left-0 right-0 h-0.5 bg-indigo-600 rounded-full' />
+                  <div className='absolute bottom-0 left-0 right-0 h-0.5 bg-primary rounded-full' />
                 )}
               </button>
               <button
                 onClick={() => setActiveTab('schedule')}
-                className={`pb-3 text-sm font-bold transition-all relative ${
-                  activeTab === 'schedule' ? 'text-indigo-600' : 'text-slate-500 hover:text-slate-600'
+                className={`pb-3 text-sm transition-colors relative ${
+                  activeTab === 'schedule' ? 'font-semibold text-primary' : 'font-medium text-muted-foreground hover:text-foreground'
                 }`}
               >
                 Lịch trình cá nhân
                 {activeTab === 'schedule' && (
-                  <div className='absolute bottom-0 left-0 right-0 h-0.5 bg-indigo-600 rounded-full' />
+                  <div className='absolute bottom-0 left-0 right-0 h-0.5 bg-primary rounded-full' />
                 )}
               </button>
             </div>
 
             <button
               onClick={() => refetch()}
-              className='flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-500 bg-white hover:border-slate-300 transition-all shadow-sm'
+              className='flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border text-xs font-medium text-foreground bg-card hover:bg-muted transition-colors'
             >
               <RefreshCw className={`w-3.5 h-3.5 ${isRefetching ? 'animate-spin' : ''}`} />
               Làm mới
@@ -315,18 +283,19 @@ export default function WasherDashboard() {
           {isLoading ? (
             <div className='space-y-4'>
               {Array.from({ length: 2 }).map((_, i) => (
-                <div key={i} className='bg-white rounded-3xl p-6 border border-slate-100 shadow-sm animate-pulse h-48' />
+                <div key={i} className='bg-card rounded-xl p-6 border border-border animate-pulse h-48' />
               ))}
             </div>
           ) : activeTab === 'schedule' ? (
             scheduleItems.length === 0 ? (
-              <div className='bg-white rounded-3xl p-16 text-center border border-slate-100 shadow-sm max-w-md mx-auto mt-8'>
-                <div className='w-16 h-16 rounded-2xl bg-indigo-50 flex items-center justify-center mx-auto mb-6 text-indigo-600'>
+              <div className='bg-card rounded-xl p-16 text-center border border-border shadow-xs max-w-md mx-auto mt-8'>
+                <div className='w-16 h-16 rounded-xl bg-accent flex items-center justify-center mx-auto mb-6 text-primary'>
                   <Calendar className='w-8 h-8' />
                 </div>
-                <h3 className='font-heading text-lg font-black text-slate-800 mb-2'>Trống lịch trình</h3>
-                <p className='text-slate-500 text-sm leading-relaxed'>
-                  Hôm nay bạn chưa có lịch hẹn đặt trước nào được ghi nhận.
+                <h3 className='font-heading text-lg font-semibold tracking-tight text-foreground mb-2'>Chưa có lịch hẹn</h3>
+                <p className='text-muted-foreground text-sm leading-relaxed'>
+                  Hôm nay bạn chưa có lịch hẹn đặt trước nào. Lịch mới sẽ hiện
+                  ở đây.
                 </p>
               </div>
             ) : (
@@ -343,47 +312,52 @@ export default function WasherDashboard() {
                   return (
                     <div
                       key={item.bookingId}
-                      className='bg-white rounded-3xl border border-slate-100 shadow-sm p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:shadow-md transition-all'
+                      className='bg-card rounded-xl border border-border shadow-xs p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4'
                     >
                       <div className='flex items-center gap-4'>
-                        <div className='px-4 py-2 bg-indigo-50 text-indigo-700 rounded-2xl font-mono font-black text-sm tracking-wide border border-indigo-100'>
+                        <div className='px-4 py-2 bg-muted text-foreground rounded-lg font-mono font-semibold text-sm tracking-wide border border-border'>
                           {item.vehicle?.licensePlate || '-'}
                         </div>
                         <div>
-                          <h4 className='font-heading font-bold text-slate-800 text-sm'>
+                          <h4 className='font-heading font-semibold text-foreground text-sm'>
                             {item.service?.name || 'Gói rửa xe'} ({item.service?.durationMinutes || 30} phút)
                           </h4>
-                          <p className='text-xs text-slate-500 font-medium mt-0.5'>
-                            Khách hàng: <span className='text-slate-700 font-bold'>{item.customer?.name || 'Khách vãng lai'}</span>
+                          <p className='text-xs text-muted-foreground mt-0.5'>
+                            Khách hàng: <span className='text-foreground font-medium'>{item.customer?.name || 'Khách vãng lai'}</span>
                             {item.customer?.phone && ` • SĐT: ${item.customer.phone}`}
                           </p>
                           {item.location && (
-                            <p className='text-xs text-slate-500 font-semibold mt-1'>
-                              Vị trí: <span className='text-indigo-600'>{item.location}</span>
+                            <p className='text-xs text-muted-foreground mt-1'>
+                              Vị trí: <span className='text-primary font-medium'>{item.location}</span>
                             </p>
                           )}
                         </div>
                       </div>
 
-                      <div className='flex flex-col items-end gap-2 shrink-0 border-t sm:border-t-0 pt-3 sm:pt-0 border-slate-50'>
-                        <span className='text-slate-500 text-xs font-semibold flex items-center gap-1'>
+                      <div className='flex flex-col items-end gap-2 shrink-0 border-t sm:border-t-0 pt-3 sm:pt-0 border-border'>
+                        <span className='text-muted-foreground text-xs flex items-center gap-1 tabular-nums'>
                           <Clock className='w-3.5 h-3.5' /> {dateStr}
                         </span>
-                        <span className={`inline-flex px-2.5 py-0.5 rounded-lg text-[10px] font-black uppercase ${
-                          item.status === 'confirmed' ? 'bg-blue-50 text-blue-700 border border-blue-100' :
-                          item.status === 'checked_in' ? 'bg-amber-50 text-amber-700 border border-amber-100' :
-                          item.status === 'in_progress' ? 'bg-indigo-50 text-indigo-700 border border-indigo-100' :
-                          item.status === 'completed' ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' :
-                          'bg-slate-100 text-slate-400'
-                        }`}>
-                          {item.status === 'confirmed' && 'Chờ rửa xe'}
-                          {item.status === 'checked_in' && 'Đã nhận xe'}
-                          {item.status === 'in_progress' && 'Đang rửa'}
-                          {item.status === 'completed' && 'Hoàn thành'}
-                          {item.status === 'cancelled' && 'Đã hủy'}
-                          {item.status === 'pending_payment' && 'Chờ thanh toán'}
-                          {item.status === 'no_show' && 'Vắng mặt'}
-                        </span>
+                        <StatusBadge
+                          label={
+                            item.status === 'confirmed' ? 'Chờ rửa xe'
+                            : item.status === 'checked_in' ? 'Đã nhận xe'
+                            : item.status === 'in_progress' ? 'Đang rửa'
+                            : item.status === 'completed' ? 'Hoàn thành'
+                            : item.status === 'cancelled' ? 'Đã hủy'
+                            : item.status === 'pending_payment' ? 'Chờ thanh toán'
+                            : item.status === 'no_show' ? 'Vắng mặt'
+                            : item.status ?? '-'
+                          }
+                          tone={
+                            (item.status === 'confirmed' ? 'info'
+                            : item.status === 'checked_in' ? 'warning'
+                            : item.status === 'in_progress' ? 'primary'
+                            : item.status === 'completed' ? 'success'
+                            : item.status === 'cancelled' ? 'destructive'
+                            : 'muted') as StatusTone
+                          }
+                        />
                       </div>
                     </div>
                   );
@@ -391,15 +365,15 @@ export default function WasherDashboard() {
               </div>
             )
           ) : workOrders.length === 0 ? (
-            <div className='bg-white rounded-3xl p-16 text-center border border-slate-100 shadow-sm max-w-md mx-auto mt-8'>
-              <div className='w-16 h-16 rounded-2xl bg-indigo-50 flex items-center justify-center mx-auto mb-6 text-indigo-600'>
+            <div className='bg-card rounded-xl p-16 text-center border border-border shadow-xs max-w-md mx-auto mt-8'>
+              <div className='w-16 h-16 rounded-xl bg-accent flex items-center justify-center mx-auto mb-6 text-primary'>
                 <Car className='w-8 h-8' />
               </div>
-              <h3 className='font-heading text-lg font-black text-slate-800 mb-2'>Trống lịch trình</h3>
-              <p className='text-slate-500 text-sm leading-relaxed'>
+              <h3 className='font-heading text-lg font-semibold tracking-tight text-foreground mb-2'>Chưa có xe được giao</h3>
+              <p className='text-muted-foreground text-sm leading-relaxed'>
                 {activeTab === 'todo'
-                  ? 'Hiện tại bạn chưa có xe nào được phân công. Hãy nghỉ ngơi chút hoặc nhắc Cashier/Manager giao xe nhé!'
-                  : 'Chưa có lịch sử xe hoàn thành nào trong hôm nay.'}
+                  ? 'Bạn chưa có xe nào được phân công. Xe mới sẽ hiện ở đây khi quầy giao việc.'
+                  : 'Chưa có xe hoàn thành nào trong hôm nay.'}
               </p>
             </div>
           ) : (
@@ -415,50 +389,52 @@ export default function WasherDashboard() {
                     ? wo.orderId
                     : (wo.orderId?._id ?? wo.orderId?.id ?? wo.id);
 
-                const isPending = wo.status === 'assigned' || wo.status === 'waiting' || wo.status === 'returned';
+                const isPending = wo.status === 'assigned' || wo.status === 'waiting';
                 const isInProgress = wo.status === 'in_progress';
-                const isCompleted = wo.status === 'quality_check' || wo.status === 'done';
+                const isCompleted = wo.status === 'done';
 
-                // Lấy checklist hiện tại cho order này
-                const currentChecklist = checklists[wo.id] || new Array(WASH_STEPS.length).fill(false);
-                const checkedCount = currentChecklist.filter(Boolean).length;
-                const progressPercentage = Math.round((checkedCount / WASH_STEPS.length) * 100);
+                // BE bắt buộc ≥1 ảnh sau rửa (checkoutPhotos) mới cho hoàn thành.
+                // Chặn ở FE để không bấm rồi nhận lỗi 400 mơ hồ.
+                const postWashCount =
+                  inspectionPhotos[photoKey]?.postWash?.length ?? 0;
+                const canFinish = postWashCount > 0;
 
                 return (
                   <div
                     key={wo.id}
-                    className={`bg-white rounded-3xl border transition-all duration-300 shadow-sm hover:shadow-md overflow-hidden ${
-                      isPending ? 'border-amber-100 hover:border-amber-200' :
-                      isInProgress ? 'border-indigo-200 ring-2 ring-indigo-500/5' :
-                      'border-emerald-100'
+                    className={`bg-card rounded-xl border transition-colors shadow-xs overflow-hidden ${
+                      isInProgress
+                        ? 'border-primary/40 ring-1 ring-primary/20'
+                        : 'border-border'
                     }`}
                   >
                     {/* Header Card */}
-                    <div className='p-6 border-b border-slate-100/60 bg-slate-50/30 flex flex-wrap items-center justify-between gap-4'>
+                    <div className='p-6 border-b border-border bg-muted/30 flex flex-wrap items-center justify-between gap-4'>
                       <div className='flex items-center gap-3.5'>
-                        <div className='px-4 py-2 bg-indigo-600 text-white rounded-2xl font-mono font-black text-sm tracking-wide shadow-md shadow-indigo-600/10 border border-indigo-500'>
+                        <div className='px-4 py-2 bg-primary text-primary-foreground rounded-lg font-mono font-semibold text-sm tracking-wide'>
                           {plate}
                         </div>
                         <div>
-                          <h4 className='font-heading font-bold text-slate-800 text-sm'>{service}</h4>
-                          <p className='text-xs text-slate-500 font-medium'>Định danh: <span className='text-slate-600 font-bold'>{customer}</span></p>
+                          <h4 className='font-heading font-semibold text-foreground text-sm'>{service}</h4>
+                          <p className='text-xs text-muted-foreground'>Định danh: <span className='text-foreground font-medium'>{customer}</span></p>
                         </div>
                       </div>
 
                       {/* Status & Timer Badge */}
                       <div className='flex flex-col items-end gap-1.5'>
-                        <span className={`inline-flex px-3 py-1 rounded-xl text-xs font-black ${
-                          isPending ? 'bg-amber-50 text-amber-700 border border-amber-100' :
-                          isInProgress ? 'bg-indigo-50 text-indigo-700 border border-indigo-100 animate-pulse' :
-                          'bg-emerald-50 text-emerald-700 border border-emerald-100'
-                        }`}>
-                          {wo.status === 'waiting' && 'Chờ phân công'}
-                          {wo.status === 'assigned' && 'Được giao việc'}
-                          {wo.status === 'returned' && 'QC Không đạt (Rửa lại)'}
-                          {isInProgress && 'Đang tiến hành rửa'}
-                          {wo.status === 'quality_check' && 'Chờ QC'}
-                          {wo.status === 'done' && 'Hoàn thành sạch đẹp'}
-                        </span>
+                        <StatusBadge
+                          label={
+                            wo.status === 'waiting' ? 'Chờ phân công'
+                            : wo.status === 'assigned' ? 'Được giao việc'
+                            : isInProgress ? 'Đang rửa'
+                            : 'Hoàn thành'
+                          }
+                          tone={
+                            (isPending ? 'warning'
+                            : isInProgress ? 'primary'
+                            : 'success') as StatusTone
+                          }
+                        />
                         {isInProgress && (
                           <WashTimer startedAt={wo.updatedAt as string || wo.createdAt as string} />
                         )}
@@ -470,77 +446,31 @@ export default function WasherDashboard() {
                       {/* Đang chuẩn bị rửa */}
                       {isPending && (
                         <div className='text-center py-6 max-w-sm mx-auto'>
-                          <p className='text-slate-500 text-sm mb-4 leading-relaxed font-medium'>
-                            {wo.status === 'returned' 
-                              ? 'Xe không đạt tiêu chuẩn kiểm định QC. Hãy click "Bắt đầu làm việc" để tiến hành rửa lại.'
-                              : 'Xe đã được giao cho bạn phụ trách. Hãy click "Bắt đầu làm việc" để nhận xe vào khoang rửa.'}
+                          <p className='text-muted-foreground text-sm mb-4 leading-relaxed'>
+                            Xe đã được giao cho bạn phụ trách. Bấm &quot;Bắt đầu
+                            làm việc&quot; để nhận xe vào khoang rửa.
                           </p>
                           <button
                             onClick={() => startWashMutation.mutate(wo.id)}
                             disabled={startWashMutation.isPending}
-                            className='w-full py-3.5 rounded-2xl bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-black text-sm transition-all shadow-lg shadow-indigo-600/25 flex items-center justify-center gap-2 group'
+                            className='w-full py-3.5 rounded-lg bg-primary hover:bg-primary/90 disabled:opacity-50 text-primary-foreground font-semibold text-sm transition-colors flex items-center justify-center gap-2'
                           >
-                            <Play className='w-4.5 h-4.5 fill-white group-hover:scale-110 transition-transform' />
-                            Bắt đầu làm việc ngay
+                            <Play className='w-4.5 h-4.5 fill-current' />
+                            Bắt đầu làm việc
                           </button>
                         </div>
                       )}
 
-                      {/* Đang rửa xe & Checklist */}
+                      {/* Đang rửa xe: đối chiếu ảnh trước + chụp ảnh nghiệm thu */}
                       {isInProgress && (
                         <div>
-                          {/* Progress bar */}
-                          <div className='mb-6 bg-slate-50 p-4 rounded-2xl border border-slate-100/60 flex items-center justify-between gap-4'>
-                            <div className='flex-1'>
-                              <div className='flex items-center justify-between text-xs font-bold text-slate-500 mb-1.5'>
-                                <span>Tiến độ tiêu chuẩn:</span>
-                                <span className='text-indigo-600'>{checkedCount} / {WASH_STEPS.length} hạng mục ({progressPercentage}%)</span>
-                              </div>
-                              <div className='w-full h-2 bg-slate-200/80 rounded-full overflow-hidden'>
-                                <div
-                                  className='h-full bg-gradient-to-r from-indigo-500 to-indigo-600 transition-all duration-300 rounded-full'
-                                  style={{ width: `${progressPercentage}%` }}
-                                />
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* Checklist Items */}
-                          <p className='text-xs font-black text-slate-500 uppercase tracking-wider mb-3.5'>Quy trình rửa xe chuẩn WAVE</p>
-                          <div className='grid grid-cols-1 md:grid-cols-2 gap-3 mb-6'>
-                            {WASH_STEPS.map((step, idx) => {
-                              const isChecked = currentChecklist[idx];
-                              return (
-                                <button
-                                  key={idx}
-                                  type='button'
-                                  onClick={() => toggleChecklistItem(wo.id, idx)}
-                                  className={`flex items-center gap-3 p-3.5 rounded-2xl text-left border transition-all ${
-                                    isChecked
-                                      ? 'border-indigo-600 bg-indigo-50/10 text-slate-800'
-                                      : 'border-slate-200 text-slate-500 hover:bg-slate-50'
-                                  }`}
-                                >
-                                  {isChecked ? (
-                                    <CheckSquare className='w-5 h-5 text-indigo-600 shrink-0' />
-                                  ) : (
-                                    <Square className='w-5 h-5 text-slate-300 shrink-0' />
-                                  )}
-                                  <span className={`text-xs font-semibold ${isChecked ? 'line-through text-slate-500 font-medium' : ''}`}>
-                                    {step}
-                                  </span>
-                                </button>
-                              );
-                            })}
-                          </div>
-
                           {/* Ảnh kiểm định xe - lưu theo orderId */}
-                          <div className='mt-6 mb-6 border-t border-slate-100 pt-5 space-y-6'>
+                          <div className='mb-6 space-y-6'>
                             {/* 1. Trước khi rửa - CHỈ XEM (thu ngân chụp khi nhận xe) */}
                             <div>
-                              <p className='text-xs font-black text-slate-500 uppercase tracking-wider mb-3 flex items-center gap-1.5'>
-                                <Camera className='w-4 h-4 text-amber-500' />
-                                1. Ảnh trước khi rửa (Trầy xước/Móp méo có sẵn)
+                              <p className='text-[11px] font-semibold text-muted-foreground uppercase tracking-[0.08em] mb-3 flex items-center gap-1.5'>
+                                <Camera className='w-4 h-4' />
+                                Ảnh trước khi rửa (trầy xước, móp méo có sẵn)
                               </p>
 
                               {((wo.checkinPhotos && (wo.checkinPhotos as string[]).length > 0) || (inspectionPhotos[photoKey]?.preWash && inspectionPhotos[photoKey].preWash.length > 0)) ? (
@@ -549,10 +479,10 @@ export default function WasherDashboard() {
                                     <div
                                       key={pIdx}
                                       onClick={() => setPreviewPhoto(photo)}
-                                      className='group relative aspect-square rounded-xl overflow-hidden border border-slate-200 shadow-sm bg-slate-50 cursor-pointer'
+                                      className='group relative aspect-square rounded-lg overflow-hidden border border-border bg-muted cursor-pointer'
                                     >
                                       {/* eslint-disable-next-line @next/next/no-img-element */}
-                                      <img src={photo} alt='Pre-wash' className='w-full h-full object-cover group-hover:scale-105 transition-transform duration-200' />
+                                      <img src={photo} alt='Pre-wash' className='w-full h-full object-cover' />
                                       <div className='absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity duration-150 flex items-center justify-center'>
                                         <Eye className='w-5 h-5 text-white' />
                                       </div>
@@ -560,47 +490,47 @@ export default function WasherDashboard() {
                                   ))}
                                 </div>
                               ) : (
-                                <div className='p-4 rounded-xl border border-dashed border-slate-200 bg-slate-50/40 text-center py-6'>
-                                  <p className='text-xs font-semibold text-slate-500 italic'>Thu ngân chưa chụp ảnh hiện trạng xe lúc nhận. Ảnh sẽ hiển thị ở đây để bạn đối chiếu.</p>
+                                <div className='p-4 rounded-lg border border-dashed border-border bg-muted/30 text-center py-6'>
+                                  <p className='text-xs text-muted-foreground'>Thu ngân chưa chụp ảnh hiện trạng xe lúc nhận. Ảnh sẽ hiển thị ở đây để bạn đối chiếu.</p>
                                 </div>
                               )}
                             </div>
 
                             {/* 2. Sau khi rửa - thợ chụp/tải lên */}
                             <div>
-                              <p className='text-xs font-black text-slate-500 uppercase tracking-wider mb-3 flex items-center gap-1.5'>
-                                <CheckCircle2 className='w-4 h-4 text-emerald-500' />
-                                2. Ảnh sau khi rửa (Nghiệm thu xe sạch đẹp)
+                              <p className='text-[11px] font-semibold text-muted-foreground uppercase tracking-[0.08em] mb-3 flex items-center gap-1.5'>
+                                <CheckCircle2 className='w-4 h-4' />
+                                Ảnh sau khi rửa (bắt buộc — nghiệm thu xe sạch)
                               </p>
 
                               <div className='grid grid-cols-4 gap-3'>
                                 {(inspectionPhotos[photoKey]?.postWash && inspectionPhotos[photoKey].postWash.length > 0) ? (
                                   <>
                                     {inspectionPhotos[photoKey].postWash.map((photo, pIdx) => (
-                                      <div key={pIdx} className='group relative aspect-square rounded-xl overflow-hidden border border-slate-200 shadow-sm bg-slate-50'>
+                                      <div key={pIdx} className='group relative aspect-square rounded-lg overflow-hidden border border-border bg-muted'>
                                         {/* eslint-disable-next-line @next/next/no-img-element */}
-                                        <img src={photo} alt='Post-wash' className='w-full h-full object-cover group-hover:scale-105 transition-transform duration-200' />
+                                        <img src={photo} alt='Post-wash' className='w-full h-full object-cover' />
                                         <div className='absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-150 flex items-center justify-center gap-2'>
                                           <button
                                             type='button'
                                             onClick={() => setPreviewPhoto(photo)}
-                                            className='w-7 h-7 bg-white/90 hover:bg-white text-slate-700 rounded-lg flex items-center justify-center shadow-sm'
+                                            className='w-7 h-7 bg-white/90 hover:bg-white text-slate-700 rounded-md flex items-center justify-center'
                                           >
                                             <Eye className='w-4 h-4' />
                                           </button>
                                           <button
                                             type='button'
                                             onClick={() => handleDeletePhoto(photoKey, pIdx, 'post')}
-                                            className='w-7 h-7 bg-rose-500/90 hover:bg-rose-500 text-white rounded-lg flex items-center justify-center shadow-sm'
+                                            className='w-7 h-7 bg-destructive/90 hover:bg-destructive text-destructive-foreground rounded-md flex items-center justify-center'
                                           >
                                             <Trash2 className='w-4 h-4' />
                                           </button>
                                         </div>
                                       </div>
                                     ))}
-                                    <label className='aspect-square rounded-xl border border-dashed border-slate-300 hover:border-indigo-500 bg-slate-50/50 hover:bg-indigo-50/10 cursor-pointer flex flex-col items-center justify-center gap-1 transition-all duration-200'>
-                                      <Plus className='w-5 h-5 text-slate-500' />
-                                      <span className='text-[10px] font-bold text-slate-500 uppercase tracking-wider'>Thêm ảnh</span>
+                                    <label className='aspect-square rounded-lg border border-dashed border-border hover:border-primary bg-muted/40 hover:bg-accent cursor-pointer flex flex-col items-center justify-center gap-1 transition-colors'>
+                                      <Plus className='w-5 h-5 text-muted-foreground' />
+                                      <span className='text-[10px] font-medium text-muted-foreground'>Thêm ảnh</span>
                                       <input
                                         type='file'
                                         multiple
@@ -611,10 +541,10 @@ export default function WasherDashboard() {
                                     </label>
                                   </>
                                 ) : (
-                                  <div className='col-span-4 p-4 rounded-xl border border-dashed border-slate-200 bg-slate-50/40 flex flex-col items-center justify-center gap-2 text-center py-6'>
-                                    <p className='text-xs font-semibold text-slate-500 italic'>Chưa chụp ảnh nghiệm thu sau khi rửa xe.</p>
-                                    <label className='px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs cursor-pointer shadow-md transition-all flex items-center gap-1.5'>
-                                      <Plus className='w-3.5 h-3.5' /> Chụp / Tải ảnh lên
+                                  <div className='col-span-4 p-4 rounded-lg border border-dashed border-border bg-muted/30 flex flex-col items-center justify-center gap-2 text-center py-6'>
+                                    <p className='text-xs text-muted-foreground'>Chưa có ảnh nghiệm thu sau khi rửa.</p>
+                                    <label className='px-4 py-2 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground font-semibold text-xs cursor-pointer transition-colors flex items-center gap-1.5'>
+                                      <Plus className='w-3.5 h-3.5' /> Chụp / tải ảnh lên
                                       <input
                                         type='file'
                                         multiple
@@ -631,21 +561,18 @@ export default function WasherDashboard() {
 
                           {/* Complete action */}
                           <div className='flex flex-col gap-2'>
-                            {checkedCount < WASH_STEPS.length && (
-                              <div className='flex items-center gap-1.5 text-[11px] font-bold text-amber-600 bg-amber-50 border border-amber-100 p-2.5 rounded-xl mb-1'>
-                                <AlertCircle className='w-4 h-4 shrink-0' />
-                                Khuyên dùng: Hoàn thành đầy đủ {WASH_STEPS.length} bước trên để đảm bảo chất lượng xe trước khi bàn giao QC.
+                            {!canFinish && (
+                              <div className='flex items-center gap-1.5 text-[11px] font-medium text-foreground bg-muted/60 border border-border p-2.5 rounded-lg mb-1'>
+                                <AlertCircle className='w-4 h-4 shrink-0 text-primary' />
+                                Cần ít nhất 1 ảnh sau khi rửa để hoàn thành và
+                                bàn giao xe.
                               </div>
                             )}
 
                             <button
-                              onClick={() => finishWashMutation.mutate({ woId: wo.id, photoKey, currentStatus: wo.status })}
-                              disabled={finishWashMutation.isPending}
-                              className={`w-full py-3.5 rounded-2xl font-black text-sm text-white transition-all shadow-lg flex items-center justify-center gap-1.5 ${
-                                checkedCount === WASH_STEPS.length
-                                  ? 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-600/25'
-                                  : 'bg-indigo-600 hover:bg-indigo-700 shadow-indigo-600/20'
-                              }`}
+                              onClick={() => finishWashMutation.mutate({ woId: wo.id, photoKey })}
+                              disabled={finishWashMutation.isPending || !canFinish}
+                              className='w-full py-3.5 rounded-lg font-semibold text-sm bg-primary hover:bg-primary/90 text-primary-foreground transition-colors flex items-center justify-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed'
                             >
                               <CheckCircle2 className='w-4.5 h-4.5' />
                               Hoàn thành rửa xe
@@ -654,37 +581,16 @@ export default function WasherDashboard() {
                         </div>
                       )}
 
-                      {/* Đã hoàn thành (Chờ QC hoặc Lịch sử) */}
+                      {/* Đã hoàn thành */}
                       {isCompleted && (
-                        <div className='bg-slate-50/80 border border-slate-100 p-4 rounded-2xl flex flex-col gap-2'>
-                          <p className='text-xs font-bold text-slate-700 flex items-center gap-1.5'>
-                            <CheckCircle2 className='w-4.5 h-4.5 text-emerald-500' />
-                            Trạng thái công việc: {wo.status === 'quality_check' ? 'Đã rửa xong (Đang chờ kiểm định QC)' : 'Đã kiểm duyệt QC thành công'}
+                        <div className='bg-muted/40 border border-border p-4 rounded-lg flex flex-col gap-2'>
+                          <p className='text-xs font-semibold text-foreground flex items-center gap-1.5'>
+                            <CheckCircle2 className='w-4.5 h-4.5 text-success' />
+                            Đã hoàn thành rửa xe
                           </p>
-                          <p className='text-xs text-slate-500 leading-relaxed font-medium'>
-                            {wo.status === 'quality_check' 
-                              ? 'Đã gửi báo cáo hoàn tất cho Cashier/Manager. Hiện tại xe đang ở khu vực bàn giao hoặc chờ đánh giá chất lượng (QC).'
-                              : 'Xe đã được kiểm duyệt chất lượng đạt tiêu chuẩn và sẵn sàng bàn giao cho khách hàng.'}
+                          <p className='text-xs text-muted-foreground leading-relaxed'>
+                            Xe đã rửa xong và sẵn sàng bàn giao cho khách hàng.
                           </p>
-
-                          {/* Kết quả QC của manager nếu có */}
-                          {wo.qcPassed !== undefined && wo.qcPassed !== null && (
-                            <div className='mt-2 p-3 bg-white border border-slate-100 rounded-xl text-xs'>
-                              <div className='font-bold text-slate-800 flex items-center gap-1.5'>
-                                {wo.qcPassed ? (
-                                  <span className='text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100'>QC ĐẠT</span>
-                                ) : (
-                                  <span className='text-rose-600 bg-rose-50 px-2 py-0.5 rounded border border-rose-100'>QC KHÔNG ĐẠT</span>
-                                )}
-                                <span>Ghi chú từ quản lý:</span>
-                              </div>
-                              {wo.qcNote ? (
-                                <p className='text-slate-500 mt-1.5 italic bg-slate-50 p-2 rounded-lg border border-slate-100/50'>&quot;{wo.qcNote}&quot;</p>
-                              ) : (
-                                <p className='text-slate-500 mt-1 italic'>Không có ghi chú thêm.</p>
-                              )}
-                            </div>
-                          )}
                         </div>
                       )}
                     </div>
@@ -698,15 +604,15 @@ export default function WasherDashboard() {
 
       {/* Lightbox Preview Modal */}
       {previewPhoto && (
-        <div className='fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4' onClick={() => setPreviewPhoto(null)}>
-          <div className='relative max-w-3xl w-full max-h-[85vh] flex items-center justify-center animate-in fade-in zoom-in-95 duration-150'>
+        <div className='fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4' onClick={() => setPreviewPhoto(null)}>
+          <div className='relative max-w-3xl w-full max-h-[85vh] flex items-center justify-center motion-safe:animate-in motion-safe:fade-in motion-safe:zoom-in-95 duration-150'>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={previewPhoto} alt='Enlarged Preview' className='rounded-2xl max-w-full max-h-[80vh] object-contain shadow-2xl border border-white/10' />
-            <button 
-              onClick={() => setPreviewPhoto(null)} 
-              className='absolute top-3 right-3 bg-black/50 hover:bg-black text-white text-xs font-bold px-3 py-1.5 rounded-xl shadow-lg border border-white/10 animate-pulse'
+            <img src={previewPhoto} alt='Enlarged Preview' className='rounded-xl max-w-full max-h-[80vh] object-contain' />
+            <button
+              onClick={() => setPreviewPhoto(null)}
+              className='absolute top-3 right-3 bg-black/60 hover:bg-black text-white text-xs font-medium px-3 py-1.5 rounded-lg'
             >
-              Đóng xem ảnh (Esc)
+              Đóng
             </button>
           </div>
         </div>

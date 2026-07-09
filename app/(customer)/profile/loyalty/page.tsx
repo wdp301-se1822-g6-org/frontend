@@ -41,17 +41,17 @@ const tierStyles: Record<
     gradient: 'from-slate-400 via-slate-600 to-slate-800',
     text: 'text-slate-100',
     border: 'border-slate-500/30',
-    glow: 'shadow-slate-600/20',
+    glow: '',
     badgeBg: 'bg-slate-700/80 text-slate-200 border-slate-500',
-    chipBg: 'bg-slate-500/20',
+    chipBg: 'bg-muted/400/20',
   },
   gold: {
     gradient: 'from-amber-400 via-yellow-600 to-amber-900',
     text: 'text-amber-100',
     border: 'border-amber-500/30',
-    glow: 'shadow-amber-600/30',
+    glow: '',
     badgeBg: 'bg-amber-900/60 text-amber-200 border-amber-500',
-    chipBg: 'bg-amber-500/20',
+    chipBg: 'bg-warning/20',
   },
   platinum: {
     gradient: 'from-cyan-500 via-blue-700 to-slate-900',
@@ -143,7 +143,7 @@ export default function LoyaltyPage() {
 
   if (loyaltyError) {
     return (
-      <div className='bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900 rounded-2xl p-6 text-center text-red-600 dark:text-red-400 space-y-3 max-w-lg mx-auto mt-8'>
+      <div className='bg-destructive/10 dark:bg-red-950/20 border border-destructive/30 dark:border-red-900 rounded-xl p-6 text-center text-destructive dark:text-destructive space-y-3 max-w-lg mx-auto mt-8'>
         <Info className='w-8 h-8 mx-auto' />
         <h3 className='font-heading font-bold text-lg'>Đã xảy ra lỗi</h3>
         <p className='text-sm'>
@@ -158,7 +158,7 @@ export default function LoyaltyPage() {
     <div className='space-y-8 animate-fade-in'>
       {/* Page Header */}
       <div>
-        <h1 className='font-heading text-2xl font-black text-foreground flex items-center gap-2'>
+        <h1 className='font-heading text-2xl font-semibold text-foreground flex items-center gap-2'>
           <Award className='w-7 h-7 text-primary' /> Khách Hàng Thân Thiết
         </h1>
         <p className='text-sm text-muted-foreground'>
@@ -173,7 +173,7 @@ export default function LoyaltyPage() {
         <div className='lg:col-span-7 space-y-6'>
           {/* E-Membership Card */}
           <div
-            className={`relative rounded-3xl p-8 bg-gradient-to-br ${currentStyle.gradient} text-white shadow-xl ${currentStyle.glow} overflow-hidden border ${currentStyle.border} aspect-[1.586/1] flex flex-col justify-between group transition-all duration-300 hover:scale-[1.01]`}
+            className={`relative rounded-xl p-8 bg-gradient-to-br ${currentStyle.gradient} text-white shadow-xl ${currentStyle.glow} overflow-hidden border ${currentStyle.border} aspect-[1.586/1] flex flex-col justify-between group transition-all duration-300 hover:scale-[1.01]`}
           >
             {/* Background elements */}
             <div className='absolute -right-10 -top-10 w-40 h-40 bg-white/10 rounded-full blur-2xl group-hover:scale-125 transition-all duration-500' />
@@ -182,15 +182,15 @@ export default function LoyaltyPage() {
             {/* Card Header */}
             <div className='flex justify-between items-start z-10'>
               <div className='space-y-1'>
-                <p className='text-[10px] font-black uppercase tracking-widest text-white/60'>
+                <p className='text-[10px] font-semibold uppercase tracking-widest text-white/60'>
                   E-Membership Card
                 </p>
-                <h3 className='font-heading font-black tracking-wider text-lg'>
+                <h3 className='font-heading font-semibold tracking-wider text-lg'>
                   WASH AUTO
                 </h3>
               </div>
               <div
-                className={`px-3 py-1 rounded-full text-xs font-black uppercase tracking-wide border flex items-center gap-1.5 backdrop-blur-md ${currentStyle.badgeBg}`}
+                className={`px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wide border flex items-center gap-1.5 backdrop-blur-md ${currentStyle.badgeBg}`}
               >
                 <Crown className='w-3.5 h-3.5' />{' '}
                 {loyalty?.tierName || 'Member'}
@@ -217,10 +217,10 @@ export default function LoyaltyPage() {
             {/* Card Footer */}
             <div className='grid grid-cols-2 gap-4 border-t border-white/15 pt-4 z-10'>
               <div>
-                <p className='text-[9px] font-black uppercase tracking-widest text-white/50 flex items-center gap-1'>
+                <p className='text-[9px] font-semibold uppercase tracking-widest text-white/50 flex items-center gap-1'>
                   <Coins className='w-3 h-3' /> Điểm Tích Lũy
                 </p>
-                <p className='text-lg font-black tracking-wide'>
+                <p className='text-lg font-semibold tracking-wide'>
                   {(loyalty?.pointsBalance ?? 0).toLocaleString()}{' '}
                   <span className='text-xs font-semibold text-white/70'>
                     PTS
@@ -228,10 +228,10 @@ export default function LoyaltyPage() {
                 </p>
               </div>
               <div className='text-right'>
-                <p className='text-[9px] font-black uppercase tracking-widest text-white/50 flex items-center gap-1 justify-end'>
+                <p className='text-[9px] font-semibold uppercase tracking-widest text-white/50 flex items-center gap-1 justify-end'>
                   <Sparkles className='w-3 h-3' /> Tổng Lượt Rửa
                 </p>
-                <p className='text-lg font-black tracking-wide'>
+                <p className='text-lg font-semibold tracking-wide'>
                   {(loyalty?.totalSuccessfulWashes ?? 0).toLocaleString()}{' '}
                   <span className='text-xs font-semibold text-white/70'>
                     lần
@@ -242,7 +242,7 @@ export default function LoyaltyPage() {
           </div>
 
           {/* Voucher & Tier Progress Card */}
-          <Card className='border-none shadow-xl shadow-black/5 rounded-3xl overflow-hidden bg-white/80 backdrop-blur-md'>
+          <Card className='border-none shadow-xl shadow-black/5 rounded-xl overflow-hidden bg-white/80 backdrop-blur-md'>
             <CardContent className='p-6 space-y-6'>
               {/* Tiến độ voucher rửa miễn phí */}
               <div className='space-y-3'>
@@ -257,7 +257,7 @@ export default function LoyaltyPage() {
                       voucher thưởng bằng ~5% chi tiêu của các lượt đó.
                     </p>
                   </div>
-                  <span className='font-black text-primary text-base shrink-0'>
+                  <span className='font-semibold text-primary text-base shrink-0'>
                     {towardVoucher}/{WASHES_PER_FREE_VOUCHER}
                   </span>
                 </div>
@@ -267,7 +267,7 @@ export default function LoyaltyPage() {
                     style={{ width: `${voucherPct}%` }}
                   />
                 </div>
-                <div className='bg-[#FFFBF2] border border-[#F9E1B2] rounded-2xl p-4 flex items-start gap-3 text-[#856404] text-xs sm:text-sm shadow-sm'>
+                <div className='bg-[#FFFBF2] border border-[#F9E1B2] rounded-xl p-4 flex items-start gap-3 text-[#856404] text-xs sm:text-sm shadow-xs'>
                   <Sparkles className='w-5 h-5 text-orange-400 shrink-0 mt-0.5' />
                   <p>
                     Còn{' '}
@@ -286,7 +286,7 @@ export default function LoyaltyPage() {
                     <TrendingUp className='w-5 h-5 text-primary' /> Tiến Độ
                     Thăng Hạng
                   </h3>
-                  <span className='font-black text-primary text-base shrink-0'>
+                  <span className='font-semibold text-primary text-base shrink-0'>
                     {pointsBalance.toLocaleString()}{' '}
                     <span className='text-xs font-semibold text-muted-foreground'>
                       PTS
@@ -304,7 +304,7 @@ export default function LoyaltyPage() {
                   />
                 </div>
                 {nextTierConfig ? (
-                  <div className='bg-primary/5 border border-primary/10 rounded-2xl p-4 flex items-start gap-3 text-foreground/80 text-xs sm:text-sm'>
+                  <div className='bg-primary/5 border border-primary/10 rounded-xl p-4 flex items-start gap-3 text-foreground/80 text-xs sm:text-sm'>
                     <Crown className='w-5 h-5 text-primary shrink-0 mt-0.5' />
                     <p>
                       Còn{' '}
@@ -320,7 +320,7 @@ export default function LoyaltyPage() {
                     </p>
                   </div>
                 ) : (
-                  <div className='bg-cyan-50/50 border border-cyan-100 rounded-2xl p-4 flex items-start gap-3 text-cyan-800 text-xs sm:text-sm shadow-sm'>
+                  <div className='bg-cyan-50/50 border border-cyan-100 rounded-xl p-4 flex items-start gap-3 text-cyan-800 text-xs sm:text-sm shadow-xs'>
                     <Crown className='w-5 h-5 text-cyan-500 shrink-0 mt-0.5' />
                     <p>
                       Bạn đang ở hạng cao nhất. Tiếp tục tích điểm để duy trì
@@ -335,7 +335,7 @@ export default function LoyaltyPage() {
 
         {/* Right Column: Key Benefits Brief */}
         <div className='lg:col-span-5'>
-          <Card className='border-none shadow-xl shadow-black/5 rounded-3xl overflow-hidden bg-white/80 backdrop-blur-md h-full flex flex-col justify-between'>
+          <Card className='border-none shadow-xl shadow-black/5 rounded-xl overflow-hidden bg-white/80 backdrop-blur-md h-full flex flex-col justify-between'>
             <div>
               <CardHeader className='border-b border-border/50 pb-4'>
                 <CardTitle className='text-base font-bold flex items-center gap-2'>
@@ -346,8 +346,8 @@ export default function LoyaltyPage() {
               <CardContent className='p-6 space-y-4'>
                 {currentTierConfig ? (
                   <div className='space-y-4'>
-                    <div className='flex items-center gap-3 p-3 rounded-2xl bg-primary/5 border border-primary/10'>
-                      <div className='p-2 rounded-xl bg-white shadow-sm text-primary'>
+                    <div className='flex items-center gap-3 p-3 rounded-xl bg-primary/5 border border-primary/10'>
+                      <div className='p-2 rounded-xl bg-card shadow-xs text-primary'>
                         <Award className='w-5 h-5' />
                       </div>
                       <div>
@@ -361,8 +361,8 @@ export default function LoyaltyPage() {
                       </div>
                     </div>
 
-                    <div className='flex items-center gap-3 p-3 rounded-2xl bg-blue-50/50 border border-blue-100/50'>
-                      <div className='p-2 rounded-xl bg-white shadow-sm text-blue-600'>
+                    <div className='flex items-center gap-3 p-3 rounded-xl bg-info/10 border border-info/30/50'>
+                      <div className='p-2 rounded-xl bg-card shadow-xs text-blue-600'>
                         <Calendar className='w-5 h-5' />
                       </div>
                       <div>
@@ -376,8 +376,8 @@ export default function LoyaltyPage() {
                       </div>
                     </div>
 
-                    <div className='flex items-center gap-3 p-3 rounded-2xl bg-amber-50/50 border border-amber-100/50'>
-                      <div className='p-2 rounded-xl bg-white shadow-sm text-amber-500'>
+                    <div className='flex items-center gap-3 p-3 rounded-xl bg-warning/10 border border-warning/30/50'>
+                      <div className='p-2 rounded-xl bg-card shadow-xs text-warning'>
                         <Coins className='w-5 h-5' />
                       </div>
                       <div>
@@ -433,14 +433,14 @@ export default function LoyaltyPage() {
             return (
               <div
                 key={t.id}
-                className={`bg-white rounded-3xl border shadow-sm overflow-hidden flex flex-col justify-between relative transition-all duration-300 ${
+                className={`bg-card rounded-xl border shadow-xs overflow-hidden flex flex-col justify-between relative transition-all duration-300 ${
                   isMyTier
                     ? 'border-primary ring-2 ring-primary/20 scale-[1.02] -translate-y-1 shadow-md'
                     : 'border-border/60 hover:-translate-y-0.5 hover:shadow-md'
                 }`}
               >
                 {isMyTier && (
-                  <div className='absolute top-0 right-0 bg-primary text-white text-[9px] font-black uppercase tracking-wider py-1 px-3 rounded-bl-2xl shadow-sm z-10 flex items-center gap-1'>
+                  <div className='absolute top-0 right-0 bg-primary text-white text-[9px] font-semibold uppercase tracking-wider py-1 px-3 rounded-bl-2xl shadow-xs z-10 flex items-center gap-1'>
                     <Crown className='w-3 h-3' /> Hạng của bạn
                   </div>
                 )}
@@ -451,7 +451,7 @@ export default function LoyaltyPage() {
                 >
                   <div className='absolute top-0 right-0 w-16 h-16 bg-white/10 rounded-full blur-xl -mr-6 -mt-6' />
                   <Crown className='w-6 h-6 mb-2 relative z-10' />
-                  <h3 className='font-heading font-black text-lg capitalize tracking-wide relative z-10'>
+                  <h3 className='font-heading font-semibold text-lg capitalize tracking-wide relative z-10'>
                     {t.tierName}
                   </h3>
                   <p className='text-[10px] text-white/70 mt-1 relative z-10 flex items-center gap-1 font-medium'>
@@ -467,7 +467,7 @@ export default function LoyaltyPage() {
                       <span className='text-muted-foreground font-medium'>
                         Ưu đãi giảm giá
                       </span>
-                      <span className='font-black text-primary text-sm'>
+                      <span className='font-semibold text-primary text-sm'>
                         {t.discountPercent}%
                       </span>
                     </div>
@@ -491,10 +491,10 @@ export default function LoyaltyPage() {
 
                   <div className='pt-3 border-t border-border/40 text-center'>
                     <span
-                      className={`inline-flex px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider ${
+                      className={`inline-flex px-2.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider ${
                         t.isActive
                           ? 'bg-green-100 text-green-700'
-                          : 'bg-red-100 text-red-700'
+                          : 'bg-red-100 text-destructive'
                       }`}
                     >
                       {t.isActive ? 'Đang hoạt động' : 'Tạm khoá'}

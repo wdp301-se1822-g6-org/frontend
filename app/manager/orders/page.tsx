@@ -26,13 +26,13 @@ interface OrderData {
 }
 
 const statusConfig: Record<string, { label: string; cls: string }> = {
-  completed:       { label: 'Hoàn thành',       cls: 'bg-emerald-50 text-emerald-700 border border-emerald-100' },
-  in_progress:     { label: 'Đang rửa xe',      cls: 'bg-indigo-50 text-indigo-700 border border-indigo-100' },
-  confirmed:       { label: 'Đã xác nhận',      cls: 'bg-blue-50 text-blue-700 border border-blue-100' },
-  checked_in:      { label: 'Đã check-in',      cls: 'bg-sky-50 text-sky-700 border border-sky-100' },
-  pending_payment: { label: 'Chờ thanh toán',   cls: 'bg-amber-50 text-amber-700 border border-amber-100' },
-  cancelled:       { label: 'Đã hủy',           cls: 'bg-rose-50 text-rose-700 border border-rose-100' },
-  no_show:         { label: 'Vắng mặt',         cls: 'bg-slate-100 text-slate-600' },
+  completed:       { label: 'Hoàn thành',       cls: 'bg-success/10 text-success border border-success/30' },
+  in_progress:     { label: 'Đang rửa xe',      cls: 'bg-accent text-primary border border-primary/30' },
+  confirmed:       { label: 'Đã xác nhận',      cls: 'bg-info/10 text-info border border-info/30' },
+  checked_in:      { label: 'Đã check-in',      cls: 'bg-info/10 text-info border border-info/30' },
+  pending_payment: { label: 'Chờ thanh toán',   cls: 'bg-warning/10 text-warning-foreground border border-warning/30' },
+  cancelled:       { label: 'Đã hủy',           cls: 'bg-destructive/10 text-destructive border border-destructive/30' },
+  no_show:         { label: 'Vắng mặt',         cls: 'bg-muted text-muted-foreground' },
 };
 
 const statusOptions = ['all', 'pending_payment', 'confirmed', 'checked_in', 'in_progress', 'completed', 'cancelled', 'no_show'];
@@ -62,19 +62,19 @@ export default function ManagerOrdersPage() {
   return (
     <>
       <AdminTopbar title='Quản lý Đặt lịch' subtitle='Xem lịch hẹn của khách hàng và thực hiện Check-in tại quầy' />
-      <main className='flex-1 p-8 overflow-y-auto bg-slate-50/50'>
+      <main className='flex-1 p-8 overflow-y-auto bg-muted/40'>
         <div className='max-w-7xl mx-auto'>
 
           {/* Filters */}
           <div className='flex flex-wrap items-center gap-3 mb-6'>
             <div className='relative flex-1 min-w-[200px] max-w-xs'>
-              <Search className='absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500' />
+              <Search className='absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground' />
               <input
                 type='text'
                 placeholder='Tìm kiếm đơn đặt lịch...'
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className='w-full pl-9 pr-4 py-2.5 rounded-xl bg-white border border-slate-200 text-sm focus:outline-none focus:border-indigo-500/50 transition-all shadow-sm'
+                className='w-full pl-9 pr-4 py-2.5 rounded-xl bg-card border border-border text-sm focus:outline-none focus:border-primary/50 transition-all shadow-xs'
               />
             </div>
 
@@ -82,7 +82,7 @@ export default function ManagerOrdersPage() {
               <select
                 value={statusFilter}
                 onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
-                className='appearance-none bg-white border border-slate-200 rounded-xl px-4 py-2.5 pr-8 text-sm font-semibold focus:outline-none focus:border-indigo-500/50 transition-all cursor-pointer shadow-sm text-slate-700'
+                className='appearance-none bg-card border border-border rounded-xl px-4 py-2.5 pr-8 text-sm font-semibold focus:outline-none focus:border-primary/50 transition-all cursor-pointer shadow-xs text-foreground'
               >
                 {statusOptions.map((s) => (
                   <option key={s} value={s}>
@@ -90,55 +90,55 @@ export default function ManagerOrdersPage() {
                   </option>
                 ))}
               </select>
-              <ChevronDown className='absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none' />
+              <ChevronDown className='absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none' />
             </div>
 
             <button
               onClick={() => refetch()}
-              className='flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-slate-200 text-sm font-semibold hover:border-indigo-300 transition-all shadow-sm text-slate-600'
+              className='flex items-center gap-2 px-4 py-2.5 rounded-xl bg-card border border-border text-sm font-semibold hover:border-primary transition-all shadow-xs text-muted-foreground'
             >
-              <RefreshCw className={`w-4 h-4 text-slate-500 ${isRefetching ? 'animate-spin' : ''}`} />
+              <RefreshCw className={`w-4 h-4 text-muted-foreground ${isRefetching ? 'animate-spin' : ''}`} />
               Làm mới
             </button>
 
-            <span className='ml-auto text-xs font-semibold text-slate-500'>
+            <span className='ml-auto text-xs font-semibold text-muted-foreground'>
               Tổng: {total} đơn đặt lịch
             </span>
           </div>
 
           {/* Table */}
-          <div className='bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden'>
+          <div className='bg-card rounded-xl border border-border shadow-xs overflow-hidden'>
             <div className='overflow-x-auto'>
-              <table className='w-full text-sm text-slate-600'>
+              <table className='w-full text-sm text-muted-foreground'>
                 <thead>
-                  <tr className='bg-slate-50/50 border-b border-slate-100'>
+                  <tr className='bg-muted/40 border-b border-border'>
                     {['ID', 'Khách hàng', 'Biển số', 'Dịch vụ', 'Giờ hẹn', 'Ngày hẹn', 'Số tiền', 'Trạng thái', 'Chi tiết'].map((h) => (
-                      <th key={h} className='text-left px-5 py-3.5 text-[11px] font-black uppercase tracking-widest text-slate-500'>
+                      <th key={h} className='text-left px-5 py-3.5 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground'>
                         {h}
                       </th>
                     ))}
                   </tr>
                 </thead>
-                <tbody className='divide-y divide-slate-100'>
+                <tbody className='divide-y divide-border'>
                   {isLoading ? (
                     Array.from({ length: 5 }).map((_, i) => (
                       <tr key={i}>
                         {Array.from({ length: 8 }).map((__, j) => (
                           <td key={j} className='px-5 py-4'>
-                            <div className='h-4 bg-slate-100 animate-pulse rounded-lg' />
+                            <div className='h-4 bg-muted animate-pulse rounded-lg' />
                           </td>
                         ))}
                       </tr>
                     ))
                   ) : filtered.length === 0 ? (
                     <tr>
-                      <td colSpan={8} className='px-5 py-16 text-center text-slate-500 font-semibold'>
+                      <td colSpan={8} className='px-5 py-16 text-center text-muted-foreground font-semibold'>
                         Không có dữ liệu đơn đặt lịch nào.
                       </td>
                     </tr>
                   ) : (
                     filtered.map((o: OrderData) => {
-                      const s = statusConfig[o.status ?? ''] ?? { label: o.status, cls: 'bg-slate-100 text-slate-500' };
+                      const s = statusConfig[o.status ?? ''] ?? { label: o.status, cls: 'bg-muted text-muted-foreground' };
                       
                       const orderId = o._id ?? o.id ?? '';
 
@@ -150,33 +150,33 @@ export default function ManagerOrdersPage() {
                         : '-';
 
                       return (
-                        <tr key={orderId} className='hover:bg-slate-50/20 transition-colors'>
-                          <td className='px-5 py-4 font-mono text-xs text-slate-500'>
+                        <tr key={orderId} className='hover:bg-muted/50 transition-colors'>
+                          <td className='px-5 py-4 font-mono text-xs text-muted-foreground'>
                             {orderId.slice(-6).toUpperCase()}
                           </td>
                           <td className='px-5 py-4'>
                             <div className='flex items-center gap-2.5'>
-                              <div className='w-8 h-8 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600 font-black text-xs'>
+                              <div className='w-8 h-8 rounded-full bg-accent flex items-center justify-center text-primary font-semibold text-xs'>
                                 {(o.userId?.fullName ?? o.customerName ?? '?')[0]}
                               </div>
-                              <span className='font-bold text-slate-800'>
+                              <span className='font-bold text-foreground'>
                                 {o.userId?.fullName ?? o.customerName ?? '-'}
                               </span>
                             </div>
                           </td>
-                          <td className='px-5 py-4 text-xs font-mono font-bold text-indigo-600 bg-indigo-50/30 rounded px-2 py-0.5 inline-block mt-4'>
+                          <td className='px-5 py-4 text-xs font-mono font-bold text-primary bg-accent rounded px-2 py-0.5 inline-block mt-4'>
                             {o.vehicleId?.licensePlate ?? o.licensePlate ?? '-'}
                           </td>
-                          <td className='px-5 py-4 text-slate-600 font-medium'>
+                          <td className='px-5 py-4 text-muted-foreground font-medium'>
                             {o.serviceTypeId?.name ?? o.serviceName ?? '-'}
                           </td>
-                          <td className='px-5 py-4 text-slate-700 font-bold'>
+                          <td className='px-5 py-4 text-foreground font-bold'>
                             {formattedTime}
                           </td>
-                          <td className='px-5 py-4 text-slate-500 text-xs'>
+                          <td className='px-5 py-4 text-muted-foreground text-xs'>
                             {formattedDate}
                           </td>
-                          <td className='px-5 py-4 font-black text-slate-800'>
+                          <td className='px-5 py-4 font-semibold text-foreground'>
                             {(o.amount ?? o.totalPrice) != null ? `${Number(o.amount ?? o.totalPrice).toLocaleString('vi-VN')}đ` : '-'}
                           </td>
                           <td className='px-5 py-4'>
@@ -187,7 +187,7 @@ export default function ManagerOrdersPage() {
                           <td className='px-5 py-4'>
                             <button
                               onClick={() => setSelectedOrder(o)}
-                              className='flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 hover:border-indigo-300 text-slate-600 hover:text-indigo-600 font-bold text-xs transition-all shadow-sm bg-white'
+                              className='flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-border hover:border-primary text-muted-foreground hover:text-primary font-bold text-xs transition-all shadow-xs bg-card'
                             >
                               Xem chi tiết
                             </button>
@@ -202,20 +202,20 @@ export default function ManagerOrdersPage() {
 
             {/* Pagination */}
             {total > 10 && (
-              <div className='flex items-center justify-between px-5 py-4 border-t border-slate-100 bg-slate-50/20'>
-                <span className='text-xs font-semibold text-slate-500'>
+              <div className='flex items-center justify-between px-5 py-4 border-t border-border bg-muted/40'>
+                <span className='text-xs font-semibold text-muted-foreground'>
                   Trang {page} / {Math.ceil(total / 10)}
                 </span>
                 <div className='flex gap-2'>
                   <button
                     onClick={() => setPage(Math.max(1, page - 1))}
                     disabled={page === 1}
-                    className='px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-semibold disabled:opacity-40 hover:border-indigo-300 transition-all text-slate-600 bg-white'
+                    className='px-3 py-1.5 rounded-lg border border-border text-xs font-semibold disabled:opacity-40 hover:border-primary transition-all text-muted-foreground bg-card'
                   >Trước</button>
                   <button
                     onClick={() => setPage(page + 1)}
                     disabled={page >= Math.ceil(total / 10)}
-                    className='px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-semibold disabled:opacity-40 hover:border-indigo-300 transition-all text-slate-600 bg-white'
+                    className='px-3 py-1.5 rounded-lg border border-border text-xs font-semibold disabled:opacity-40 hover:border-primary transition-all text-muted-foreground bg-card'
                   >Sau</button>
                 </div>
               </div>
@@ -224,74 +224,74 @@ export default function ManagerOrdersPage() {
         </div>
       </main>
       {selectedOrder && (
-        <div className='fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4' onClick={() => setSelectedOrder(null)}>
-          <div className='bg-white rounded-3xl p-6 w-full max-w-lg shadow-2xl border border-slate-100 animate-in fade-in zoom-in-95 duration-150 flex flex-col gap-5' onClick={(e) => e.stopPropagation()}>
-            <div className='flex items-center justify-between pb-3 border-b border-slate-100'>
-              <h3 className='font-heading font-black text-slate-800 text-lg'>Chi tiết lịch đặt xe</h3>
+        <div className='fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4' onClick={() => setSelectedOrder(null)}>
+          <div className='bg-card rounded-xl p-6 w-full max-w-lg shadow-2xl border border-border animate-in fade-in zoom-in-95 duration-150 flex flex-col gap-5' onClick={(e) => e.stopPropagation()}>
+            <div className='flex items-center justify-between pb-3 border-b border-border'>
+              <h3 className='font-heading font-semibold text-foreground text-lg'>Chi tiết lịch đặt xe</h3>
               <button onClick={() => setSelectedOrder(null)}>
-                <X className='w-5 h-5 text-slate-500 hover:text-slate-600' />
+                <X className='w-5 h-5 text-muted-foreground hover:text-muted-foreground' />
               </button>
             </div>
 
             <div className='grid grid-cols-2 gap-4 text-sm'>
               <div>
-                <p className='text-xs font-bold text-slate-400 uppercase tracking-wider'>Mã đơn</p>
-                <p className='font-mono font-bold text-slate-700 mt-0.5'>{(selectedOrder._id ?? selectedOrder.id ?? '').toUpperCase()}</p>
+                <p className='text-xs font-bold text-placeholder uppercase tracking-wider'>Mã đơn</p>
+                <p className='font-mono font-bold text-foreground mt-0.5'>{(selectedOrder._id ?? selectedOrder.id ?? '').toUpperCase()}</p>
               </div>
               <div>
-                <p className='text-xs font-bold text-slate-400 uppercase tracking-wider'>Trạng thái</p>
-                <span className={`inline-flex px-2.5 py-0.5 rounded-lg text-xs font-bold mt-1 ${statusConfig[selectedOrder.status ?? '']?.cls ?? 'bg-slate-100 text-slate-500'}`}>
+                <p className='text-xs font-bold text-placeholder uppercase tracking-wider'>Trạng thái</p>
+                <span className={`inline-flex px-2.5 py-0.5 rounded-lg text-xs font-bold mt-1 ${statusConfig[selectedOrder.status ?? '']?.cls ?? 'bg-muted text-muted-foreground'}`}>
                   {statusConfig[selectedOrder.status ?? '']?.label ?? selectedOrder.status}
                 </span>
               </div>
               
-              <div className='col-span-2 border-t border-slate-100 pt-3'>
-                <p className='text-xs font-bold text-slate-400 uppercase tracking-wider'>Khách hàng</p>
-                <p className='font-bold text-slate-800 mt-0.5'>{selectedOrder.userId?.fullName ?? selectedOrder.customerName ?? '-'}</p>
+              <div className='col-span-2 border-t border-border pt-3'>
+                <p className='text-xs font-bold text-placeholder uppercase tracking-wider'>Khách hàng</p>
+                <p className='font-bold text-foreground mt-0.5'>{selectedOrder.userId?.fullName ?? selectedOrder.customerName ?? '-'}</p>
               </div>
 
               <div>
-                <p className='text-xs font-bold text-slate-400 uppercase tracking-wider'>Biển số xe</p>
-                <p className='font-mono font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded w-fit mt-1'>
+                <p className='text-xs font-bold text-placeholder uppercase tracking-wider'>Biển số xe</p>
+                <p className='font-mono font-bold text-primary bg-accent px-2 py-0.5 rounded w-fit mt-1'>
                   {selectedOrder.vehicleId?.licensePlate ?? selectedOrder.licensePlate ?? '-'}
                 </p>
               </div>
               <div>
-                <p className='text-xs font-bold text-slate-400 uppercase tracking-wider'>Dịch vụ</p>
-                <p className='font-semibold text-slate-700 mt-1'>{selectedOrder.serviceTypeId?.name ?? selectedOrder.serviceName ?? '-'}</p>
+                <p className='text-xs font-bold text-placeholder uppercase tracking-wider'>Dịch vụ</p>
+                <p className='font-semibold text-foreground mt-1'>{selectedOrder.serviceTypeId?.name ?? selectedOrder.serviceName ?? '-'}</p>
               </div>
 
               <div>
-                <p className='text-xs font-bold text-slate-400 uppercase tracking-wider'>Giờ hẹn</p>
-                <p className='font-bold text-slate-700 mt-0.5'>
+                <p className='text-xs font-bold text-placeholder uppercase tracking-wider'>Giờ hẹn</p>
+                <p className='font-bold text-foreground mt-0.5'>
                   {(selectedOrder.scheduledAt ?? selectedOrder.bookingDate) ? new Date((selectedOrder.scheduledAt ?? selectedOrder.bookingDate) as string).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : '-'}
                 </p>
               </div>
               <div>
-                <p className='text-xs font-bold text-slate-400 uppercase tracking-wider'>Ngày hẹn</p>
-                <p className='font-semibold text-slate-600 mt-0.5'>
+                <p className='text-xs font-bold text-placeholder uppercase tracking-wider'>Ngày hẹn</p>
+                <p className='font-semibold text-muted-foreground mt-0.5'>
                   {(selectedOrder.scheduledAt ?? selectedOrder.bookingDate) ? new Date((selectedOrder.scheduledAt ?? selectedOrder.bookingDate) as string).toLocaleDateString('vi-VN') : '-'}
                 </p>
               </div>
 
-              <div className='col-span-2 border-t border-slate-100 pt-3'>
-                <p className='text-xs font-bold text-slate-400 uppercase tracking-wider'>Tổng số tiền</p>
-                <p className='text-lg font-black text-indigo-600 mt-0.5'>
+              <div className='col-span-2 border-t border-border pt-3'>
+                <p className='text-xs font-bold text-placeholder uppercase tracking-wider'>Tổng số tiền</p>
+                <p className='text-lg font-semibold text-primary mt-0.5'>
                   {(selectedOrder.amount ?? selectedOrder.totalPrice) != null ? `${Number(selectedOrder.amount ?? selectedOrder.totalPrice).toLocaleString('vi-VN')}đ` : '-'}
                 </p>
               </div>
 
               {selectedOrder.note && (
-                <div className='col-span-2 bg-slate-50 p-3 rounded-xl border border-slate-100 italic text-slate-500 text-xs mt-1'>
+                <div className='col-span-2 bg-muted/40 p-3 rounded-xl border border-border italic text-muted-foreground text-xs mt-1'>
                   &quot;{selectedOrder.note}&quot;
                 </div>
               )}
             </div>
 
-            <div className='border-t border-slate-100 pt-4 flex justify-end'>
+            <div className='border-t border-border pt-4 flex justify-end'>
               <button
                 onClick={() => setSelectedOrder(null)}
-                className='px-5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-all'
+                className='px-5 py-2 rounded-xl bg-muted hover:bg-border text-foreground text-xs font-bold transition-all'
               >
                 Đóng
               </button>

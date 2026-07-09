@@ -23,15 +23,15 @@ interface UserData {
 
 const roleConfig: Record<string, { label: string; cls: string }> = {
   admin:    { label: 'Admin',    cls: 'bg-primary/10 text-primary' },
-  manager:  { label: 'Quản lý',   cls: 'bg-blue-50 text-blue-700' },
-  cashier:  { label: 'Thu ngân',  cls: 'bg-amber-50 text-amber-700' },
-  washer:   { label: 'Thợ rửa xe', cls: 'bg-indigo-50 text-indigo-700' },
-  customer: { label: 'Khách hàng', cls: 'bg-muted text-foreground/60' },
+  manager:  { label: 'Quản lý',   cls: 'bg-info/10 text-info' },
+  cashier:  { label: 'Thu ngân',  cls: 'bg-warning/10 text-warning-foreground' },
+  washer:   { label: 'Thợ rửa xe', cls: 'bg-accent text-primary' },
+  customer: { label: 'Khách hàng', cls: 'bg-muted text-muted-foreground' },
 };
 
 const statusConfig: Record<string, { label: string; cls: string }> = {
-  active:   { label: 'Hoạt động', cls: 'bg-emerald-50 text-emerald-700' },
-  inactive: { label: 'Vô hiệu',   cls: 'bg-rose-50 text-rose-700' },
+  active:   { label: 'Hoạt động', cls: 'bg-success/10 text-success' },
+  inactive: { label: 'Vô hiệu',   cls: 'bg-destructive/10 text-destructive' },
   banned:   { label: 'Banned',    cls: 'bg-gray-100 text-gray-600' },
 };
 
@@ -90,14 +90,14 @@ export default function AdminUsersPage() {
           {/* Filters */}
           <div className='flex flex-wrap items-center gap-3 mb-6'>
             <div className='relative flex-1 min-w-[200px] max-w-xs'>
-              <Search className='absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/55' />
+              <Search className='absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-placeholder' />
               <input type='text' placeholder='Tìm kiếm người dùng...'
                 value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-                className='w-full pl-9 pr-4 py-2.5 rounded-xl bg-white border border-border text-sm focus:outline-none focus:border-primary/50 transition-all' />
+                className='w-full pl-9 pr-4 py-2.5 rounded-xl bg-card border border-border text-sm focus:outline-none focus:border-primary/50 transition-all' />
             </div>
             <div className='relative'>
               <select value={roleFilter} onChange={(e) => { setRoleFilter(e.target.value); setPage(1); }}
-                className='appearance-none bg-white border border-border rounded-xl px-4 py-2.5 pr-8 text-sm font-semibold focus:outline-none cursor-pointer'>
+                className='appearance-none bg-card border border-border rounded-xl px-4 py-2.5 pr-8 text-sm font-semibold focus:outline-none cursor-pointer'>
                 <option value='all'>Tất cả vai trò</option>
                 <option value='admin'>Admin</option>
                 <option value='manager'>Quản lý</option>
@@ -105,23 +105,23 @@ export default function AdminUsersPage() {
                 <option value='washer'>Thợ rửa xe</option>
                 <option value='customer'>Khách hàng</option>
               </select>
-              <ChevronDown className='absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/60 pointer-events-none' />
+              <ChevronDown className='absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none' />
             </div>
             <button onClick={() => refetch()}
-              className='flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-border text-sm font-semibold hover:border-primary/30 transition-all'>
+              className='flex items-center gap-2 px-4 py-2.5 rounded-xl bg-card border border-border text-sm font-semibold hover:border-primary/30 transition-all'>
               <RefreshCw className='w-4 h-4 text-foreground/50' />Làm mới
             </button>
-            <span className='ml-auto text-xs font-semibold text-foreground/60'>Tổng: {totalItems} tài khoản</span>
+            <span className='ml-auto text-xs font-semibold text-muted-foreground'>Tổng: {totalItems} tài khoản</span>
           </div>
 
           {/* Table */}
-          <div className='bg-white rounded-2xl border border-border/50 shadow-sm overflow-hidden'>
+          <div className='bg-card rounded-xl border border-border/50 shadow-xs overflow-hidden'>
             <div className='overflow-x-auto'>
               <table className='w-full text-sm'>
                 <thead>
                   <tr className='bg-muted/50 border-b border-border/50'>
                     {['Người dùng', 'Email', 'Vai trò', 'Trạng thái', 'Ngày tạo', 'Thao tác'].map((h) => (
-                      <th key={h} className='text-left px-5 py-3.5 text-[11px] font-black uppercase tracking-widest text-foreground/60'>{h}</th>
+                      <th key={h} className='text-left px-5 py-3.5 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground'>{h}</th>
                     ))}
                   </tr>
                 </thead>
@@ -133,28 +133,28 @@ export default function AdminUsersPage() {
                       ))}</tr>
                     ))
                   ) : paginatedUsers.length === 0 ? (
-                    <tr><td colSpan={6} className='px-5 py-16 text-center text-foreground/60 font-semibold'>Không có dữ liệu</td></tr>
+                    <tr><td colSpan={6} className='px-5 py-16 text-center text-muted-foreground font-semibold'>Không có dữ liệu</td></tr>
                   ) : (
                     paginatedUsers.map((u: UserData) => {
-                      const role = roleConfig[u.role ?? ''] ?? { label: u.role, cls: 'bg-muted text-foreground/60' };
+                      const role = roleConfig[u.role ?? ''] ?? { label: u.role, cls: 'bg-muted text-muted-foreground' };
                       const status = statusConfig[u.status ?? 'active'] ?? statusConfig.active;
                       const id = u._id ?? u.id ?? '';
                       return (
                         <tr key={id} className='hover:bg-muted/20 transition-colors'>
                           <td className='px-5 py-4'>
                             <div className='flex items-center gap-3'>
-                              <div className='w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center text-primary font-black text-sm'>
+                              <div className='w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold text-sm'>
                                 {(u.fullName ?? u.name ?? '?')[0]?.toUpperCase()}
                               </div>
                               <span className='font-semibold text-foreground'>{u.fullName ?? u.name ?? '-'}</span>
                             </div>
                           </td>
-                          <td className='px-5 py-4 text-foreground/60 text-sm'>{u.email ?? '-'}</td>
+                          <td className='px-5 py-4 text-muted-foreground text-sm'>{u.email ?? '-'}</td>
                           <td className='px-5 py-4'>
-                            <span className={`inline-flex px-2.5 py-1 rounded-lg text-[11px] font-black uppercase tracking-wider ${role.cls}`}>{role.label}</span>
+                            <span className={`inline-flex px-2.5 py-1 rounded-lg text-[11px] font-semibold uppercase tracking-wider ${role.cls}`}>{role.label}</span>
                           </td>
                           <td className='px-5 py-4'>
-                            <span className={`inline-flex px-2.5 py-1 rounded-lg text-[11px] font-black uppercase tracking-wider ${status.cls}`}>{status.label}</span>
+                            <span className={`inline-flex px-2.5 py-1 rounded-lg text-[11px] font-semibold uppercase tracking-wider ${status.cls}`}>{status.label}</span>
                           </td>
                           <td className='px-5 py-4 text-foreground/50 text-xs'>
                             {u.createdAt ? new Date(u.createdAt).toLocaleDateString('vi-VN') : '-'}
@@ -164,7 +164,7 @@ export default function AdminUsersPage() {
                               {/* Role select */}
                               <select value={u.role}
                                 onChange={(e) => changeRole.mutate({ id, role: e.target.value })}
-                                className='text-xs border border-border rounded-lg px-2 py-1 bg-white focus:outline-none cursor-pointer'>
+                                className='text-xs border border-border rounded-lg px-2 py-1 bg-card focus:outline-none cursor-pointer'>
                                 <option value='customer'>Khách hàng</option>
                                 <option value='washer'>Thợ rửa xe</option>
                                 <option value='cashier'>Thu ngân</option>
@@ -175,7 +175,7 @@ export default function AdminUsersPage() {
                               <button
                                 onClick={() => changeStatus.mutate({ id, status: u.status === 'active' ? 'inactive' : 'active' })}
                                 title={u.status === 'active' ? 'Vô hiệu hoá' : 'Kích hoạt'}
-                                className='w-7 h-7 rounded-lg border border-border flex items-center justify-center hover:border-rose-300 hover:text-rose-500 transition-all'>
+                                className='w-7 h-7 rounded-lg border border-border flex items-center justify-center hover:border-destructive/40 hover:text-destructive transition-all'>
                                 <Ban className='w-3.5 h-3.5' />
                               </button>
                               {/* Reset password */}
@@ -195,7 +195,7 @@ export default function AdminUsersPage() {
             {/* Pagination */}
             {totalItems > itemsPerPage && (
               <div className='flex items-center justify-between px-5 py-4 border-t border-border/50 bg-muted/20'>
-                <span className='text-xs font-semibold text-foreground/60'>Trang {page} / {totalPages}</span>
+                <span className='text-xs font-semibold text-muted-foreground'>Trang {page} / {totalPages}</span>
                 <div className='flex gap-2'>
                   <button onClick={() => setPage(Math.max(1, page - 1))} disabled={page === 1}
                     className='px-3 py-1.5 rounded-lg border border-border text-xs font-semibold disabled:opacity-40 hover:border-primary/30'>Trước</button>
@@ -211,14 +211,14 @@ export default function AdminUsersPage() {
       {/* Reset Password Modal */}
       {resetId && (
         <div className='fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4' onClick={() => setResetId(null)}>
-          <div className='bg-white rounded-2xl p-8 w-full max-w-sm shadow-2xl' onClick={(e) => e.stopPropagation()}>
+          <div className='bg-card rounded-xl p-8 w-full max-w-sm shadow-2xl' onClick={(e) => e.stopPropagation()}>
             <div className='flex items-center gap-3 mb-6'>
               <div className='w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center'>
                 <KeyRound className='w-5 h-5 text-primary' />
               </div>
               <div>
-                <h3 className='font-heading font-black text-foreground'>Đặt lại mật khẩu</h3>
-                <p className='text-xs text-foreground/60'>Nhập mật khẩu mới cho người dùng</p>
+                <h3 className='font-heading font-semibold text-foreground'>Đặt lại mật khẩu</h3>
+                <p className='text-xs text-muted-foreground'>Nhập mật khẩu mới cho người dùng</p>
               </div>
             </div>
             <input type='password' placeholder='Mật khẩu mới (tối thiểu 8 ký tự)'
@@ -229,7 +229,7 @@ export default function AdminUsersPage() {
                 className='flex-1 py-2.5 rounded-xl border border-border text-sm font-semibold hover:bg-muted transition-all'>Huỷ</button>
               <button onClick={() => resetPwd.mutate({ id: resetId, password: newPwd })}
                 disabled={newPwd.length < 8 || resetPwd.isPending}
-                className='flex-1 py-2.5 rounded-xl bg-primary text-white text-sm font-black disabled:opacity-50 hover:bg-primary/90 transition-all'>
+                className='flex-1 py-2.5 rounded-xl bg-primary text-white text-sm font-semibold disabled:opacity-50 hover:bg-primary/90 transition-all'>
                 {resetPwd.isPending ? 'Đang lưu...' : 'Xác nhận'}
               </button>
             </div>

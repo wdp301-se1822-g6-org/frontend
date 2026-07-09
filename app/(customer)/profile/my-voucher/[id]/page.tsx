@@ -36,7 +36,7 @@ const STATUS_META: Record<
 > = {
   unused: { label: 'Chưa sử dụng', className: 'bg-green-100 text-green-700' },
   used: { label: 'Đã sử dụng', className: 'bg-muted text-muted-foreground' },
-  expired: { label: 'Hết hạn', className: 'bg-red-100 text-red-600' },
+  expired: { label: 'Hết hạn', className: 'bg-red-100 text-destructive' },
 };
 
 export default function VoucherDetailPage({
@@ -68,7 +68,7 @@ export default function VoucherDetailPage({
         >
           <ArrowLeft className='w-4 h-4' /> Quay lại
         </button>
-        <div className='bg-red-50 border border-red-200 rounded-2xl p-6 text-center text-red-600 space-y-2'>
+        <div className='bg-destructive/10 border border-destructive/30 rounded-xl p-6 text-center text-destructive space-y-2'>
           <Info className='w-8 h-8 mx-auto' />
           <h3 className='font-heading font-bold text-lg'>
             Không tìm thấy voucher
@@ -95,9 +95,9 @@ export default function VoucherDetailPage({
       </button>
 
       {/* Voucher hero */}
-      <div className='flex flex-col sm:flex-row rounded-3xl overflow-hidden border border-border/60 bg-white shadow-sm'>
+      <div className='flex flex-col sm:flex-row rounded-xl overflow-hidden border border-border/60 bg-card shadow-xs'>
         <div className='relative sm:w-48 shrink-0 bg-gradient-to-br from-primary to-blue-700 text-white flex flex-col items-center justify-center p-6 text-center'>
-          <span className='text-[11px] font-black uppercase tracking-widest text-white/70'>
+          <span className='text-[11px] font-semibold uppercase tracking-widest text-white/70'>
             {voucher.type === 'free_wash' ? 'Tặng' : 'Giảm'}
           </span>
           {voucher.type === 'free_wash' ? (
@@ -112,12 +112,12 @@ export default function VoucherDetailPage({
 
         <div className='flex-1 p-6 space-y-3'>
           <div className='flex items-start justify-between gap-3'>
-            <h1 className='font-heading text-xl font-black text-foreground'>
+            <h1 className='font-heading text-xl font-semibold text-foreground'>
               {TYPE_LABEL[voucher.type] ?? voucher.type}
             </h1>
             <span
               className={cn(
-                'shrink-0 rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-wider',
+                'shrink-0 rounded-full px-3 py-1 text-[10px] font-semibold uppercase tracking-wider',
                 statusMeta.className,
               )}
             >
@@ -132,7 +132,7 @@ export default function VoucherDetailPage({
           {status === 'unused' && (
             <button
               onClick={() => router.push('/booking')}
-              className='rounded-lg bg-primary px-5 py-2.5 text-sm font-bold text-white shadow-sm transition-colors hover:bg-primary/90'
+              className='rounded-lg bg-primary px-5 py-2.5 text-sm font-bold text-white shadow-xs transition-colors hover:bg-primary/90'
             >
               Dùng ngay
             </button>
@@ -141,7 +141,7 @@ export default function VoucherDetailPage({
       </div>
 
       {/* Details */}
-      <div className='rounded-2xl border border-border/60 bg-white shadow-sm divide-y divide-border/50'>
+      <div className='rounded-xl border border-border/60 bg-card shadow-xs divide-y divide-border/50'>
         <DetailRow
           icon={Ticket}
           label='Loại voucher'

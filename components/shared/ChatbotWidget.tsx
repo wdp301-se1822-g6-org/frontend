@@ -165,7 +165,7 @@ export default function ChatbotWidget() {
           <MessageSquare className="w-6 h-6 transition-transform group-hover:scale-110" />
           
           {/* Active green dot */}
-          <span className="absolute -top-1 -right-1 bg-emerald-500 border-2 border-white w-3.5 h-3.5 rounded-full" />
+          <span className="absolute -top-1 -right-1 bg-success border-2 border-white w-3.5 h-3.5 rounded-full" />
         </button>
       )}
 
@@ -188,10 +188,10 @@ export default function ChatbotWidget() {
                   height={36}
                   className="object-cover"
                 />
-                <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 border border-slate-955 rounded-full animate-pulse" />
+                <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-success border border-slate-955 rounded-full animate-pulse" />
               </div>
               <div>
-                <h3 className="font-heading font-black text-sm tracking-wide">
+                <h3 className="font-heading font-semibold text-sm tracking-wide">
                   Trợ lý WAVE
                 </h3>
                 <p className="text-[10px] text-slate-350 font-medium">Tự động phản hồi • Hoạt động 24/7</p>
@@ -202,14 +202,14 @@ export default function ChatbotWidget() {
               <button 
                 onClick={handleResetChat}
                 title="Làm mới cuộc chat"
-                className="p-1.5 rounded-lg hover:bg-white/10 text-slate-300 hover:text-white transition-colors cursor-pointer"
+                className="p-1.5 rounded-lg hover:bg-white/10 text-placeholder hover:text-white transition-colors cursor-pointer"
               >
                 <RefreshCw className="w-4 h-4" />
               </button>
               <button 
                 onClick={() => setIsOpen(false)}
                 title="Thu nhỏ"
-                className="p-1.5 rounded-lg hover:bg-white/10 text-slate-300 hover:text-white transition-colors cursor-pointer"
+                className="p-1.5 rounded-lg hover:bg-white/10 text-placeholder hover:text-white transition-colors cursor-pointer"
               >
                 <Minimize2 className="w-4 h-4" />
               </button>
@@ -217,7 +217,7 @@ export default function ChatbotWidget() {
           </div>
 
           {/* Messages Container */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50/40 scrollbar-thin">
+          <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-muted/40 scrollbar-thin">
             {messages.map((msg) => {
               const isAi = msg.role === 'assistant';
               return (
@@ -226,7 +226,7 @@ export default function ChatbotWidget() {
                   <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 overflow-hidden border ${
                     isAi 
                       ? 'border-primary/10' 
-                      : 'bg-slate-100 border-slate-200 text-slate-600'
+                      : 'bg-muted border-border text-muted-foreground'
                   }`}>
                     {isAi ? (
                       <Image
@@ -244,8 +244,8 @@ export default function ChatbotWidget() {
                   {/* Message Bubble */}
                   <div className={`px-4 py-2.5 text-xs font-medium leading-relaxed shadow-xs ${
                     isAi 
-                      ? 'bg-white/90 border border-slate-100 text-slate-700 rounded-2xl rounded-tl-sm' 
-                      : 'bg-primary text-white rounded-2xl rounded-tr-sm'
+                      ? 'bg-white/90 border border-border text-foreground rounded-xl rounded-tl-sm' 
+                      : 'bg-primary text-white rounded-xl rounded-tr-sm'
                   }`}>
                     {msg.content}
                   </div>
@@ -265,7 +265,7 @@ export default function ChatbotWidget() {
                     className="object-cover"
                   />
                 </div>
-                <div className="bg-white/90 border border-slate-100 rounded-2xl rounded-tl-sm px-4 py-3 text-xs shadow-xs flex items-center gap-1.5">
+                <div className="bg-white/90 border border-border rounded-xl rounded-tl-sm px-4 py-3 text-xs shadow-xs flex items-center gap-1.5">
                   <span className="w-1.5 h-1.5 bg-primary/60 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
                   <span className="w-1.5 h-1.5 bg-primary/60 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
                   <span className="w-1.5 h-1.5 bg-primary/60 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
@@ -278,15 +278,15 @@ export default function ChatbotWidget() {
 
           {/* Quick FAQs Suggestions */}
           {messages.length === 1 && !isLoading && (
-            <div className="p-3 bg-white/70 backdrop-blur-md border-t border-slate-100 flex flex-col gap-1.5 shrink-0">
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1 mb-0.5">Gợi ý câu hỏi thường gặp</p>
+            <div className="p-3 bg-white/70 backdrop-blur-md border-t border-border flex flex-col gap-1.5 shrink-0">
+              <p className="text-[10px] font-bold text-placeholder uppercase tracking-widest pl-1 mb-0.5">Gợi ý câu hỏi thường gặp</p>
               <div className="flex flex-col gap-1.5 max-h-[110px] overflow-y-auto scrollbar-thin">
                 {QUICK_QUESTIONS.map((q, idx) => (
                   <button
                     key={idx}
                     type="button"
                     onClick={() => handleSendMessage(q)}
-                    className="w-full text-left px-3 py-2 rounded-xl border border-slate-100 hover:border-primary/20 hover:bg-primary/5 text-slate-600 hover:text-primary font-medium text-[11px] transition-all flex items-center justify-between group cursor-pointer"
+                    className="w-full text-left px-3 py-2 rounded-xl border border-border hover:border-primary/20 hover:bg-primary/5 text-muted-foreground hover:text-primary font-medium text-[11px] transition-all flex items-center justify-between group cursor-pointer"
                   >
                     <span>{q}</span>
                     <ArrowRight className="w-3 h-3 opacity-0 group-hover:opacity-100 transform translate-x-1 group-hover:translate-x-0 transition-all text-primary" />
@@ -299,14 +299,14 @@ export default function ChatbotWidget() {
           {/* Input Footer */}
           <form
             onSubmit={(e) => { e.preventDefault(); handleSendMessage(input); }}
-            className="p-3 bg-white/80 backdrop-blur-md border-t border-slate-100 flex gap-2 shrink-0 items-center"
+            className="p-3 bg-white/80 backdrop-blur-md border-t border-border flex gap-2 shrink-0 items-center"
           >
             <input
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder="Nhập câu hỏi của bạn..."
-              className="flex-1 bg-slate-50/50 border border-slate-200 focus:border-primary/50 focus:ring-1 focus:ring-primary/50 rounded-xl px-4 py-2.5 text-xs font-medium focus:outline-none transition-all placeholder:text-slate-400 text-slate-700"
+              className="flex-1 bg-muted/40 border border-border focus:border-primary/50 focus:ring-1 focus:ring-primary/50 rounded-xl px-4 py-2.5 text-xs font-medium focus:outline-none transition-all placeholder:text-placeholder text-foreground"
             />
             <button
               type="submit"

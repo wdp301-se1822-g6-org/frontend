@@ -28,17 +28,17 @@ export const tierStyles: Record<
     gradient: 'from-slate-400 via-slate-600 to-slate-800',
     text: 'text-slate-100',
     border: 'border-slate-500/30',
-    glow: 'shadow-slate-600/20',
+    glow: '',
     badgeBg: 'bg-slate-700/80 text-slate-200 border-slate-500',
-    chipBg: 'bg-slate-500/20',
+    chipBg: 'bg-muted/400/20',
   },
   gold: {
     gradient: 'from-amber-400 via-yellow-600 to-amber-900',
     text: 'text-amber-100',
     border: 'border-amber-500/30',
-    glow: 'shadow-amber-600/30',
+    glow: '',
     badgeBg: 'bg-amber-900/60 text-amber-200 border-amber-500',
-    chipBg: 'bg-amber-500/20',
+    chipBg: 'bg-warning/20',
   },
   platinum: {
     gradient: 'from-cyan-500 via-blue-700 to-slate-900',
@@ -64,7 +64,7 @@ export default function LoyaltyCard({
 
   return (
     <div
-      className={`relative rounded-3xl p-8 bg-gradient-to-br ${currentStyle.gradient} text-white shadow-xl ${currentStyle.glow} overflow-hidden border ${currentStyle.border} aspect-[1.586/1] flex flex-col justify-between group transition-all duration-300 hover:scale-[1.01]`}
+      className={`relative rounded-xl p-8 bg-gradient-to-br ${currentStyle.gradient} text-white shadow-xl ${currentStyle.glow} overflow-hidden border ${currentStyle.border} aspect-[1.586/1] flex flex-col justify-between group transition-all duration-300 hover:scale-[1.01]`}
     >
       {/* Background elements */}
       <div className='absolute -right-10 -top-10 w-40 h-40 bg-white/10 rounded-full blur-2xl group-hover:scale-125 transition-all duration-500' />
@@ -73,15 +73,15 @@ export default function LoyaltyCard({
       {/* Card Header */}
       <div className='flex justify-between items-start z-10'>
         <div className='space-y-1'>
-          <p className='text-[10px] font-black uppercase tracking-widest text-white/60'>
+          <p className='text-[10px] font-semibold uppercase tracking-widest text-white/60'>
             E-Membership Card
           </p>
-          <h3 className='font-heading font-black tracking-wider text-lg'>
+          <h3 className='font-heading font-semibold tracking-wider text-lg'>
             WASH AUTO
           </h3>
         </div>
         <div
-          className={`px-3 py-1 rounded-full text-xs font-black uppercase tracking-wide border flex items-center gap-1.5 backdrop-blur-md ${currentStyle.badgeBg}`}
+          className={`px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wide border flex items-center gap-1.5 backdrop-blur-md ${currentStyle.badgeBg}`}
         >
           <Crown className='w-3.5 h-3.5' /> {loyalty?.tierName || 'Member'}
         </div>
@@ -107,16 +107,16 @@ export default function LoyaltyCard({
       {/* Card Footer */}
       <div className='grid grid-cols-2 gap-4 border-t border-white/15 pt-4 z-10'>
         <div>
-          <p className='text-[9px] font-black uppercase tracking-widest text-white/50 flex items-center gap-1'>
+          <p className='text-[9px] font-semibold uppercase tracking-widest text-white/50 flex items-center gap-1'>
             <Coins className='w-3 h-3' /> Điểm Tích Lũy
           </p>
-          <p className='text-lg font-black tracking-wide'>
+          <p className='text-lg font-semibold tracking-wide'>
             {(loyalty?.pointsBalance ?? 0).toLocaleString()}{' '}
             <span className='text-xs font-semibold text-white/70'>PTS</span>
           </p>
         </div>
         <div className='text-right'>
-          <p className='text-[9px] font-black uppercase tracking-widest text-white/50 flex items-center gap-1 justify-end'>
+          <p className='text-[9px] font-semibold uppercase tracking-widest text-white/50 flex items-center gap-1 justify-end'>
             <Calendar className='w-3 h-3' /> Hạn Dùng Điểm
           </p>
           <p className='text-sm font-bold'>

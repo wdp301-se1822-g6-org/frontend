@@ -1,6 +1,5 @@
 import {
     LayoutDashboard,
-    PieChart,
     CalendarCheck,
     Wrench,
     Car,
@@ -14,12 +13,13 @@ import {
     Settings,
 } from 'lucide-react';
 
+// Mọi role dùng chung hệ màu thương hiệu (primary) — phân biệt role bằng
+// nhãn chữ, không đổi palette theo role để giữ nhận diện nhất quán.
 export const SIDEBAR_CONFIG = {
     admin: {
         title: 'Admin',
         textColor: 'text-primary',
-        activeClass:
-            'bg-primary text-white shadow-lg shadow-primary/25',
+        activeClass: 'bg-primary text-primary-foreground',
         avatarClass: 'bg-primary',
         navItems: [
             { href: '/admin', icon: LayoutDashboard, label: 'Tổng quan' },
@@ -37,12 +37,11 @@ export const SIDEBAR_CONFIG = {
 
     manager: {
         title: 'Manager',
-        textColor: 'text-indigo-400',
-        activeClass: 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/25',
-        avatarClass: 'bg-indigo-500',
+        textColor: 'text-primary',
+        activeClass: 'bg-primary text-primary-foreground',
+        avatarClass: 'bg-primary',
         navItems: [
-            { href: '/manager', icon: LayoutDashboard, label: 'Tổng quan' },
-            { href: '/manager/dashboard', icon: PieChart, label: 'Báo cáo vận hành' },
+            { href: '/manager', icon: LayoutDashboard, label: 'Tổng quan & Báo cáo' },
             { href: '/manager/orders', icon: CalendarCheck, label: 'Đơn đặt lịch' },
             { href: '/manager/work-orders', icon: Wrench, label: 'Vận hành rửa xe' },
             { href: '/manager/vehicles', icon: Car, label: 'Quản lý xe' },
@@ -53,9 +52,9 @@ export const SIDEBAR_CONFIG = {
 
     cashier: {
         title: 'Cashier',
-        textColor: 'text-emerald-400',
-        activeClass: 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/25',
-        avatarClass: 'bg-emerald-500',
+        textColor: 'text-primary',
+        activeClass: 'bg-primary text-primary-foreground',
+        avatarClass: 'bg-primary',
         navItems: [
             { href: '/cashier', icon: CreditCard, label: 'Quầy thu ngân' },
             { href: '/cashier/orders', icon: CalendarCheck, label: 'Lịch hẹn đặt trước' },
@@ -65,9 +64,9 @@ export const SIDEBAR_CONFIG = {
 
     washer: {
         title: 'Washer',
-        textColor: 'text-amber-400',
-        activeClass: 'bg-amber-600 text-white shadow-lg shadow-amber-600/25',
-        avatarClass: 'bg-amber-500',
+        textColor: 'text-primary',
+        activeClass: 'bg-primary text-primary-foreground',
+        avatarClass: 'bg-primary',
         navItems: [
             { href: '/washer', icon: Wrench, label: 'Lịch rửa xe' },
         ],

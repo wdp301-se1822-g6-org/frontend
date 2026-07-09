@@ -20,7 +20,7 @@ export const washerStartWorkOrder = (id: string) =>
   axiosInstance.patch(`/me/work-orders/${id}/start`);
 
 /**
- * Hoàn thành rửa xe, chuyển trạng thái cho Cashier/Manager đánh giá QC
+ * Hoàn thành rửa xe — bước cuối của phiếu (BE tự complete đơn, QC đã bỏ)
  */
 export const washerFinishWorkOrder = (id: string, checkoutPhotos: string[]) =>
   axiosInstance.patch(`/me/work-orders/${id}/finish`, { checkoutPhotos });

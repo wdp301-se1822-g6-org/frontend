@@ -94,15 +94,15 @@ export default function AdminVehiclesPage() {
             <div className='relative flex-1 min-w-[200px] max-w-xs'>
               <Search className='absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/55' />
               <input type='text' placeholder='Tìm kiếm phương tiện...' value={search} onChange={(e) => setSearch(e.target.value)}
-                className='w-full pl-9 pr-4 py-2.5 rounded-xl bg-white border border-border text-sm focus:outline-none focus:border-primary/50 transition-all' />
+                className='w-full pl-9 pr-4 py-2.5 rounded-xl bg-card border border-border text-sm focus:outline-none focus:border-primary/50 transition-all' />
             </div>
-            <button onClick={() => refetch()} className='flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-border text-sm font-semibold hover:border-primary/30'>
+            <button onClick={() => refetch()} className='flex items-center gap-2 px-4 py-2.5 rounded-xl bg-card border border-border text-sm font-semibold hover:border-primary/30'>
               <RefreshCw className='w-4 h-4 text-foreground/50' />Làm mới
             </button>
             <span className='ml-auto text-xs font-semibold text-foreground/60'>Tổng: {total} xe</span>
           </div>
 
-          <div className='bg-white rounded-2xl border border-border/50 shadow-sm overflow-hidden'>
+          <div className='bg-card rounded-xl border border-border/50 shadow-xs overflow-hidden'>
             <div className='overflow-x-auto'>
               <table className='w-full text-sm'>
                 <thead>
@@ -119,11 +119,11 @@ export default function AdminVehiclesPage() {
                       <th
                         key={col.field}
                         onClick={() => handleSort(col.field)}
-                        className='text-left px-5 py-3.5 text-[11px] font-black uppercase tracking-widest text-slate-500 cursor-pointer hover:bg-slate-100 transition-colors select-none group'
+                        className='text-left px-5 py-3.5 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground cursor-pointer hover:bg-muted transition-colors select-none group'
                       >
                         <div className='flex items-center gap-1.5'>
                           {col.label}
-                          <span className='text-slate-400 group-hover:text-slate-600 transition-colors text-[9px]'>
+                          <span className='text-placeholder group-hover:text-muted-foreground transition-colors text-[9px]'>
                             {sortField === col.field ? (sortOrder === 'asc' ? '▲' : '▼') : '↕'}
                           </span>
                         </div>
@@ -141,28 +141,28 @@ export default function AdminVehiclesPage() {
                   ) : sorted.map((v: VehicleData) => {
                     const id = v._id ?? v.id;
                     return (
-                      <tr key={id} className='hover:bg-indigo-50/10 transition-colors border-b border-slate-100'>
+                      <tr key={id} className='hover:bg-accent transition-colors border-b border-border'>
                         <td className='px-5 py-4'>
                           <div className='flex items-center gap-2.5'>
-                            <div className='w-8 h-8 rounded-xl bg-indigo-50 flex items-center justify-center border border-indigo-100'>
-                              <Car className='w-4 h-4 text-indigo-600' />
+                            <div className='w-8 h-8 rounded-xl bg-accent flex items-center justify-center border border-primary/30'>
+                              <Car className='w-4 h-4 text-primary' />
                             </div>
-                            <span className='font-mono font-black text-indigo-600 bg-indigo-50/50 rounded-xl px-2.5 py-1 text-xs border border-indigo-100/50'>{v.licensePlate ?? '-'}</span>
+                            <span className='font-mono font-semibold text-primary bg-accent rounded-xl px-2.5 py-1 text-xs border border-primary/30/50'>{v.licensePlate ?? '-'}</span>
                           </div>
                         </td>
                         <td className='px-5 py-4'>
-                          <span className='font-bold text-slate-800 block'>{v.ownerName ?? v.userId?.fullName ?? '-'}</span>
+                          <span className='font-bold text-foreground block'>{v.ownerName ?? v.userId?.fullName ?? '-'}</span>
                           {v.ownerPhone && (
-                            <span className='text-[10px] font-bold text-slate-400 block mt-0.5'>
+                            <span className='text-[10px] font-bold text-placeholder block mt-0.5'>
                               📞 {v.ownerPhone}
                             </span>
                           )}
                         </td>
-                        <td className='px-5 py-4 text-slate-600 font-semibold'>{v.brand ?? v.make ?? '-'}</td>
-                        <td className='px-5 py-4 text-slate-600 font-medium'>{v.model ?? '-'}</td>
-                        <td className='px-5 py-4 text-slate-500 font-medium'>{v.vehicleTypeName ?? (typeof v.vehicleTypeId === 'object' ? v.vehicleTypeId?.name : undefined) ?? v.vehicleType ?? '-'}</td>
-                        <td className='px-5 py-4 text-slate-500 font-medium'>{v.color ?? '-'}</td>
-                        <td className='px-5 py-4 text-slate-500 font-mono'>{v.year ?? '-'}</td>
+                        <td className='px-5 py-4 text-muted-foreground font-semibold'>{v.brand ?? v.make ?? '-'}</td>
+                        <td className='px-5 py-4 text-muted-foreground font-medium'>{v.model ?? '-'}</td>
+                        <td className='px-5 py-4 text-muted-foreground font-medium'>{v.vehicleTypeName ?? (typeof v.vehicleTypeId === 'object' ? v.vehicleTypeId?.name : undefined) ?? v.vehicleType ?? '-'}</td>
+                        <td className='px-5 py-4 text-muted-foreground font-medium'>{v.color ?? '-'}</td>
+                        <td className='px-5 py-4 text-muted-foreground font-mono'>{v.year ?? '-'}</td>
                       </tr>
                     );
                   })}

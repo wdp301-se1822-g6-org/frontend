@@ -23,13 +23,13 @@ interface BookingData {
 }
 
 const statusConfig: Record<string, { label: string; cls: string }> = {
-  completed:       { label: 'Hoàn thành',       cls: 'bg-emerald-50 text-emerald-700' },
-  in_progress:     { label: 'Đang rửa xe',      cls: 'bg-indigo-50 text-indigo-700' },
-  confirmed:       { label: 'Đã xác nhận',      cls: 'bg-blue-50 text-blue-700' },
-  checked_in:      { label: 'Đã check-in',      cls: 'bg-sky-50 text-sky-700' },
-  pending_payment: { label: 'Chờ thanh toán',   cls: 'bg-amber-50 text-amber-700' },
-  cancelled:       { label: 'Đã hủy',           cls: 'bg-rose-50 text-rose-700' },
-  no_show:         { label: 'Vắng mặt',         cls: 'bg-slate-100 text-slate-600' },
+  completed:       { label: 'Hoàn thành',       cls: 'bg-success/10 text-success' },
+  in_progress:     { label: 'Đang rửa xe',      cls: 'bg-accent text-primary' },
+  confirmed:       { label: 'Đã xác nhận',      cls: 'bg-info/10 text-info' },
+  checked_in:      { label: 'Đã check-in',      cls: 'bg-info/10 text-info' },
+  pending_payment: { label: 'Chờ thanh toán',   cls: 'bg-warning/10 text-warning-foreground' },
+  cancelled:       { label: 'Đã hủy',           cls: 'bg-destructive/10 text-destructive' },
+  no_show:         { label: 'Vắng mặt',         cls: 'bg-muted text-muted-foreground' },
 };
 
 const statusOptions = ['all', 'pending_payment', 'confirmed', 'checked_in', 'in_progress', 'completed', 'cancelled', 'no_show'];
@@ -71,13 +71,13 @@ export default function AdminBookingsPage() {
           {/* Filters */}
           <div className='flex flex-wrap items-center gap-3 mb-6'>
             <div className='relative flex-1 min-w-[200px] max-w-xs'>
-              <Search className='absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/55' />
+              <Search className='absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-placeholder' />
               <input
                 type='text'
                 placeholder='Tìm kiếm booking...'
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className='w-full pl-9 pr-4 py-2.5 rounded-xl bg-white border border-border text-sm focus:outline-none focus:border-primary/50 transition-all'
+                className='w-full pl-9 pr-4 py-2.5 rounded-xl bg-card border border-border text-sm focus:outline-none focus:border-primary/50 transition-all'
               />
             </div>
 
@@ -85,7 +85,7 @@ export default function AdminBookingsPage() {
               <select
                 value={statusFilter}
                 onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
-                className='appearance-none bg-white border border-border rounded-xl px-4 py-2.5 pr-8 text-sm font-semibold focus:outline-none focus:border-primary/50 transition-all cursor-pointer'
+                className='appearance-none bg-card border border-border rounded-xl px-4 py-2.5 pr-8 text-sm font-semibold focus:outline-none focus:border-primary/50 transition-all cursor-pointer'
               >
                 {statusOptions.map((s) => (
                   <option key={s} value={s}>
@@ -93,30 +93,30 @@ export default function AdminBookingsPage() {
                   </option>
                 ))}
               </select>
-              <ChevronDown className='absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/60 pointer-events-none' />
+              <ChevronDown className='absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none' />
             </div>
 
             <button
               onClick={() => refetch()}
-              className='flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-border text-sm font-semibold hover:border-primary/30 transition-all'
+              className='flex items-center gap-2 px-4 py-2.5 rounded-xl bg-card border border-border text-sm font-semibold hover:border-primary/30 transition-all'
             >
               <RefreshCw className='w-4 h-4 text-foreground/50' />
               Làm mới
             </button>
 
-            <span className='ml-auto text-xs font-semibold text-foreground/60'>
+            <span className='ml-auto text-xs font-semibold text-muted-foreground'>
               Tổng: {total} booking
             </span>
           </div>
 
           {/* Table */}
-          <div className='bg-white rounded-2xl border border-border/50 shadow-sm overflow-hidden'>
+          <div className='bg-card rounded-xl border border-border/50 shadow-xs overflow-hidden'>
             <div className='overflow-x-auto'>
               <table className='w-full text-sm'>
                 <thead>
                   <tr className='bg-muted/50 border-b border-border/50'>
                     {['ID', 'Khách hàng', 'Xe', 'Dịch vụ', 'Ca / Ngày', 'Số tiền', 'Trạng thái', 'Thao tác'].map((h) => (
-                      <th key={h} className='text-left px-5 py-3.5 text-[11px] font-black uppercase tracking-widest text-foreground/60'>
+                      <th key={h} className='text-left px-5 py-3.5 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground'>
                         {h}
                       </th>
                     ))}
@@ -135,13 +135,13 @@ export default function AdminBookingsPage() {
                     ))
                   ) : filtered.length === 0 ? (
                     <tr>
-                      <td colSpan={8} className='px-5 py-16 text-center text-foreground/60 font-semibold'>
+                      <td colSpan={8} className='px-5 py-16 text-center text-muted-foreground font-semibold'>
                         Không có dữ liệu
                       </td>
                     </tr>
                   ) : (
                     filtered.map((b: BookingData) => {
-                      const s = statusConfig[b.status ?? ''] ?? { label: b.status, cls: 'bg-muted text-foreground/60' };
+                      const s = statusConfig[b.status ?? ''] ?? { label: b.status, cls: 'bg-muted text-muted-foreground' };
                       return (
                         <tr key={b._id ?? b.id} className='hover:bg-muted/20 transition-colors'>
                           <td className='px-5 py-4 font-mono text-xs text-foreground/50'>
@@ -149,7 +149,7 @@ export default function AdminBookingsPage() {
                           </td>
                           <td className='px-5 py-4'>
                             <div className='flex items-center gap-2'>
-                              <div className='w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center text-primary font-black text-xs'>
+                              <div className='w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold text-xs'>
                                 {(b.userId?.fullName ?? b.customerName ?? '?')[0]}
                               </div>
                               <span className='font-semibold text-foreground'>
@@ -157,21 +157,21 @@ export default function AdminBookingsPage() {
                               </span>
                             </div>
                           </td>
-                          <td className='px-5 py-4 text-foreground/60 font-mono text-xs'>
+                          <td className='px-5 py-4 text-muted-foreground font-mono text-xs'>
                             {b.vehicleId?.licensePlate ?? b.licensePlate ?? '-'}
                           </td>
                           <td className='px-5 py-4 text-foreground/70'>
                             {b.serviceTypeId?.name ?? b.serviceName ?? '-'}
                           </td>
-                          <td className='px-5 py-4 text-foreground/60 text-xs'>
+                          <td className='px-5 py-4 text-muted-foreground text-xs'>
                             <div>{b.shiftId?.name ?? '-'}</div>
-                            <div className='text-foreground/60'>{(b.scheduledAt ?? b.bookingDate) ? new Date((b.scheduledAt ?? b.bookingDate) as string).toLocaleDateString('vi-VN') : '-'}</div>
+                            <div className='text-muted-foreground'>{(b.scheduledAt ?? b.bookingDate) ? new Date((b.scheduledAt ?? b.bookingDate) as string).toLocaleDateString('vi-VN') : '-'}</div>
                           </td>
-                          <td className='px-5 py-4 font-black text-foreground'>
+                          <td className='px-5 py-4 font-semibold text-foreground'>
                             {(b.amount ?? b.totalPrice) != null ? `${Number(b.amount ?? b.totalPrice).toLocaleString('vi-VN')}đ` : '-'}
                           </td>
                           <td className='px-5 py-4'>
-                            <span className={`inline-flex px-2.5 py-1 rounded-lg text-[11px] font-black uppercase tracking-wider ${s.cls}`}>
+                            <span className={`inline-flex px-2.5 py-1 rounded-lg text-[11px] font-semibold uppercase tracking-wider ${s.cls}`}>
                               {s.label}
                             </span>
                           </td>
@@ -179,7 +179,7 @@ export default function AdminBookingsPage() {
                             <select
                               defaultValue={b.status}
                               onChange={(e) => updateStatus.mutate({ id: b._id ?? b.id ?? '', status: e.target.value })}
-                              className='text-xs border border-border rounded-lg px-2 py-1.5 bg-white focus:outline-none focus:border-primary/50 cursor-pointer'
+                              className='text-xs border border-border rounded-lg px-2 py-1.5 bg-card focus:outline-none focus:border-primary/50 cursor-pointer'
                             >
                               {Object.entries(statusConfig).map(([v, { label }]) => (
                                 <option key={v} value={v}>{label}</option>
@@ -197,7 +197,7 @@ export default function AdminBookingsPage() {
             {/* Pagination */}
             {total > 10 && (
               <div className='flex items-center justify-between px-5 py-4 border-t border-border/50 bg-muted/20'>
-                <span className='text-xs font-semibold text-foreground/60'>
+                <span className='text-xs font-semibold text-muted-foreground'>
                   Trang {page} / {Math.ceil(total / 10)}
                 </span>
                 <div className='flex gap-2'>
