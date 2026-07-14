@@ -13,7 +13,10 @@ import {
   Info,
   CreditCard,
   User2,
-  X
+  X,
+  ChevronLeft,
+  ChevronRight,
+  Star
 } from 'lucide-react';
 import { Spinner } from '@/components/ui/spinner';
 import { Pagination } from '@/components/shared/Pagination';
@@ -31,6 +34,7 @@ import {
   useActiveServiceTypes
 } from '@/hooks/orders/useOrders';
 import { getMyVehicles, submitFeedback } from '@/lib/customer-api';
+import { OrderWashPhotos } from '@/components/orders/OrderWashPhotos';
 import { cn } from '@/lib/utils';
 import { formatCurrency } from '@/lib/format';
 import { Order, OrderStatus, AvailableSlot } from '@/types/order';
@@ -78,6 +82,12 @@ export default function MyOrdersPage() {
   const [reschedulingOrder, setReschedulingOrder] = useState<Order | null>(null);
   const [rescheduleDate, setRescheduleDate] = useState('');
   const [rescheduleSlot, setRescheduleSlot] = useState('');
+
+  // Lightbox xem ảnh trước/sau khi rửa
+  const [photoPreview, setPhotoPreview] = useState<{
+    photos: string[];
+    index: number;
+  } | null>(null);
 
   // Feedback states
   const [feedbackOrder, setFeedbackOrder] = useState<Order | null>(null);
@@ -577,12 +587,27 @@ export default function MyOrdersPage() {
                             <div>
                               <p className="text-[10px] text-muted-foreground uppercase font-semibold tracking-wider">Thợ rửa xe</p>
                               <p className="font-bold text-foreground text-xs">{washer.name}</p>
-                              <p className="text-[10px] text-warning font-bold">⭐ {washer.rating}</p>
+                              <p className="flex items-center gap-1 text-[10px] font-bold text-foreground">
+                                <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
+                                {washer.rating}
+                              </p>
                             </div>
                           </div>
                         </div>
                       );
                     })()}
+
+                    {/* Ảnh hiện trạng xe trước & sau khi rửa */}
+                    {(order.status === 'checked_in' ||
+                      order.status === 'in_progress' ||
+                      order.status === 'completed') && (
+                      <OrderWashPhotos
+                        orderId={order.id}
+                        onPreview={(photos, index) =>
+                          setPhotoPreview({ photos, index })
+                        }
+                      />
+                    )}
                   </div>
 
                   {/* Actions right panel */}
@@ -890,13 +915,22 @@ export default function MyOrdersPage() {
                         key={star}
                         type="button"
                         onClick={() => setFeedbackRating(star)}
-                        className="text-2xl focus:outline-none transition-transform hover:scale-110 cursor-pointer"
+                        aria-label={`${star} sao`}
+                        aria-pressed={star === feedbackRating}
+                        className="focus:outline-none transition-transform hover:scale-110 cursor-pointer"
                       >
-                        {star <= feedbackRating ? '★' : '☆'}
+                        <Star
+                          className={cn(
+                            "w-7 h-7 transition-colors",
+                            star <= feedbackRating
+                              ? "fill-amber-400 text-amber-400"
+                              : "fill-transparent text-muted-foreground/40"
+                          )}
+                        />
                       </button>
                     ))}
                   </div>
-                  <span className="text-xs font-semibold text-warning block">
+                  <span className="text-xs font-semibold text-foreground block">
                     {feedbackRating === 5 && 'Rất hài lòng (5 sao)'}
                     {feedbackRating === 4 && 'Hài lòng (4 sao)'}
                     {feedbackRating === 3 && 'Bình thường (3 sao)'}
@@ -942,6 +976,73 @@ export default function MyOrdersPage() {
 
             </CardContent>
           </Card>
+        </div>
+      )}
+
+      {/* ─── LIGHTBOX ẢNH TRƯỚC/SAU KHI RỬA ─── */}
+      {photoPreview && (
+        <div
+          className="fixed inset-0 z-60 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm animate-in fade-in duration-150"
+          onClick={() => setPhotoPreview(null)}
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={photoPreview.photos[photoPreview.index]}
+            alt="Ảnh rửa xe phóng to"
+            onClick={(e) => e.stopPropagation()}
+            className="max-h-[85vh] max-w-full rounded-xl object-contain shadow-2xl"
+          />
+
+          <button
+            type="button"
+            onClick={() => setPhotoPreview(null)}
+            aria-label="Đóng"
+            className="absolute top-5 right-5 rounded-full bg-white/10 p-2 text-white transition-colors hover:bg-white/20 cursor-pointer"
+          >
+            <X className="w-5 h-5" />
+          </button>
+
+          {photoPreview.photos.length > 1 && (
+            <>
+              <button
+                type="button"
+                aria-label="Ảnh trước"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setPhotoPreview((p) =>
+                    p
+                      ? {
+                          ...p,
+                          index:
+                            (p.index - 1 + p.photos.length) % p.photos.length,
+                        }
+                      : p,
+                  );
+                }}
+                className="absolute left-5 rounded-full bg-white/10 p-2 text-white transition-colors hover:bg-white/20 cursor-pointer"
+              >
+                <ChevronLeft className="w-6 h-6" />
+              </button>
+              <button
+                type="button"
+                aria-label="Ảnh kế tiếp"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setPhotoPreview((p) =>
+                    p
+                      ? { ...p, index: (p.index + 1) % p.photos.length }
+                      : p,
+                  );
+                }}
+                className="absolute right-5 rounded-full bg-white/10 p-2 text-white transition-colors hover:bg-white/20 cursor-pointer"
+              >
+                <ChevronRight className="w-6 h-6" />
+              </button>
+              <span className="absolute bottom-6 rounded-full bg-black/60 px-3 py-1 text-xs font-semibold text-white">
+                {photoPreview.index + 1}/{photoPreview.photos.length}
+              </span>
+            </>
+          )}
         </div>
       )}
 

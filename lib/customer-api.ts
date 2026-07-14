@@ -119,6 +119,14 @@ export const previewOrder = (data: {
   voucherId?: string;
 }) => axiosInstance.post('/me/orders/preview', data);
 
+/**
+ * Work order của một đơn — GET /me/orders/:id/work-order.
+ * Chứa ảnh hiện trạng xe: `checkinPhotos` (trước khi rửa, quầy chụp lúc check-in)
+ * và `checkoutPhotos` (sau khi rửa, thợ chụp lúc hoàn thành).
+ */
+export const getMyOrderWorkOrder = (orderId: string) =>
+  axiosInstance.get(ENDPOINTS.orders.mineWorkOrder(orderId));
+
 export const rescheduleOrder = (
   id: string,
   data: { staffShiftId: string; scheduledAt: string },
