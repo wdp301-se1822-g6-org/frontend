@@ -1,110 +1,59 @@
 'use client';
 
-import { Button } from '@/components/ui/button';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/useAuthStore';
-
-import Image from 'next/image';
+import { ChevronDown } from 'lucide-react';
 
 export function HeroSection() {
   const router = useRouter();
   const { authUser } = useAuthStore();
 
+  const handleBooking = () => {
+    router.push(authUser?.role === 'customer' ? '/booking' : '/register');
+  };
+
   return (
-    <section className='relative flex items-center overflow-hidden bg-background pt-20 pb-10 sm:pt-24 sm:pb-16'>
-      {/* Sophisticated Background */}
-      <div className='absolute inset-0 z-0'>
-        <div className='absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_10%_20%,var(--primary)_0.2px,transparent_0.2px)] [background-size:40px_40px] opacity-10' />
-        <div className='absolute top-0 right-0 w-1/2 h-full bg-linear-to-l from-primary/5 to-transparent' />
-      </div>
+    <section className='relative w-full pt-16 bg-[#0A1628] overflow-hidden'>
+      {/* Full-width Maserati image */}
+      <div className='relative w-full aspect-[16/7] min-h-[480px] md:min-h-[560px] bg-[#0A1628]'>
+        <Image
+          src='/hero-maserati.png'
+          alt='Maserati Detailing'
+          fill
+          priority
+          sizes='100vw'
+          className='object-cover object-right md:object-center'
+        />
 
-      <div className='relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full'>
-        <div className='grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-10 lg:gap-12 items-center'>
-          {/* Left Content */}
-          <div className='flex flex-col items-start text-left max-w-xl'>
-            <div className='inline-flex items-center gap-2.5 bg-card shadow-sm border border-border px-4 py-1.5 rounded-full mb-5 animate-fade-in-up'>
-              <div className='w-2 h-2 bg-primary rounded-full animate-pulse' />
-              <span className='text-[10px] font-bold uppercase tracking-[0.25em] text-foreground/50'>
-                Tương Lai Của Việc Chăm Sóc Xe Hơi
-              </span>
-            </div>
+        {/* Gradient overlay - fade from left to dark background for readable text */}
+        <div className='absolute inset-0 bg-gradient-to-r from-[#0A1628]/95 via-[#0A1628]/60 to-transparent' />
+        <div className='absolute inset-0 bg-gradient-to-t from-[#0A1628] via-transparent to-transparent opacity-80' />
 
-            <h1 className='text-[1.75rem] sm:text-4xl lg:text-5xl font-heading text-foreground leading-[1.15] mb-4 tracking-tight animate-fade-in-up [animation-delay:200ms] opacity-0 fill-mode-forwards'>
-              Nâng Tầm Trải Nghiệm
-              <br />
-              <span className='text-primary'>Chăm Sóc Xe</span>
-            </h1>
-
-            <p className='text-muted-foreground text-base mb-7 leading-relaxed animate-fade-in-up [animation-delay:400ms] opacity-0 fill-mode-forwards'>
-              WAVE kết hợp công nghệ hiện đại và dịch vụ tận tâm để mang lại vẻ
-              đẹp hoàn mỹ cho chiếc xe của bạn. Quy trình chuẩn quốc tế, minh
-              bạch và tiện lợi.
-            </p>
-
-            <div className='flex flex-wrap gap-3 w-full animate-fade-in-up [animation-delay:600ms] opacity-0 fill-mode-forwards'>
-              <Button
-                size='xl'
-                onClick={() =>
-                  router.push(
-                    authUser?.role === 'customer' ? '/booking' : '/register',
-                  )
-                }
-                className='rounded-xl shadow-lg shadow-primary/15'
-              >
-                Đặt lịch ngay
-              </Button>
-              <Button
-                size='xl'
-                variant='ghost'
-                onClick={() =>
-                  document
-                    .getElementById('services')
-                    ?.scrollIntoView({ behavior: 'smooth' })
-                }
-                className='text-foreground/70 hover:text-primary group'
-              >
-                Khám phá dịch vụ
-              </Button>
-            </div>
-          </div>
-
-          {/* Right Visual - Triple Image Staggered Stack */}
-          <div className='relative hidden md:block h-[340px] lg:h-[480px]'>
-            {/* Image 1 - Main (Bottom Right) */}
-            <div className='absolute bottom-0 right-0 w-[78%] aspect-square rounded-[2.5rem] overflow-hidden border-[6px] border-card shadow-xl z-10 animate-fade-in-up [animation-delay:400ms] opacity-0 fill-mode-forwards'>
-              <Image
-                src='/h1.jpg'
-                alt='WAVE 1'
-                fill
-                priority
-                sizes='(max-width: 1024px) 100vw, 80vw'
-                className='object-cover hover:scale-110 transition-transform duration-1000'
-              />
-            </div>
-
-            {/* Image 2 - Top Left Overlay */}
-            <div className='absolute top-6 left-0 w-[52%] aspect-square rounded-[2rem] overflow-hidden border-[5px] border-card shadow-xl z-20 animate-fade-in-up [animation-delay:600ms] opacity-0 fill-mode-forwards rotate-[-6deg] hover:rotate-0 transition-transform duration-500'>
-              <Image
-                src='/h4.jpg'
-                alt='WAVE 2'
-                fill
-                priority
-                sizes='(max-width: 1024px) 100vw, 55vw'
-                className='object-cover'
-              />
-            </div>
-
-            {/* Image 3 - Small Accent (Bottom Left) */}
-            <div className='absolute bottom-8 left-16 w-[38%] aspect-[4/3] rounded-2xl overflow-hidden border-[5px] border-card shadow-xl z-30 animate-fade-in-up [animation-delay:800ms] opacity-0 fill-mode-forwards rotate-[10deg] hover:rotate-0 transition-transform duration-500'>
-              <Image
-                src='/h7.jpg'
-                alt='WAVE 3'
-                fill
-                priority
-                sizes='(max-width: 1024px) 100vw, 40vw'
-                className='object-cover'
-              />
-            </div>
+        {/* Text + CTA aligned to the LEFT */}
+        <div className='absolute inset-0 flex flex-col items-start justify-center text-left px-6 sm:px-12 md:px-20 max-w-3xl gap-5 z-10'>
+          <p className='text-white text-2xl sm:text-4xl md:text-5xl font-extrabold tracking-tight leading-tight drop-shadow-md'>
+            Xe sạch từng góc nhỏ {' '}
+            <br className='hidden sm:inline' />
+            <span className='text-sky-400'>Chỉ mất vài phút.</span>
+          </p>
+          <p className='text-slate-300 text-sm sm:text-base max-w-lg font-medium leading-relaxed drop-shadow-xs'>
+            Dịch vụ rửa xe chuyên nghiệp tiêu chuẩn cao cấp. Đặt lịch nhanh, nhận xe đúng giờ, bảo đảm chất lượng.
+          </p>
+          <div className='flex flex-wrap items-center gap-3 pt-1'>
+            <button
+              onClick={handleBooking}
+              className='inline-flex items-center gap-2 bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold px-7 py-3.5 rounded-xl shadow-lg shadow-sky-500/30 transition-all text-sm cursor-pointer'
+            >
+              Đặt lịch ngay
+            </button>
+            <button
+              onClick={() => document.getElementById('services')?.scrollIntoView({ behavior: 'smooth' })}
+              className='inline-flex items-center gap-2 border border-white/30 bg-white/10 hover:bg-white/20 text-white font-semibold px-7 py-3.5 rounded-xl text-sm backdrop-blur-sm transition-all cursor-pointer'
+            >
+              Tìm hiểu thêm
+              <ChevronDown className='w-4 h-4' />
+            </button>
           </div>
         </div>
       </div>
