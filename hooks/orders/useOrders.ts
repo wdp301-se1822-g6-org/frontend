@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   getMyOrders,
   getMyOrder,
+  getMyOrderWorkOrder,
   createOrder,
   rescheduleOrder,
   cancelOrder,
@@ -36,6 +37,31 @@ export const useMyOrderDetail = (id: string) => {
       return res.data;
     },
     enabled: !!id,
+  });
+};
+
+/** Ảnh hiện trạng xe trước & sau khi rửa (lấy từ work order của đơn). */
+export interface OrderWashPhotos {
+  checkinPhotos: string[];
+  checkoutPhotos: string[];
+  status?: string;
+}
+
+export const useMyOrderWashPhotos = (orderId: string | null | undefined) => {
+  return useQuery({
+    queryKey: ['my-order-wash-photos', orderId],
+    queryFn: async (): Promise<OrderWashPhotos | null> => {
+      if (!orderId) return null;
+      const res = await getMyOrderWorkOrder(orderId);
+      const wo = res.data?.data ?? res.data ?? null;
+      if (!wo) return null;
+      return {
+        checkinPhotos: Array.isArray(wo.checkinPhotos) ? wo.checkinPhotos : [],
+        checkoutPhotos: Array.isArray(wo.checkoutPhotos) ? wo.checkoutPhotos : [],
+        status: wo.status,
+      };
+    },
+    enabled: !!orderId,
   });
 };
 

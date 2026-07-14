@@ -76,6 +76,10 @@ export const getMyOrders = () => axiosInstance.get('/me/orders');
 
 export const getMyOrder = (id: string) => axiosInstance.get(`/me/orders/${id}`);
 
+/** Work order của đơn (ảnh trước/sau khi rửa, thợ, QC…) cho khách tự xem. */
+export const getMyOrderWorkOrder = (orderId: string) =>
+  axiosInstance.get(ENDPOINTS.orders.mineWorkOrder(orderId));
+
 export const createOrder = (data: {
   vehicleId?: string;
   vehicle?: {

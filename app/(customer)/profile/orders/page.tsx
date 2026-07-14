@@ -13,7 +13,8 @@ import {
   Info,
   CreditCard,
   User2,
-  X
+  X,
+  Images
 } from 'lucide-react';
 import { Spinner } from '@/components/ui/spinner';
 import { toast } from 'sonner';
@@ -27,9 +28,11 @@ import {
   useCancelOrder,
   useRescheduleOrder,
   useAvailableSlots,
-  useActiveServiceTypes
+  useActiveServiceTypes,
+  useMyOrderWashPhotos
 } from '@/hooks/orders/useOrders';
 import { getMyVehicles, submitFeedback } from '@/lib/customer-api';
+import { ReviewModal } from '@/components/orders/ReviewModal';
 import { cn } from '@/lib/utils';
 import { formatCurrency } from '@/lib/format';
 import { Order, OrderStatus, AvailableSlot } from '@/types/order';
@@ -78,8 +81,12 @@ export default function MyOrdersPage() {
   const [rescheduleDate, setRescheduleDate] = useState('');
   const [rescheduleSlot, setRescheduleSlot] = useState('');
 
-  // Feedback states
-  const [feedbackOrder, setFeedbackOrder] = useState<Order | null>(null);
+  // Đánh giá + ảnh trước/sau khi rửa — gộp chung 1 modal
+  const [reviewOrder, setReviewOrder] = useState<Order | null>(null);
+  const [previewPhoto, setPreviewPhoto] = useState<string | null>(null);
+  const { data: washPhotos, isLoading: isLoadingPhotos } = useMyOrderWashPhotos(
+    reviewOrder?.id ?? null,
+  );
   const [feedbackRating, setFeedbackRating] = useState(5);
   const [feedbackComment, setFeedbackComment] = useState('');
   const [submittedFeedbacks, setSubmittedFeedbacks] = useState<Record<string, boolean>>(() => {
@@ -293,20 +300,20 @@ export default function MyOrdersPage() {
   };
 
   const handleFeedbackSubmit = async () => {
-    if (!feedbackOrder) return;
+    if (!reviewOrder) return;
     toast.loading('Đang gửi đánh giá...');
     try {
       await submitFeedback({
-        orderId: feedbackOrder.id,
+        orderId: reviewOrder.id,
         rating: feedbackRating,
         comment: feedbackComment.trim() || undefined
       });
-      const updated = { ...submittedFeedbacks, [feedbackOrder.id]: true };
+      const updated = { ...submittedFeedbacks, [reviewOrder.id]: true };
       setSubmittedFeedbacks(updated);
       localStorage.setItem('wave_submitted_feedbacks', JSON.stringify(updated));
       toast.dismiss();
       toast.success('Cảm ơn bạn đã gửi đánh giá dịch vụ!');
-      setFeedbackOrder(null);
+      setReviewOrder(null);
       setFeedbackRating(5);
       setFeedbackComment('');
     } catch (err) {
@@ -587,20 +594,32 @@ export default function MyOrdersPage() {
                         </Button>
                       )}
 
-                      {order.status === 'completed' && !submittedFeedbacks[order.id] && (
+                      {(order.status === 'checked_in' || order.status === 'in_progress') && (
                         <Button
                           size="sm"
-                          onClick={() => setFeedbackOrder(order)}
-                          className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold h-8 px-3 cursor-pointer"
+                          variant="outline"
+                          onClick={() => setReviewOrder(order)}
+                          className="rounded-xl text-xs font-semibold h-8 px-3 cursor-pointer gap-1.5"
                         >
-                          Đánh giá thợ
+                          <Images className="w-3.5 h-3.5" /> Ảnh rửa xe
                         </Button>
                       )}
 
-                      {order.status === 'completed' && submittedFeedbacks[order.id] && (
-                        <span className="text-xs font-semibold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-100 flex items-center gap-1 w-fit">
-                          Đã đánh giá
-                        </span>
+                      {order.status === 'completed' && (
+                        <Button
+                          size="sm"
+                          onClick={() => setReviewOrder(order)}
+                          variant={submittedFeedbacks[order.id] ? 'outline' : 'default'}
+                          className={cn(
+                            "rounded-xl text-xs font-bold h-8 px-3 cursor-pointer gap-1.5",
+                            submittedFeedbacks[order.id]
+                              ? "font-semibold"
+                              : "bg-emerald-600 hover:bg-emerald-700 text-white"
+                          )}
+                        >
+                          <Images className="w-3.5 h-3.5" />
+                          {submittedFeedbacks[order.id] ? 'Xem ảnh & đánh giá' : 'Ảnh & đánh giá'}
+                        </Button>
                       )}
 
                       {isReschedulable && (
@@ -825,99 +844,53 @@ export default function MyOrdersPage() {
         </div>
       )}
 
-      {/* ─── MODAL ĐÁNH GIÁ DỊCH VỤ (FEEDBACK DIALOG) ─── */}
-      {feedbackOrder && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
-          <Card className="w-full max-w-md border-none shadow-2xl rounded-2xl overflow-hidden bg-white/95 backdrop-blur-md animate-in zoom-in-95 duration-200">
-            <CardContent className="p-6">
+      {/* ─── MODAL ĐÁNH GIÁ + ẢNH RỬA XE (REVIEW DIALOG) ─── */}
+      {reviewOrder && (() => {
+        const isCompleted = reviewOrder.status === 'completed';
+        const alreadyRated = isCompleted && !!submittedFeedbacks[reviewOrder.id];
+        const canRate = isCompleted && !alreadyRated;
+        const closeReview = () => {
+          setReviewOrder(null);
+          setFeedbackRating(5);
+          setFeedbackComment('');
+        };
+        return (
+          <ReviewModal
+            serviceName={getServiceName(reviewOrder.serviceTypeId)}
+            washerName={getWasherInfo(reviewOrder)?.name ?? null}
+            washPhotos={washPhotos}
+            isLoadingPhotos={isLoadingPhotos}
+            canRate={canRate}
+            alreadyRated={alreadyRated}
+            rating={feedbackRating}
+            onRatingChange={setFeedbackRating}
+            comment={feedbackComment}
+            onCommentChange={setFeedbackComment}
+            onPreview={setPreviewPhoto}
+            onClose={closeReview}
+            onSubmit={handleFeedbackSubmit}
+          />
+        );
+      })()}
 
-              <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-5">
-                <h3 className="font-heading text-base font-bold text-foreground">Đánh giá chất lượng rửa xe</h3>
-                <button
-                  onClick={() => {
-                    setFeedbackOrder(null);
-                    setFeedbackRating(5);
-                    setFeedbackComment('');
-                  }}
-                  className="p-1 text-slate-400 hover:text-slate-600 cursor-pointer"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-
-              <div className="space-y-4">
-                {/* Thợ được đánh giá */}
-                <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-full bg-indigo-100 flex items-center justify-center font-bold text-indigo-600 text-sm">
-                    {getWasherInfo(feedbackOrder)?.name[0] || '?'}
-                  </div>
-                  <div>
-                    <span className="text-[10px] text-muted-foreground font-bold uppercase block">Thợ phụ trách</span>
-                    <span className="font-bold text-slate-800 text-xs block">{getWasherInfo(feedbackOrder)?.name || 'Chưa phân công'}</span>
-                  </div>
-                </div>
-
-                {/* Chọn số sao */}
-                <div className="space-y-2 text-center py-2">
-                  <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider block">Chọn mức độ hài lòng</Label>
-                  <div className="flex justify-center gap-2">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <button
-                        key={star}
-                        type="button"
-                        onClick={() => setFeedbackRating(star)}
-                        className="text-2xl focus:outline-none transition-transform hover:scale-110 cursor-pointer"
-                      >
-                        {star <= feedbackRating ? '★' : '☆'}
-                      </button>
-                    ))}
-                  </div>
-                  <span className="text-xs font-extrabold text-amber-500 block">
-                    {feedbackRating === 5 && 'Rất hài lòng (5 sao)'}
-                    {feedbackRating === 4 && 'Hài lòng (4 sao)'}
-                    {feedbackRating === 3 && 'Bình thường (3 sao)'}
-                    {feedbackRating === 2 && 'Không hài lòng (2 sao)'}
-                    {feedbackRating === 1 && 'Rất tệ (1 sao)'}
-                  </span>
-                </div>
-
-                {/* Bình luận */}
-                <div className="space-y-1.5">
-                  <Label htmlFor="feedback-comment" className="text-xs font-bold text-slate-500 uppercase tracking-wider block">Nhận xét của bạn</Label>
-                  <textarea
-                    id="feedback-comment"
-                    placeholder="VD: Thợ rửa rất sạch, nhiệt tình, đúng giờ..."
-                    value={feedbackComment}
-                    onChange={e => setFeedbackComment(e.target.value)}
-                    rows={3}
-                    className="w-full border border-slate-200 rounded-xl p-3 text-xs focus:outline-none focus:border-indigo-500 transition-all resize-none placeholder:text-slate-300"
-                  />
-                </div>
-              </div>
-
-              <div className="flex justify-end gap-3 pt-5 border-t border-slate-100 mt-6">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => {
-                    setFeedbackOrder(null);
-                    setFeedbackRating(5);
-                    setFeedbackComment('');
-                  }}
-                  className="rounded-xl text-xs font-semibold px-4 h-9 cursor-pointer"
-                >
-                  Hủy
-                </Button>
-                <Button
-                  onClick={handleFeedbackSubmit}
-                  className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold px-5 h-9 cursor-pointer"
-                >
-                  Gửi đánh giá
-                </Button>
-              </div>
-
-            </CardContent>
-          </Card>
+      {/* ─── LIGHTBOX PHÓNG TO ẢNH ─── */}
+      {previewPhoto && (
+        <div
+          className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[60] flex items-center justify-center p-4 animate-in fade-in duration-150"
+          onClick={() => setPreviewPhoto(null)}
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={previewPhoto}
+            alt="Ảnh rửa xe phóng to"
+            className="rounded-2xl max-w-full max-h-[85vh] object-contain shadow-2xl"
+          />
+          <button
+            onClick={() => setPreviewPhoto(null)}
+            className="absolute top-5 right-5 p-2 rounded-full bg-white/10 text-white hover:bg-white/20 cursor-pointer"
+          >
+            <X className="w-5 h-5" />
+          </button>
         </div>
       )}
 

@@ -2,7 +2,6 @@
 
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useRouter } from 'next/navigation';
 import { Lock, User } from 'lucide-react';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -37,17 +36,15 @@ export function LoginForm({
       className={cn('flex flex-col gap-6', className)}
       {...props}
     >
-      <Card className='border-primary/10 bg-white/80 shadow-2xl shadow-primary/5 backdrop-blur-xl px-4 py-10'>
-        <CardHeader className='space-y-1 pb-6 text-center'>
-          <CardTitle className='font-sans text-3xl font-bold tracking-tight text-primary'>
-            Chào mừng trở lại
-          </CardTitle>
-          <p className='text-sm font-medium text-muted-foreground'>
-            Vui lòng đăng nhập để tiếp tục
-          </p>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={form.handleSubmit(onSubmit)}>
+      <div className='space-y-1.5 text-center'>
+        <h1 className='font-heading text-3xl font-bold tracking-tight text-primary'>
+          Chào mừng trở lại
+        </h1>
+        <p className='text-sm font-medium text-muted-foreground'>
+          Vui lòng đăng nhập để tiếp tục
+        </p>
+      </div>
+      <form onSubmit={form.handleSubmit(onSubmit)}>
             <FieldGroup className='gap-5'>
               <div className='grid gap-5'>
                 <AuthFormField
@@ -104,9 +101,7 @@ export function LoginForm({
                 </button>
               </div>
             </FieldGroup>
-          </form>
-        </CardContent>
-      </Card>
+      </form>
     </div>
   );
 }

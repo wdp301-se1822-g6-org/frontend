@@ -92,17 +92,17 @@ function ProfileContent({ authUser }: { authUser: User }) {
   };
 
   return (
-    <div className='space-y-4'>
+    <div className='space-y-5'>
       {showAlert && (
-        <div className='flex items-center justify-between rounded-md border border-warning/30 bg-warning/10 p-4 text-sm text-warning'>
-          <div className='flex items-center gap-3'>
-            <AlertCircle className='size-4' />
+        <div className='flex items-center justify-between gap-3 rounded-xl border border-warning/30 bg-warning/10 px-4 py-3 text-sm text-warning'>
+          <div className='flex items-center gap-2.5'>
+            <AlertCircle className='size-4 shrink-0' />
             <span>Tính năng thay đổi thông tin cá nhân sắp được ra mắt.</span>
           </div>
           <button
             type='button'
             onClick={() => setShowAlert(false)}
-            className='text-warning/70 transition-colors hover:text-warning'
+            className='shrink-0 text-warning/70 transition-colors hover:text-warning'
             aria-label='Đóng thông báo'
           >
             <X className='size-4' />
@@ -110,72 +110,71 @@ function ProfileContent({ authUser }: { authUser: User }) {
         </div>
       )}
 
-      <Card className='overflow-hidden rounded-xl border-none bg-card/80 shadow-md backdrop-blur-md'>
-        <CardContent className='p-8'>
-          <div className='mb-8 border-b border-border pb-4'>
-            <h1 className='font-heading text-xl font-bold text-foreground'>
+      <Card className='rounded-2xl border border-border bg-card shadow-sm'>
+        <CardContent className='p-6 sm:p-8'>
+          <div className='mb-8 border-b border-border pb-5'>
+            <h1 className='font-heading text-2xl font-bold text-foreground'>
               Hồ Sơ Của Tôi
             </h1>
-            <p className='text-sm text-muted-foreground'>
+            <p className='mt-1 text-sm text-muted-foreground'>
               Quản lý thông tin hồ sơ để bảo mật tài khoản
             </p>
           </div>
 
-          <div className='grid grid-cols-1 gap-12 lg:grid-cols-12'>
-            <div className='space-y-6 lg:col-span-8'>
-              <div className='grid grid-cols-1 gap-2 sm:grid-cols-3 sm:items-center sm:gap-4'>
+          <div className='grid grid-cols-1 gap-10 lg:grid-cols-3'>
+            {/* Form thông tin */}
+            <div className='space-y-5 lg:col-span-2'>
+              <div className='grid grid-cols-1 gap-2 sm:grid-cols-[130px_minmax(0,1fr)] sm:items-center sm:gap-4'>
                 <Label className='font-medium text-muted-foreground sm:text-right'>
                   Tên
                 </Label>
-                <div className='sm:col-span-2'>
-                  <Input
-                    value={formData.name}
-                    onChange={(e) =>
-                      setFormData({ ...formData, name: e.target.value })
-                    }
-                    className='h-10 rounded-xl'
-                  />
-                </div>
+                <Input
+                  value={formData.name}
+                  onChange={(e) =>
+                    setFormData({ ...formData, name: e.target.value })
+                  }
+                  className='h-11 rounded-xl'
+                />
               </div>
 
-              <div className='grid grid-cols-1 gap-2 sm:grid-cols-3 sm:items-center sm:gap-4'>
+              <div className='grid grid-cols-1 gap-2 sm:grid-cols-[130px_minmax(0,1fr)] sm:items-center sm:gap-4'>
                 <Label className='font-medium text-muted-foreground sm:text-right'>
                   Email
                 </Label>
-                <div className='flex items-center gap-2 sm:col-span-2'>
+                <div className='flex flex-wrap items-center gap-2'>
                   <span className='text-foreground'>
                     {formData.email.replace(/(.{2}).+(@.+)/, '$1******$2')}
                   </span>
-                  <button className='text-xs text-primary hover:underline'>
+                  <button className='text-xs font-medium text-primary hover:underline'>
                     Thay Đổi
                   </button>
                 </div>
               </div>
 
-              <div className='grid grid-cols-1 gap-2 sm:grid-cols-3 sm:items-center sm:gap-4'>
+              <div className='grid grid-cols-1 gap-2 sm:grid-cols-[130px_minmax(0,1fr)] sm:items-center sm:gap-4'>
                 <Label className='font-medium text-muted-foreground sm:text-right'>
                   Số điện thoại
                 </Label>
-                <div className='flex items-center gap-2 sm:col-span-2'>
+                <div className='flex flex-wrap items-center gap-2'>
                   <span className='text-foreground'>
                     {formData.phone.replace(/(.{3}).+(.{2})/, '$1********$2')}
                   </span>
-                  <button className='text-xs text-primary hover:underline'>
+                  <button className='text-xs font-medium text-primary hover:underline'>
                     Thay Đổi
                   </button>
                 </div>
               </div>
 
-              <div className='grid grid-cols-1 gap-2 sm:grid-cols-3 sm:items-center sm:gap-4'>
-                <Label className='font-medium text-muted-foreground sm:text-right'>
+              <div className='grid grid-cols-1 gap-2 sm:grid-cols-[130px_minmax(0,1fr)] sm:items-start sm:gap-4'>
+                <Label className='font-medium text-muted-foreground sm:pt-2.5 sm:text-right'>
                   Ngày sinh
                 </Label>
-                <div className='grid grid-cols-1 gap-3 sm:col-span-2 sm:grid-cols-3'>
+                <div className='grid grid-cols-3 gap-3'>
                   <Select
                     value={formData.day}
                     onValueChange={(day) => setFormData({ ...formData, day })}
                   >
-                    <SelectTrigger className='h-10 rounded-xl'>
+                    <SelectTrigger className='h-11 rounded-xl'>
                       <SelectValue placeholder='Ngày' />
                     </SelectTrigger>
                     <SelectContent>
@@ -193,7 +192,7 @@ function ProfileContent({ authUser }: { authUser: User }) {
                       setFormData({ ...formData, month })
                     }
                   >
-                    <SelectTrigger className='h-10 rounded-xl'>
+                    <SelectTrigger className='h-11 rounded-xl'>
                       <SelectValue placeholder='Tháng' />
                     </SelectTrigger>
                     <SelectContent>
@@ -209,7 +208,7 @@ function ProfileContent({ authUser }: { authUser: User }) {
                     value={formData.year}
                     onValueChange={(year) => setFormData({ ...formData, year })}
                   >
-                    <SelectTrigger className='h-10 rounded-xl'>
+                    <SelectTrigger className='h-11 rounded-xl'>
                       <SelectValue placeholder='Năm' />
                     </SelectTrigger>
                     <SelectContent>
@@ -223,27 +222,25 @@ function ProfileContent({ authUser }: { authUser: User }) {
                 </div>
               </div>
 
-              <div className='grid grid-cols-1 gap-3 pt-4 sm:grid-cols-3 sm:items-center sm:gap-4'>
-                <div />
-                <div className='sm:col-span-2'>
-                  <Button
-                    type='button'
-                    size='lg'
-                    disabled={isLoading}
-                    aria-busy={isLoading}
-                    onClick={handleSave}
-                    className='rounded-xl px-10 font-bold shadow-md shadow-primary/20'
-                  >
-                    {isLoading && <Spinner />}
-                    {isLoading ? 'Đang xử lý...' : 'Lưu'}
-                  </Button>
-                </div>
+              <div className='pt-2 sm:grid sm:grid-cols-[130px_minmax(0,1fr)] sm:gap-4'>
+                <div className='hidden sm:block' />
+                <Button
+                  type='button'
+                  disabled={isLoading}
+                  aria-busy={isLoading}
+                  onClick={handleSave}
+                  className='h-11 w-full rounded-xl px-8 font-bold sm:w-auto'
+                >
+                  {isLoading && <Spinner />}
+                  {isLoading ? 'Đang xử lý...' : 'Lưu'}
+                </Button>
               </div>
             </div>
 
-            <div className='flex flex-col items-center justify-start space-y-4 border-t border-border pt-8 lg:col-span-4 lg:border-t-0 lg:border-l lg:pt-4'>
+            {/* Avatar upload */}
+            <div className='flex flex-col items-center justify-start gap-4 rounded-2xl border border-border/60 bg-muted/30 p-6 lg:col-span-1'>
               <div className='group relative'>
-                <div className='flex size-32 items-center justify-center overflow-hidden rounded-full border-4 border-background bg-muted shadow-md transition-all group-hover:opacity-90'>
+                <div className='flex size-28 items-center justify-center overflow-hidden rounded-full border-4 border-background bg-muted shadow-sm transition-all group-hover:opacity-90'>
                   {authUser.avatarUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
@@ -257,7 +254,7 @@ function ProfileContent({ authUser }: { authUser: User }) {
                     </span>
                   )}
                   <div className='absolute inset-0 flex cursor-pointer items-center justify-center bg-black/40 opacity-0 transition-opacity group-hover:opacity-100'>
-                    <Camera className='size-8 text-white' />
+                    <Camera className='size-7 text-white' />
                   </div>
                 </div>
               </div>
@@ -266,13 +263,9 @@ function ProfileContent({ authUser }: { authUser: User }) {
                 Chọn Ảnh
               </Button>
 
-              <div className='space-y-1 text-center'>
-                <p className='text-xs text-muted-foreground'>
-                  Dung lượng file tối đa 1 MB
-                </p>
-                <p className='text-xs text-muted-foreground'>
-                  Định dạng: .JPEG, .PNG
-                </p>
+              <div className='space-y-0.5 text-center text-xs leading-relaxed text-muted-foreground'>
+                <p>Dung lượng file tối đa 1 MB</p>
+                <p>Định dạng: .JPEG, .PNG</p>
               </div>
             </div>
           </div>
@@ -284,27 +277,27 @@ function ProfileContent({ authUser }: { authUser: User }) {
 
 function ProfilePageSkeleton() {
   return (
-    <div className='space-y-4'>
-      <Skeleton className='h-14 w-full rounded-md' />
-      <Card className='border-none bg-card/80 shadow-md'>
-        <CardContent className='p-8'>
-          <Skeleton className='h-7 w-48' />
+    <div className='space-y-5'>
+      <Skeleton className='h-12 w-full rounded-xl' />
+      <Card className='rounded-2xl border border-border shadow-sm'>
+        <CardContent className='p-6 sm:p-8'>
+          <Skeleton className='h-8 w-48' />
           <Skeleton className='mt-3 h-4 w-72' />
-          <div className='mt-8 grid grid-cols-1 gap-12 lg:grid-cols-12'>
-            <div className='space-y-6 lg:col-span-8'>
+          <div className='mt-8 grid grid-cols-1 gap-10 lg:grid-cols-3'>
+            <div className='space-y-5 lg:col-span-2'>
               {Array.from({ length: 4 }).map((_, index) => (
                 <div
                   key={index}
-                  className='grid grid-cols-1 gap-2 sm:grid-cols-3 sm:items-center sm:gap-4'
+                  className='grid grid-cols-1 gap-2 sm:grid-cols-[130px_minmax(0,1fr)] sm:items-center sm:gap-4'
                 >
-                  <Skeleton className='h-4 w-28 sm:justify-self-end' />
-                  <Skeleton className='h-10 w-full sm:col-span-2' />
+                  <Skeleton className='h-4 w-24 sm:justify-self-end' />
+                  <Skeleton className='h-11 w-full rounded-xl' />
                 </div>
               ))}
             </div>
-            <div className='flex flex-col items-center gap-4 lg:col-span-4'>
-              <Skeleton className='h-32 w-32 rounded-full' />
-              <Skeleton className='h-10 w-28' />
+            <div className='flex flex-col items-center gap-4 rounded-2xl border border-border/60 bg-muted/30 p-6 lg:col-span-1'>
+              <Skeleton className='size-28 rounded-full' />
+              <Skeleton className='h-10 w-28 rounded-xl' />
               <Skeleton className='h-4 w-40' />
             </div>
           </div>

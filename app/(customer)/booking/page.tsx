@@ -410,7 +410,7 @@ function BookingFlow() {
       { num: 4, title: 'Xác nhận' },
     ];
     return (
-      <div className='flex items-center justify-between max-w-xl mx-auto mb-6 px-4'>
+      <div className='flex items-center justify-between max-w-xl mx-auto mb-5 px-2'>
         {steps.map((s, idx) => (
           <div
             key={s.num}
@@ -420,9 +420,9 @@ function BookingFlow() {
               onClick={() => step > s.num && setStep(s.num)}
               disabled={step <= s.num}
               className={cn(
-                'flex items-center justify-center w-8 h-8 rounded-full text-xs font-black transition-all cursor-pointer',
+                'flex items-center justify-center w-9 h-9 shrink-0 rounded-full text-[13px] font-bold transition-all cursor-pointer',
                 step === s.num
-                  ? 'bg-primary text-white scale-110 shadow-lg shadow-primary/30'
+                  ? 'bg-primary text-white shadow-md shadow-primary/25'
                   : step > s.num
                     ? 'bg-emerald-500 text-white hover:bg-emerald-600'
                     : 'bg-muted text-muted-foreground border border-border',
@@ -432,7 +432,7 @@ function BookingFlow() {
             </button>
             <span
               className={cn(
-                'hidden sm:inline text-xs font-bold ml-2',
+                'hidden sm:inline text-[13px] font-semibold ml-2 whitespace-nowrap',
                 step === s.num ? 'text-foreground' : 'text-muted-foreground',
               )}
             >
@@ -441,7 +441,7 @@ function BookingFlow() {
             {idx < steps.length - 1 && (
               <div
                 className={cn(
-                  'flex-1 h-0.5 mx-4',
+                  'flex-1 h-0.5 mx-3',
                   step > s.num ? 'bg-emerald-500' : 'bg-border',
                 )}
               />
@@ -467,9 +467,9 @@ function BookingFlow() {
 
   return (
     <div className='min-h-screen bg-linear-to-b from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-950 pt-8 pb-12'>
-      <div className='max-w-5xl mx-auto px-4 sm:px-6 lg:px-8'>
+      <div className='max-w-[1160px] mx-auto px-4 sm:px-6 lg:px-8'>
         {/* Banner header */}
-        <div className='relative mb-5 flex items-center justify-between'>
+        <div className='relative mb-4 flex items-center justify-between'>
           <Button
             variant='ghost'
             onClick={() => router.push('/')}
@@ -498,27 +498,27 @@ function BookingFlow() {
 
         {/* Tiến độ voucher rửa miễn phí (hiển thị mọi bước) */}
         {myLoyalty && (
-          <div className='mb-6 rounded-2xl border border-amber-200 bg-amber-50/70 px-4 py-3 flex items-center gap-3'>
-            <div className='shrink-0 w-9 h-9 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center'>
+          <div className='mb-5 rounded-2xl border border-amber-200 bg-amber-50/70 px-4 py-3 flex items-center gap-3'>
+            <div className='shrink-0 w-8 h-8 rounded-lg bg-amber-100 text-amber-600 flex items-center justify-center'>
               <Ticket className='w-5 h-5' />
             </div>
             <div className='flex-1 min-w-0'>
-              <div className='flex items-center justify-between gap-2 mb-1'>
-                <p className='text-sm font-bold text-amber-800'>
+              <div className='flex items-center justify-between gap-2 mb-1.5'>
+                <p className='text-sm font-semibold text-amber-800'>
                   {washesToVoucher > 0 ? (
                     <>
-                      Còn <span className='font-black'>{washesToVoucher}</span>{' '}
+                      Còn <span className='font-bold'>{washesToVoucher}</span>{' '}
                       lượt rửa hợp lệ nữa để nhận voucher thưởng (~5% chi tiêu)!
                     </>
                   ) : (
                     'Tuyệt vời - bạn sắp nhận voucher thưởng!'
                   )}
                 </p>
-                <span className='text-xs font-black text-amber-700 shrink-0'>
+                <span className='text-xs font-bold text-amber-700 shrink-0'>
                   {towardVoucher}/{WASHES_PER_FREE_VOUCHER}
                 </span>
               </div>
-              <div className='h-2 bg-amber-100 rounded-full overflow-hidden'>
+              <div className='h-1.5 bg-amber-100 rounded-full overflow-hidden'>
                 <div
                   className='h-full bg-linear-to-r from-amber-400 to-orange-500 rounded-full transition-all'
                   style={{
@@ -531,25 +531,25 @@ function BookingFlow() {
         )}
 
         {/* Main Step Wrapper */}
-        <div className='grid grid-cols-1 lg:grid-cols-3 gap-6 items-start'>
+        <div className='grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_340px] gap-6 items-start'>
           {/* Step content */}
-          <div className='lg:col-span-2 space-y-6'>
-            <Card className='border-none shadow-xl rounded-2xl overflow-hidden bg-white/80 dark:bg-slate-900/80 backdrop-blur-md'>
-              <CardContent className='p-5 sm:p-6'>
+          <div className='space-y-6'>
+            <Card className='border border-border shadow-sm rounded-2xl overflow-hidden bg-card'>
+              <CardContent className='p-6'>
                 {/* ──────── STEP 1: CHỌN XE ──────── */}
                 {step === 1 && (
-                  <div className='space-y-6'>
-                    <div className='flex justify-between items-center mb-4'>
-                      <h2 className='font-heading text-xl font-bold text-foreground flex items-center gap-2'>
-                        <Car className='w-5 h-5 text-primary' /> Bước 1: Chọn Xe
-                        Của Bạn
+                  <div className='space-y-5'>
+                    <div className='flex justify-between items-center gap-3'>
+                      <h2 className='font-heading text-lg font-bold text-foreground flex items-center gap-2'>
+                        <Car className='w-5 h-5 text-primary' /> Bước 1: Chọn xe
+                        của bạn
                       </h2>
                       {!isAddingVehicle && (
                         <Button
                           type='button'
                           variant='ghost'
                           onClick={() => setIsAddingVehicle(true)}
-                          className='text-xs text-primary font-bold flex items-center gap-1 hover:bg-primary/5 rounded-lg px-2.5 py-1.5 cursor-pointer'
+                          className='text-xs text-primary font-bold flex items-center gap-1 hover:bg-primary/5 rounded-lg px-2.5 py-1.5 cursor-pointer shrink-0'
                         >
                           <Plus className='w-3.5 h-3.5' /> Thêm xe nhanh
                         </Button>
@@ -736,7 +736,14 @@ function BookingFlow() {
                         </Button>
                       </div>
                     ) : (
-                      <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
+                      <div
+                        className={cn(
+                          'grid gap-3',
+                          vehicles.length === 1
+                            ? 'grid-cols-1 sm:max-w-[480px]'
+                            : 'grid-cols-1 sm:grid-cols-2',
+                        )}
+                      >
                         {vehicles.map((v) => {
                           const isSelected =
                             (v._id || v.id) === selectedVehicleId;
@@ -746,6 +753,8 @@ function BookingFlow() {
                           const isMotor =
                             foundType?.name.toLowerCase().includes('motor') ||
                             foundType?.name.toLowerCase().includes('xe máy');
+                          const vehicleName =
+                            v.nickname || v.brand || 'Phương tiện';
 
                           return (
                             <button
@@ -754,36 +763,37 @@ function BookingFlow() {
                                 setSelectedVehicleId(v._id || v.id || '')
                               }
                               className={cn(
-                                'text-left p-4 rounded-2xl border-2 transition-all flex flex-col justify-between min-h-[120px] cursor-pointer hover:shadow-md relative',
+                                'text-left p-4 rounded-2xl border transition-colors flex flex-col gap-3 min-h-[110px] cursor-pointer relative',
                                 isSelected
-                                  ? 'border-primary bg-primary/5 ring-1 ring-primary/20 shadow-xs'
-                                  : 'border-border bg-card',
+                                  ? 'border-primary bg-primary/5 ring-1 ring-primary/20'
+                                  : 'border-border bg-card hover:border-primary/40 hover:bg-slate-50/60 dark:hover:bg-slate-800/40',
                               )}
                             >
-                              <div className='flex justify-between items-start w-full'>
-                                <div className='flex items-center gap-2'>
-                                  <div
-                                    className={cn(
-                                      'p-1.5 rounded-lg text-xs',
-                                      isSelected
-                                        ? 'bg-primary/10 text-primary'
-                                        : 'bg-slate-100 text-slate-500',
-                                    )}
+                              <div className='flex items-start gap-2.5 w-full pr-6'>
+                                <div
+                                  className={cn(
+                                    'p-2 rounded-lg shrink-0',
+                                    isSelected
+                                      ? 'bg-primary/10 text-primary'
+                                      : 'bg-slate-100 text-slate-500 dark:bg-slate-800',
+                                  )}
+                                >
+                                  {isMotor ? (
+                                    <Bike className='w-4 h-4' />
+                                  ) : (
+                                    <Car className='w-4 h-4' />
+                                  )}
+                                </div>
+                                <div className='min-w-0'>
+                                  <span
+                                    title={vehicleName}
+                                    className='font-bold text-sm block leading-tight text-foreground line-clamp-1'
                                   >
-                                    {isMotor ? (
-                                      <Bike className='w-4 h-4' />
-                                    ) : (
-                                      <Car className='w-4 h-4' />
-                                    )}
-                                  </div>
-                                  <div>
-                                    <span className='font-black text-sm block leading-tight text-foreground truncate max-w-[120px]'>
-                                      {v.nickname || v.brand || 'Phương tiện'}
-                                    </span>
-                                    <span className='text-[10px] text-muted-foreground block'>
-                                      {foundType?.name || 'Chưa rõ loại'}
-                                    </span>
-                                  </div>
+                                    {vehicleName}
+                                  </span>
+                                  <span className='text-[11px] text-muted-foreground block mt-0.5'>
+                                    {foundType?.name || 'Chưa rõ loại'}
+                                  </span>
                                 </div>
                                 {isSelected && (
                                   <span className='absolute top-3 right-3 bg-primary text-white p-0.5 rounded-full'>
@@ -792,9 +802,9 @@ function BookingFlow() {
                                 )}
                               </div>
 
-                              <div className='mt-4 flex items-center justify-between w-full'>
+                              <div className='mt-auto flex items-center justify-between gap-2 w-full'>
                                 {renderLicensePlate(v.licensePlate)}
-                                <span className='text-[10px] text-muted-foreground font-semibold'>
+                                <span className='text-[11px] text-muted-foreground font-medium truncate'>
                                   {v.color || 'Màu tùy chọn'}
                                 </span>
                               </div>
@@ -804,11 +814,11 @@ function BookingFlow() {
                       </div>
                     )}
 
-                    <div className='flex justify-end pt-4 border-t border-slate-100'>
+                    <div className='flex justify-end pt-4 border-t border-border/60'>
                       <Button
                         disabled={!selectedVehicleId}
                         onClick={() => setStep(2)}
-                        className='bg-primary hover:bg-primary/95 text-white rounded-xl font-bold px-6 py-2.5 shadow-lg shadow-primary/20 cursor-pointer transition-all hover:scale-102 flex items-center gap-1.5'
+                        className='w-full sm:w-auto bg-primary hover:bg-primary/95 text-white rounded-xl font-bold px-7 h-11 shadow-md shadow-primary/20 cursor-pointer transition-colors flex items-center justify-center gap-1.5'
                       >
                         Tiếp theo <ChevronRight className='w-4 h-4' />
                       </Button>
@@ -1408,10 +1418,10 @@ function BookingFlow() {
           </div>
 
           {/* ─── SIDEBAR HÓA ĐƠN TÓM TẮT DỊCH VỤ ─── */}
-          <div className='space-y-6'>
-            <Card className='border-none shadow-xl rounded-2xl overflow-hidden bg-white/80 dark:bg-slate-900/80 backdrop-blur-md sticky top-6'>
-              <CardContent className='p-6 space-y-5'>
-                <h3 className='font-heading font-black text-lg text-foreground tracking-tight border-b border-slate-100 pb-3'>
+          <div>
+            <Card className='border border-border shadow-sm rounded-2xl overflow-hidden bg-card lg:sticky lg:top-8'>
+              <CardContent className='p-5 space-y-4'>
+                <h3 className='font-heading font-bold text-lg text-foreground tracking-tight border-b border-border/60 pb-3'>
                   Tóm Tắt Đơn Đặt Lịch
                 </h3>
 

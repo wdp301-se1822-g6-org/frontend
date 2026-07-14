@@ -57,7 +57,7 @@ export function FeaturesSection() {
         <div className='text-center mb-12 sm:mb-16 lg:mb-20'>
           <div className='inline-flex items-center gap-2 bg-primary/10 text-primary text-[10px] font-semibold px-4 py-2 rounded-full mb-6 uppercase tracking-[0.2em] animate-fade-in-up'>
             <ShieldCheck className='w-4 h-4' />
-            Platform Excellence
+            Nền tảng chăm sóc xe
           </div>
           <h1 className='text-[1.75rem] sm:text-4xl lg:text-5xl font-heading text-foreground leading-[1.15] mb-4 tracking-tight animate-fade-in-up [animation-delay:200ms] opacity-0 fill-mode-forwards'>
             Giải pháp <span className='text-primary'>Toàn diện</span>
@@ -69,9 +69,9 @@ export function FeaturesSection() {
         </div>
 
         {/* Bento Grid Layout */}
-        <div className='grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 md:grid-rows-2 gap-4 sm:gap-6 h-auto lg:h-[700px]'>
+        <div className='grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 md:auto-rows-fr gap-4 sm:gap-6'>
           {/* Main Feature - Large Card */}
-          <div className='md:col-span-2 lg:col-span-2 lg:row-span-2 bg-white rounded-[2rem] sm:rounded-[2.5rem] p-6 sm:p-8 lg:p-10 shadow-2xl shadow-primary/5 border border-border/50 flex flex-col justify-between group hover:-translate-y-2 transition-all duration-500 animate-fade-in-up [animation-delay:500ms] opacity-0 fill-mode-forwards'>
+          <div className='md:col-span-2 lg:col-span-2 lg:row-span-2 bg-card rounded-[2rem] sm:rounded-[2.5rem] p-6 sm:p-8 lg:p-10 shadow-xl shadow-primary/5 border border-border/60 flex flex-col justify-between group hover:-translate-y-2 transition-all duration-500 animate-fade-in-up [animation-delay:500ms] opacity-0 fill-mode-forwards'>
             <div>
               <div className='flex items-center gap-4'>
                 <div className='w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center text-primary mb-4 group-hover:scale-110 group-hover:rotate-6 transition-transform'>
@@ -86,10 +86,10 @@ export function FeaturesSection() {
               </p>
             </div>
             <div className='flex-1 min-h-[20rem] rounded-2xl border border-primary/5 relative overflow-hidden'>
-              <div className='absolute bottom-2 left-4 right-4 h-12 bg-white rounded-xl shadow-lg border border-border/50 flex items-center px-4 gap-3 animate-float z-10'>
-                <div className='w-2 h-2 bg-green-500 rounded-full animate-pulse' />
+              <div className='absolute bottom-2 left-4 right-4 h-12 bg-card rounded-xl shadow-lg border border-border/60 flex items-center px-4 gap-3 animate-float z-10'>
+                <div className='w-2 h-2 bg-emerald-500 rounded-full animate-pulse' />
                 <span className='text-[10px] font-semibold uppercase tracking-widest text-foreground/40'>
-                  Live Booking Enabled
+                  Đặt lịch trực tiếp
                 </span>
               </div>
               <Image
@@ -130,16 +130,16 @@ export function FeaturesSection() {
           </div>
 
           {/* Small Cards - Bottom */}
-          <div className='bg-white rounded-[2rem] sm:rounded-[2.5rem] p-6 sm:p-8 shadow-xl shadow-primary/5 border border-border/50 group hover:-translate-y-2 transition-all duration-500 animate-fade-in-up [animation-delay:700ms] opacity-0 fill-mode-forwards relative overflow-hidden flex flex-col'>
+          <div className='bg-card rounded-[2rem] sm:rounded-[2.5rem] p-6 sm:p-8 shadow-lg shadow-primary/5 border border-border/60 group hover:-translate-y-2 transition-all duration-500 animate-fade-in-up [animation-delay:700ms] opacity-0 fill-mode-forwards relative overflow-hidden flex flex-col'>
             <div className='flex items-center gap-4 mb-4'>
-              <div className='w-12 h-12 bg-secondary/10 rounded-xl flex items-center justify-center text-secondary group-hover:scale-110 transition-transform'>
+              <div className='w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center text-primary group-hover:scale-110 transition-transform'>
                 <History className='w-6 h-6' />
               </div>
               <h3 className='font-heading text-lg font-semibold text-foreground tracking-tight'>
                 {features[1].title}
               </h3>
             </div>
-            <p className='text-foreground/50 text-xs leading-relaxed text-justify'>
+            <p className='text-foreground/50 text-xs leading-relaxed text-pretty'>
               {features[1].desc}
             </p>
             <div className='relative mt-4 w-full h-32'>
@@ -153,16 +153,16 @@ export function FeaturesSection() {
             </div>
           </div>
 
-          <div className='bg-white rounded-[2rem] sm:rounded-[2.5rem] p-6 sm:p-8 shadow-xl shadow-primary/5 border border-border/50 group hover:-translate-y-2 transition-all duration-500 animate-fade-in-up [animation-delay:800ms] opacity-0 fill-mode-forwards relative overflow-hidden flex flex-col'>
+          <div className='bg-card rounded-[2rem] sm:rounded-[2.5rem] p-6 sm:p-8 shadow-lg shadow-primary/5 border border-border/60 group hover:-translate-y-2 transition-all duration-500 animate-fade-in-up [animation-delay:800ms] opacity-0 fill-mode-forwards relative overflow-hidden flex flex-col'>
             <div className='flex items-center gap-4 mb-4'>
-              <div className='w-12 h-12 bg-yellow-500/10 rounded-xl flex items-center justify-center text-yellow-600 group-hover:scale-110 transition-transform'>
+              <div className='w-12 h-12 bg-amber-500/10 rounded-xl flex items-center justify-center text-amber-600 group-hover:scale-110 transition-transform'>
                 <Gift className='w-6 h-6' />
               </div>
               <h3 className='font-heading text-lg font-semibold text-foreground tracking-tight'>
                 {features[3].title}
               </h3>
             </div>
-            <p className='text-foreground/50 text-xs leading-relaxed text-justify'>
+            <p className='text-foreground/50 text-xs leading-relaxed text-pretty'>
               {features[3].desc}
             </p>
             <div className='relative mt-4 w-full h-32'>

@@ -3,161 +3,173 @@
 import { useAuthStore } from '@/store/useAuthStore';
 import { cn } from '@/lib/utils';
 import { getInitials } from '@/lib/format';
-import { User, Bell, Ticket, Pencil, Star, Car, History } from 'lucide-react';
+import {
+  User,
+  Bell,
+  Ticket,
+  Pencil,
+  Star,
+  Car,
+  History,
+  Lock,
+  Coins,
+  type LucideIcon,
+} from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
-const menuItems = [
+type MenuItem = {
+  label: string;
+  href: string;
+  icon: LucideIcon;
+};
+
+type MenuGroup = {
+  heading: string;
+  items: MenuItem[];
+};
+
+const menuGroups: MenuGroup[] = [
   {
-    title: 'Tài Khoản Của Tôi',
-    icon: User,
-    color: 'text-blue-500',
-    subItems: [
-      { label: 'Hồ Sơ', href: '/profile' },
-      { label: 'Xe Của Tôi', href: '/profile/vehicles' },
-      { label: 'Đổi Mật Khẩu', href: '/' },
+    heading: 'Tài khoản',
+    items: [
+      { label: 'Hồ sơ', href: '/profile', icon: User },
+      { label: 'Xe của tôi', href: '/profile/vehicles', icon: Car },
+      { label: 'Đổi mật khẩu', href: '/', icon: Lock },
     ],
   },
   {
-    title: 'Lịch sử rửa xe',
-    icon: Car,
-    color: 'text-orange-500',
-    href: '/profile/orders',
+    heading: 'Dịch vụ',
+    items: [
+      { label: 'Lịch sử rửa xe', href: '/profile/orders', icon: History },
+      { label: 'Thông báo', href: '/', icon: Bell },
+    ],
   },
   {
-    title: 'Thông Báo',
-    icon: Bell,
-    color: 'text-red-500',
-    href: '/',
-  },
-
-  {
-    title: 'Khách hàng thân thiết',
-    icon: Star,
-    color: 'text-yellow-500',
-    href: '/profile/loyalty',
-  },
-  {
-    title: 'Lịch sử điểm thưởng',
-    icon: History,
-    color: 'text-green-500',
-    href: '/profile/loyalty/transactions',
-  },
-  {
-    title: 'Voucher của tôi',
-    icon: Ticket,
-    color: 'text-blue-500',
-    href: '/profile/my-voucher',
+    heading: 'Ưu đãi',
+    items: [
+      { label: 'Khách hàng thân thiết', href: '/profile/loyalty', icon: Star },
+      {
+        label: 'Lịch sử điểm thưởng',
+        href: '/profile/loyalty/transactions',
+        icon: Coins,
+      },
+      { label: 'Voucher của tôi', href: '/profile/my-voucher', icon: Ticket },
+    ],
   },
 ];
+
+const allItems = menuGroups.flatMap((group) => group.items);
+
+// Chọn item khớp cụ thể nhất (prefix dài nhất) để tránh highlight cả item cha
+// "/profile" khi đang ở route con như "/profile/orders".
+function getActiveHref(pathname: string): string | null {
+  let best: string | null = null;
+  for (const item of allItems) {
+    if (item.href === '/') continue;
+    const matches =
+      pathname === item.href || pathname.startsWith(`${item.href}/`);
+    if (matches && (best === null || item.href.length > best.length)) {
+      best = item.href;
+    }
+  }
+  return best;
+}
 
 export default function ProfileSidebar() {
   const authUser = useAuthStore((s) => s.authUser);
   const pathname = usePathname();
+  const activeHref = getActiveHref(pathname);
 
   const initials = getInitials(authUser?.name);
 
   return (
-    <div className='flex flex-col gap-6'>
+    <div className='rounded-2xl border border-border bg-card p-4 shadow-sm sm:p-5'>
       {/* User Summary */}
-      <div className='flex items-center gap-3 px-2'>
-        <div className='relative group'>
-          <div className='w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold overflow-hidden border-2 border-background shadow-sm'>
-            {authUser?.avatarUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={authUser.avatarUrl}
-                alt={authUser.name}
-                className='w-full h-full object-cover'
-              />
-            ) : (
-              <span>{initials}</span>
-            )}
-          </div>
+      <div className='flex items-center gap-3'>
+        <div className='flex size-14 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-background bg-primary/10 font-bold text-primary shadow-sm'>
+          {authUser?.avatarUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={authUser.avatarUrl}
+              alt={authUser.name}
+              className='size-full object-cover'
+            />
+          ) : (
+            <span>{initials}</span>
+          )}
         </div>
-        <div className='flex flex-col'>
-          <span className='font-bold text-foreground truncate max-w-[150px]'>
+        <div className='min-w-0'>
+          <p className='truncate font-semibold text-foreground'>
             {authUser?.name || 'Người dùng'}
-          </span>
+          </p>
           <Link
             href='/profile'
-            className='flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors'
+            className='mt-0.5 inline-flex items-center gap-1 text-xs text-muted-foreground transition-colors hover:text-primary'
           >
-            <Pencil className='w-3 h-3' />
-            Sửa Hồ Sơ
+            <Pencil className='size-3' />
+            Sửa hồ sơ
           </Link>
         </div>
       </div>
 
-      {/* Menu */}
-      <nav className='space-y-1'>
-        {menuItems.map((item, idx) => {
-          const Icon = item.icon;
-          const isActive =
-            item.href === pathname ||
-            item.subItems?.some((si) => si.href === pathname);
-
-          return (
-            <div
-              key={idx}
-              className='space-y-1'
-            >
-              <div
+      {/* Mobile / tablet: horizontal scrollable menu */}
+      <nav className='-mx-4 mt-4 overflow-x-auto px-4 lg:hidden'>
+        <div className='flex w-max gap-2 pb-1'>
+          {allItems.map((item) => {
+            const Icon = item.icon;
+            const active = item.href === activeHref;
+            return (
+              <Link
+                key={item.label}
+                href={item.href}
                 className={cn(
-                  'flex items-center gap-3 px-3 py-2 rounded-lg transition-all',
-                  item.subItems && isActive && 'bg-primary/5 text-primary',
-                  !item.subItems &&
-                    (pathname === item.href
-                      ? 'bg-primary/5 text-primary'
-                      : 'hover:bg-accent/50'),
+                  'flex h-10 shrink-0 items-center gap-2 rounded-[10px] px-3.5 text-sm font-medium transition-colors duration-150',
+                  active
+                    ? 'bg-primary/10 text-primary'
+                    : 'bg-muted/50 text-muted-foreground hover:bg-accent hover:text-foreground',
                 )}
               >
-                <div
+                <Icon className='size-[18px] shrink-0' />
+                <span className='whitespace-nowrap'>{item.label}</span>
+              </Link>
+            );
+          })}
+        </div>
+      </nav>
+
+      {/* Desktop: grouped vertical menu */}
+      <nav className='mt-4 hidden space-y-5 border-t border-border pt-4 lg:block'>
+        {menuGroups.map((group) => (
+          <div key={group.heading} className='space-y-1'>
+            <p className='px-3 pb-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70'>
+              {group.heading}
+            </p>
+            {group.items.map((item) => {
+              const Icon = item.icon;
+              const active = item.href === activeHref;
+              return (
+                <Link
+                  key={item.label}
+                  href={item.href}
+                  aria-current={active ? 'page' : undefined}
                   className={cn(
-                    'p-1.5 rounded-md bg-card shadow-sm',
-                    item.color,
+                    'group relative flex h-11 items-center gap-3 rounded-[10px] px-3.5 text-sm font-medium transition-colors duration-150',
+                    active
+                      ? 'bg-primary/10 text-primary'
+                      : 'text-muted-foreground hover:bg-accent hover:text-foreground',
                   )}
                 >
-                  <Icon className='w-4 h-4' />
-                </div>
-                {item.href ? (
-                  <Link
-                    href={item.href}
-                    className='text-sm font-semibold flex-1'
-                  >
-                    {item.title}
-                  </Link>
-                ) : (
-                  <span className='text-sm font-semibold flex-1'>
-                    {item.title}
-                  </span>
-                )}
-              </div>
-
-              {item.subItems && (
-                <div className='ml-11 flex flex-col gap-1'>
-                  {item.subItems.map((sub, sIdx) => {
-                    const isSubActive = pathname === sub.href;
-                    return (
-                      <Link
-                        key={sIdx}
-                        href={sub.href}
-                        className={cn(
-                          'text-sm py-1 transition-colors',
-                          isSubActive
-                            ? 'text-primary font-bold'
-                            : 'text-muted-foreground hover:text-primary',
-                        )}
-                      >
-                        {sub.label}
-                      </Link>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          );
-        })}
+                  {active && (
+                    <span className='absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-full bg-primary' />
+                  )}
+                  <Icon className='size-[18px] shrink-0' />
+                  <span className='truncate'>{item.label}</span>
+                </Link>
+              );
+            })}
+          </div>
+        ))}
       </nav>
     </div>
   );

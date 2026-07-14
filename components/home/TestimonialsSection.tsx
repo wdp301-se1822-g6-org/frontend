@@ -17,7 +17,7 @@ const testimonials = [
   {
     name: 'Trần Thị Lan',
     time: '1 tuần trước',
-    title: '"Dịch vụ thực sự tốt!"',
+    title: 'Dịch vụ thực sự tốt',
     rating: 5,
     text: 'Mình đăng ký gói Kim Cương và rất hài lòng. Đặt lịch qua app dễ dàng, không phải chờ đợi. Xe sạch đẹp như mới, đáng đồng tiền bát gạo.',
     avatar: 'L',
@@ -37,9 +37,9 @@ const testimonials = [
   {
     name: 'Phạm Bảo Châu',
     time: '3 tuần trước',
-    title: 'Recommend 100%!',
+    title: 'Rất đáng để giới thiệu',
     rating: 5,
-    text: 'Cơ sở sạch sẽ, thoáng mát. Khu vực chờ có wifi, nước uống miễn phí. Dịch vụ chuyên nghiệp từ A đến Z. Recommend 100% cho mọi người!',
+    text: 'Cơ sở sạch sẽ, thoáng mát. Khu vực chờ có wifi, nước uống miễn phí. Dịch vụ chuyên nghiệp từ A đến Z, rất đáng để giới thiệu cho mọi người.',
     avatar: 'C',
     color: 'bg-rose-500',
     imgSrc: null,
@@ -144,12 +144,12 @@ export function TestimonialsSection() {
               return (
                 <div
                   key={`${idx}-${t.name}`}
-                  className='bg-white rounded-[1.5rem] sm:rounded-[2rem] p-5 sm:p-8 shadow-xl shadow-primary/5 border border-border/50 hover:-translate-y-1 transition-all duration-300 flex gap-4 sm:gap-5'
+                  className='bg-card rounded-[1.5rem] sm:rounded-[2rem] p-5 sm:p-8 shadow-lg shadow-primary/5 border border-border/60 hover:-translate-y-1 transition-all duration-300 flex gap-4 sm:gap-5'
                 >
                   {/* Avatar */}
                   <div className='shrink-0'>
                     <div
-                      className={`w-14 h-14 rounded-full ${t.color} flex items-center justify-center text-white font-black text-lg shadow-lg`}
+                      className={`w-14 h-14 rounded-full ${t.color} flex items-center justify-center text-white font-bold text-lg shadow-md`}
                     >
                       {t.avatar}
                     </div>
@@ -159,10 +159,10 @@ export function TestimonialsSection() {
                   <div className='flex flex-col gap-3 flex-1'>
                     {/* Name + time */}
                     <div>
-                      <p className='font-black text-foreground text-base tracking-tight'>
+                      <p className='font-bold text-foreground text-base tracking-tight'>
                         {t.name}
                       </p>
-                      <p className='text-foreground/40 text-xs font-semibold uppercase tracking-wider'>
+                      <p className='text-muted-foreground text-xs font-medium'>
                         {t.time}
                       </p>
                     </div>
@@ -174,12 +174,12 @@ export function TestimonialsSection() {
                     />
 
                     {/* Title */}
-                    <p className='font-black text-foreground/80 text-sm'>
+                    <p className='font-semibold text-foreground text-sm'>
                       {t.title}
                     </p>
 
                     {/* Review text */}
-                    <p className='text-foreground/55 text-sm leading-relaxed italic relative'>
+                    <p className='text-muted-foreground text-sm leading-relaxed italic relative'>
                       <Quote className='inline w-4 h-4 text-primary/30 mr-1 -mt-1' />
                       {t.text}
                     </p>
@@ -223,14 +223,14 @@ export function TestimonialsSection() {
         </div>
 
         {/* Overall rating summary bar */}
-        <div className='mt-12 sm:mt-16 flex flex-col lg:flex-row items-center gap-6 sm:gap-8 lg:gap-10 bg-linear-to-br from-primary/8 via-purple-100/40 to-fuchsia-100/40 border border-primary/15 rounded-[2rem] sm:rounded-[2.5rem] p-6 sm:p-8 lg:p-10 lg:px-16 shadow-sm relative overflow-hidden'>
+        <div className='mt-12 sm:mt-16 flex flex-col lg:flex-row items-center gap-6 sm:gap-8 lg:gap-10 bg-linear-to-br from-primary/8 via-primary/5 to-transparent border border-primary/15 rounded-[2rem] sm:rounded-[2.5rem] p-6 sm:p-8 lg:p-10 lg:px-16 shadow-sm relative overflow-hidden'>
           <div className='absolute -top-24 -right-16 w-72 h-72 bg-primary/10 rounded-full blur-3xl pointer-events-none' />
-          <div className='absolute -bottom-24 -left-16 w-72 h-72 bg-fuchsia-300/15 rounded-full blur-3xl pointer-events-none' />
+          <div className='absolute -bottom-24 -left-16 w-72 h-72 bg-primary/[0.07] rounded-full blur-3xl pointer-events-none' />
           <div className='absolute inset-0 bg-[radial-gradient(circle_at_center,var(--primary)_1px,transparent_1px)] bg-size-[24px_24px] opacity-[0.06] pointer-events-none' />
 
           {/* Score */}
           <div className='flex items-center gap-5 relative z-10'>
-            <span className='text-5xl sm:text-6xl lg:text-7xl font-black tracking-tighter bg-linear-to-br from-primary via-purple-500 to-fuchsia-500 bg-clip-text text-transparent'>
+            <span className='text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tighter text-primary'>
               4.9
             </span>
             <div>
@@ -238,7 +238,7 @@ export function TestimonialsSection() {
                 rating={5}
                 size='lg'
               />
-              <span className='text-muted-foreground text-xs font-black uppercase tracking-widest mt-1 block'>
+              <span className='text-muted-foreground text-xs font-semibold uppercase tracking-wider mt-1 block'>
                 Đánh giá trung bình
               </span>
             </div>
@@ -253,14 +253,18 @@ export function TestimonialsSection() {
 
           <div className='flex gap-8 sm:gap-12 lg:ml-auto relative z-10'>
             <div className='text-center'>
-              <p className='text-3xl sm:text-4xl font-black text-foreground'>10K+</p>
-              <p className='text-muted-foreground text-[10px] font-black uppercase tracking-widest mt-1'>
+              <p className='text-3xl sm:text-4xl font-bold text-foreground tabular-nums'>
+                10K+
+              </p>
+              <p className='text-muted-foreground text-[10px] font-semibold uppercase tracking-wider mt-1'>
                 Đánh giá 5 sao
               </p>
             </div>
             <div className='text-center'>
-              <p className='text-3xl sm:text-4xl font-black text-foreground'>50K+</p>
-              <p className='text-muted-foreground text-[10px] font-black uppercase tracking-widest mt-1'>
+              <p className='text-3xl sm:text-4xl font-bold text-foreground tabular-nums'>
+                50K+
+              </p>
+              <p className='text-muted-foreground text-[10px] font-semibold uppercase tracking-wider mt-1'>
                 Xe đã phục vụ
               </p>
             </div>

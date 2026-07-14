@@ -14,7 +14,7 @@ import { cn } from '@/lib/utils';
 
 /** Class dùng chung cho input của form xác thực - tránh lặp chuỗi className dài. */
 const AUTH_INPUT_CLASS =
-  'h-12 rounded-xl border-primary/10 bg-card pl-11 transition-all focus:border-primary focus:ring-primary/20';
+  'h-12 rounded-xl border-primary/10 bg-muted/40 pl-11 transition-all focus:border-primary focus:bg-background focus:ring-primary/20';
 
 type AuthFormFieldProps<T extends FieldValues> = {
   control: Control<T>;
