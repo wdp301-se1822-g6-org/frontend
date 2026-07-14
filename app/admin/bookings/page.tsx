@@ -23,13 +23,13 @@ interface BookingData {
 }
 
 const statusConfig: Record<string, { label: string; cls: string }> = {
-  completed:       { label: 'Hoàn thành',       cls: 'bg-success/10 text-success' },
-  in_progress:     { label: 'Đang rửa xe',      cls: 'bg-accent text-primary' },
-  confirmed:       { label: 'Đã xác nhận',      cls: 'bg-info/10 text-info' },
-  checked_in:      { label: 'Đã check-in',      cls: 'bg-info/10 text-info' },
-  pending_payment: { label: 'Chờ thanh toán',   cls: 'bg-warning/10 text-warning-foreground' },
-  cancelled:       { label: 'Đã hủy',           cls: 'bg-destructive/10 text-destructive' },
-  no_show:         { label: 'Vắng mặt',         cls: 'bg-muted text-muted-foreground' },
+  completed:       { label: 'Hoàn thành',       cls: 'bg-primary/10 text-primary border border-primary/20' },
+  in_progress:     { label: 'Đang rửa xe',      cls: 'bg-primary/10 text-primary border border-primary/20 font-semibold' },
+  confirmed:       { label: 'Đã xác nhận',      cls: 'bg-primary/10 text-primary border border-primary/20' },
+  checked_in:      { label: 'Đã check-in',      cls: 'bg-primary/10 text-primary border border-primary/20' },
+  pending_payment: { label: 'Chờ thanh toán',   cls: 'bg-muted text-muted-foreground border border-border' },
+  cancelled:       { label: 'Đã hủy',           cls: 'bg-destructive/10 text-destructive border border-destructive/20' },
+  no_show:         { label: 'Vắng mặt',         cls: 'bg-muted text-muted-foreground border border-border' },
 };
 
 const statusOptions = ['all', 'pending_payment', 'confirmed', 'checked_in', 'in_progress', 'completed', 'cancelled', 'no_show'];

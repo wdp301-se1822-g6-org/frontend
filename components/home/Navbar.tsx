@@ -89,15 +89,19 @@ export function Navbar() {
           </Link>
 
           {/* Nav links */}
-          <div className='hidden lg:flex items-center gap-5 xl:gap-7'>
-            {navLinks.map((link) => (
-              <a
-                key={link.href}
-                href={link.href}
-                className='text-foreground/70 hover:text-primary text-sm font-medium transition-colors'
-              >
-                {link.label}
-              </a>
+          <div className='hidden lg:flex items-center gap-1 xl:gap-1.5'>
+            {navLinks.map((link, idx) => (
+              <div key={link.href} className='flex items-center'>
+                {idx > 0 && (
+                  <span className='w-px h-3.5 bg-muted-foreground/30 mx-3 xl:mx-4 shrink-0' />
+                )}
+                <a
+                  href={link.href}
+                  className='text-foreground/70 hover:text-primary text-sm font-medium transition-colors'
+                >
+                  {link.label}
+                </a>
+              </div>
             ))}
           </div>
 

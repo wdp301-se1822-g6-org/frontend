@@ -365,44 +365,44 @@ export default function MyOrdersPage() {
     switch (status) {
       case 'pending_payment':
         return (
-          <span className="inline-flex items-center gap-1 text-xs bg-warning/10 text-warning font-semibold px-2.5 py-1 rounded-full shadow-xs border border-warning/30/50">
-            <Clock className="w-3 h-3 animate-pulse" /> Chờ thanh toán
+          <span className="inline-flex items-center gap-1.5 text-xs bg-muted text-muted-foreground font-semibold px-3 py-1 rounded-xl border border-border">
+            <Clock className="w-3.5 h-3.5" /> Chờ thanh toán
           </span>
         );
       case 'confirmed':
         return (
-          <span className="inline-flex items-center gap-1 text-xs bg-info/10 text-blue-600 font-semibold px-2.5 py-1 rounded-full border border-blue-200/50">
-            <CheckCircle className="w-3 h-3" /> Đã xác nhận
+          <span className="inline-flex items-center gap-1.5 text-xs bg-primary/10 text-primary font-bold px-3 py-1 rounded-xl border border-primary/20">
+            <CheckCircle className="w-3.5 h-3.5 text-primary" /> Đã xác nhận
           </span>
         );
       case 'checked_in':
         return (
-          <span className="inline-flex items-center gap-1 text-xs bg-info/10 text-sky-600 font-semibold px-2.5 py-1 rounded-full border border-sky-200/50">
-            <User2 className="w-3 h-3" /> Đã check-in
+          <span className="inline-flex items-center gap-1.5 text-xs bg-primary/10 text-primary font-bold px-3 py-1 rounded-xl border border-primary/20">
+            <User2 className="w-3.5 h-3.5 text-primary" /> Đã check-in
           </span>
         );
       case 'in_progress':
         return (
-          <span className="inline-flex items-center gap-1 text-xs bg-accent text-primary font-semibold px-2.5 py-1 rounded-full border border-primary/30/50">
-            <RefreshCw className="w-3 h-3 animate-spin" /> Đang rửa xe
+          <span className="inline-flex items-center gap-1.5 text-xs bg-primary/10 text-primary font-bold px-3 py-1 rounded-xl border border-primary/20 animate-pulse">
+            <RefreshCw className="w-3.5 h-3.5 text-primary animate-spin" /> Đang rửa xe
           </span>
         );
       case 'completed':
         return (
-          <span className="inline-flex items-center gap-1 text-xs bg-success/10 text-success font-semibold px-2.5 py-1 rounded-full border border-success/30/50">
-            <CheckCircle className="w-3 h-3" /> Hoàn thành
+          <span className="inline-flex items-center gap-1.5 text-xs bg-primary/10 text-primary font-bold px-3 py-1 rounded-xl border border-primary/20">
+            <CheckCircle className="w-3.5 h-3.5 text-primary" /> Hoàn thành
           </span>
         );
       case 'cancelled':
         return (
-          <span className="inline-flex items-center gap-1 text-xs bg-destructive/10 text-destructive font-semibold px-2.5 py-1 rounded-full border border-destructive/30/50">
-            <XCircle className="w-3 h-3" /> Đã hủy
+          <span className="inline-flex items-center gap-1.5 text-xs bg-destructive/10 text-destructive font-bold px-3 py-1 rounded-xl border border-destructive/20">
+            <XCircle className="w-3.5 h-3.5 text-destructive" /> Đã hủy
           </span>
         );
       case 'no_show':
         return (
-          <span className="inline-flex items-center gap-1 text-xs bg-muted text-muted-foreground font-semibold px-2.5 py-1 rounded-full">
-            <AlertCircle className="w-3 h-3" /> Vắng mặt (No show)
+          <span className="inline-flex items-center gap-1.5 text-xs bg-muted text-muted-foreground font-semibold px-3 py-1 rounded-xl border border-border">
+            <AlertCircle className="w-3.5 h-3.5" /> Vắng mặt
           </span>
         );
       default:
@@ -413,9 +413,8 @@ export default function MyOrdersPage() {
   const renderLicensePlate = (plate: string) => {
     if (!plate) return null;
     return (
-      <div className="inline-flex flex-col items-center justify-center border border-border rounded-md px-2.5 py-0.5 bg-muted/40 font-mono shadow-xs text-[10px] leading-none shrink-0 scale-95 origin-left">
-        <div className="text-[7px] text-placeholder font-sans pb-0.5 leading-none">VIỆT NAM</div>
-        <span className="font-bold text-foreground tracking-wide leading-none">{plate}</span>
+      <div className="inline-flex items-center gap-1.5 border border-primary/20 rounded-xl px-3 py-1 bg-primary/10 text-primary font-mono text-xs font-bold shadow-xs">
+        <span>{plate}</span>
       </div>
     );
   };
@@ -431,7 +430,7 @@ export default function MyOrdersPage() {
         </div>
         <Button
           onClick={() => router.push('/booking')}
-          className="bg-primary hover:bg-primary/95 text-white rounded-xl px-5 py-2.5 font-bold shadow-lg transition-all hover:scale-102 flex items-center gap-1.5"
+          className="bg-primary hover:bg-primary/95 text-white rounded-xl px-5 py-2.5 font-bold shadow-sm transition-all flex items-center gap-1.5 cursor-pointer"
         >
           Đặt lịch ngay
         </Button>
@@ -449,7 +448,7 @@ export default function MyOrdersPage() {
             className={cn(
               "text-xs font-bold px-4 py-2 rounded-xl transition-all whitespace-nowrap cursor-pointer shrink-0 border border-transparent",
               activeTab === tab.id
-                ? "bg-primary text-white shadow-md"
+                ? "bg-primary text-white shadow-xs"
                 : "text-muted-foreground hover:bg-muted hover:text-foreground"
             )}
           >
@@ -465,9 +464,9 @@ export default function MyOrdersPage() {
           <span className="text-sm text-muted-foreground">Đang tải danh sách lịch đặt...</span>
         </div>
       ) : filteredOrders.length === 0 ? (
-        <Card className="border-2 border-dashed border-border py-16 text-center rounded-xl bg-white/40">
+        <Card className="border border-dashed border-border py-16 text-center rounded-2xl bg-card">
           <CardContent className="flex flex-col items-center justify-center gap-3">
-            <Calendar className="w-12 h-12 text-placeholder" />
+            <Calendar className="w-12 h-12 text-muted-foreground/60" />
             <p className="font-bold text-foreground">Không tìm thấy lịch hẹn nào</p>
             <p className="text-xs text-muted-foreground max-w-xs">
               Bạn chưa có lịch hẹn nào tương ứng với trạng thái lọc này.
@@ -497,183 +496,187 @@ export default function MyOrdersPage() {
               <Card
                 key={order.id}
                 className={cn(
-                  "border-none rounded-xl overflow-hidden shadow-xs hover:shadow-md transition-all bg-white/95 backdrop-blur-md relative",
-                  isPendingPayment ? "ring-1 ring-amber-500/20" : ""
+                  "border border-border/80 rounded-2xl overflow-hidden shadow-xs hover:shadow-md hover:border-primary/40 transition-all bg-card relative space-y-0",
+                  isPendingPayment ? "border-primary/40 shadow-sm" : ""
                 )}
               >
-                <CardContent className="p-5 flex flex-col md:flex-row md:items-center justify-between gap-5">
-                  <div className="flex-1 space-y-3">
-
-                    {/* Header: Service Name & Status Badge */}
-                    <div className="flex flex-wrap items-center justify-between sm:justify-start gap-3">
-                      <span className="font-semibold text-base text-foreground tracking-tight">
-                        {getServiceName(order.serviceTypeId)}
-                      </span>
-                      {getStatusBadge(order.status)}
+                <CardContent className="p-6 space-y-4">
+                  {/* Top Bar: Service Name, Vehicle License Plate, Status Badge */}
+                  <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-border/60">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0 font-bold border border-primary/20">
+                        <Car className="w-5 h-5 text-primary" />
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-base text-foreground leading-snug">
+                          {getServiceName(order.serviceTypeId)}
+                        </h3>
+                        <span className="text-xs text-muted-foreground font-medium">
+                          Khách: <strong className="text-foreground">{vInfo.name}</strong>
+                        </span>
+                      </div>
                     </div>
 
-                    {/* Middle info */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 text-xs font-semibold text-muted-foreground">
+                    <div className="flex items-center gap-2">
+                      {renderLicensePlate(vInfo.plate)}
+                      {getStatusBadge(order.status)}
+                    </div>
+                  </div>
 
-                      {/* Vehicle */}
-                      <div className="flex items-center gap-2">
-                        <Car className="w-4 h-4 text-primary shrink-0" />
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <span className="text-foreground font-bold">{vInfo.name}</span>
-                          {renderLicensePlate(vInfo.plate)}
-                        </div>
+                  {/* Middle Info Grid */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 text-xs">
+                    {/* Time */}
+                    <div className="flex items-center gap-2.5 p-3 rounded-xl bg-muted/40 border border-border/60">
+                      <Calendar className="w-4 h-4 text-primary shrink-0" />
+                      <div>
+                        <p className="text-[10px] text-muted-foreground uppercase font-bold">Thời gian hẹn</p>
+                        <p className="font-bold text-foreground font-mono mt-0.5">{timeStr} • {dateStr}</p>
                       </div>
+                    </div>
 
-                      {/* Time */}
-                      <div className="flex items-center gap-2">
-                        <Calendar className="w-4 h-4 text-primary shrink-0" />
-                        <span className="text-foreground font-bold">{timeStr} • {dateStr}</span>
-                      </div>
-
-                      {/* Payment Method / Status */}
-                      <div className="flex items-center gap-2">
-                        <CreditCard className="w-4 h-4 text-primary shrink-0" />
-                        <span className="text-foreground font-bold">
-                          {order.paymentMethod === 'online' ? 'Chuyển khoản' : 'Tiền mặt'} •
+                    {/* Payment Info */}
+                    <div className="flex items-center gap-2.5 p-3 rounded-xl bg-muted/40 border border-border/60">
+                      <CreditCard className="w-4 h-4 text-primary shrink-0" />
+                      <div>
+                        <p className="text-[10px] text-muted-foreground uppercase font-bold">Thanh toán</p>
+                        <p className="font-bold text-foreground mt-0.5">
+                          {order.paymentMethod === 'online' ? 'Chuyển khoản' : 'Tiền mặt'} •{' '}
                           <span className={cn(
-                            "ml-1 font-semibold",
-                            order.paymentStatus === 'paid'
-                              ? "text-success"
-                              : Number(order.amount) === 0
-                                ? "text-success"
-                                : "text-warning"
+                            "font-bold",
+                            order.paymentStatus === 'paid' || Number(order.amount) === 0
+                              ? "text-primary"
+                              : "text-muted-foreground"
                           )}>
                             {order.paymentStatus === 'paid'
                               ? 'Đã trả'
                               : Number(order.amount) === 0
-                                ? 'Miễn phí (voucher)'
+                                ? 'Miễn phí'
                                 : 'Chưa trả'}
                           </span>
-                        </span>
+                        </p>
                       </div>
                     </div>
 
-                    {order.note && (
-                      <div className="bg-muted/40 p-2.5 rounded-lg text-xs font-medium text-muted-foreground flex items-start gap-1.5 border border-border max-w-2xl">
-                        <Info className="w-4 h-4 text-primary shrink-0 mt-0.5" />
-                        <span>Ghi chú: {order.note}</span>
+                    {/* Total Amount */}
+                    <div className="flex items-center gap-2.5 p-3 rounded-xl bg-primary/10 border border-primary/20">
+                      <div className="flex flex-col">
+                        <p className="text-[10px] text-primary uppercase font-bold">Tổng thanh toán</p>
+                        <p className="text-base font-extrabold text-primary font-mono leading-tight mt-0.5">
+                          {formatCurrency(order.amount)}
+                        </p>
                       </div>
-                    )}
+                    </div>
+                  </div>
 
-                    {/* Washer info representation */}
-                    {(order.status === 'checked_in' || order.status === 'in_progress' || order.status === 'completed') && (() => {
-                      const washer = getWasherInfo(order);
-                      if (!washer) {
-                        return (
-                          <div className="mt-3 bg-muted/40 border border-border p-3 rounded-xl flex items-center justify-between gap-3 max-w-2xl">
-                            <div className="flex items-center gap-3">
-                              <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center font-bold text-placeholder text-xs border border-border">
-                                ?
-                              </div>
-                              <div>
-                                <p className="text-[10px] text-muted-foreground uppercase font-semibold tracking-wider">Thợ rửa xe</p>
-                                <p className="font-bold text-warning text-xs">Đang chờ phân công thợ</p>
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      }
+                  {order.note && (
+                    <div className="bg-muted/40 p-3 rounded-xl text-xs font-medium text-muted-foreground flex items-start gap-2 border border-border/60">
+                      <Info className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+                      <span><strong>Ghi chú:</strong> {order.note}</span>
+                    </div>
+                  )}
+
+                  {/* Washer info */}
+                  {(order.status === 'checked_in' || order.status === 'in_progress' || order.status === 'completed') && (() => {
+                    const washer = getWasherInfo(order);
+                    if (!washer) {
                       return (
-                        <div className="mt-3 bg-accent border border-primary/30/30 p-3 rounded-xl flex items-center justify-between gap-3 max-w-2xl">
+                        <div className="bg-muted/30 border border-border/60 p-3 rounded-xl flex items-center justify-between gap-3">
                           <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-full bg-primary/15 flex items-center justify-center font-bold text-primary text-xs border border-primary/30">
-                              {washer.name[0]}
+                            <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center font-bold text-muted-foreground text-xs border border-border">
+                              ?
                             </div>
                             <div>
-                              <p className="text-[10px] text-muted-foreground uppercase font-semibold tracking-wider">Thợ rửa xe</p>
-                              <p className="font-bold text-foreground text-xs">{washer.name}</p>
-                              <p className="flex items-center gap-1 text-[10px] font-bold text-foreground">
-                                <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
-                                {washer.rating}
-                              </p>
+                              <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Thợ rửa xe</p>
+                              <p className="font-semibold text-muted-foreground text-xs">Đang chờ phân công thợ</p>
                             </div>
                           </div>
                         </div>
                       );
-                    })()}
+                    }
+                    return (
+                      <div className="bg-primary/10 border border-primary/20 p-3 rounded-xl flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-xs">
+                            {washer.name[0].toUpperCase()}
+                          </div>
+                          <div>
+                            <p className="text-[10px] text-primary uppercase font-bold tracking-wider">Thợ rửa xe phụ trách</p>
+                            <p className="font-bold text-foreground text-xs">{washer.name}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-1 text-xs font-bold text-primary bg-card px-2.5 py-1 rounded-lg border border-primary/20">
+                          <Star className="w-3.5 h-3.5 fill-primary text-primary" />
+                          {washer.rating}
+                        </div>
+                      </div>
+                    );
+                  })()}
 
-                    {/* Ảnh hiện trạng xe trước & sau khi rửa */}
-                    {(order.status === 'checked_in' ||
-                      order.status === 'in_progress' ||
-                      order.status === 'completed') && (
-                      <OrderWashPhotos
-                        orderId={order.id}
-                        onPreview={(photos, index) =>
-                          setPhotoPreview({ photos, index })
-                        }
-                      />
+                  {/* Pre-wash / Post-wash Photos */}
+                  {(order.status === 'checked_in' ||
+                    order.status === 'in_progress' ||
+                    order.status === 'completed') && (
+                    <OrderWashPhotos
+                      orderId={order.id}
+                      onPreview={(photos, index) =>
+                        setPhotoPreview({ photos, index })
+                      }
+                    />
+                  )}
+
+                  {/* Actions Footer Bar */}
+                  <div className="flex items-center justify-end gap-2 pt-3 border-t border-border/60">
+                    {isPendingPayment && order.payosCheckoutUrl && (
+                      <Button
+                        size="sm"
+                        onClick={() => window.location.href = order.payosCheckoutUrl!}
+                        className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl text-xs font-bold h-9 px-4 cursor-pointer shadow-xs"
+                      >
+                        Thanh toán ngay
+                      </Button>
+                    )}
+
+                    {order.status === 'completed' && !submittedFeedbacks[order.id] && (
+                      <Button
+                        size="sm"
+                        onClick={() => setFeedbackOrder(order)}
+                        className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl text-xs font-bold h-9 px-4 cursor-pointer shadow-xs"
+                      >
+                        Đánh giá dịch vụ
+                      </Button>
+                    )}
+
+                    {order.status === 'completed' && submittedFeedbacks[order.id] && (
+                      <span className="text-xs font-bold text-primary bg-primary/10 px-3 py-1.5 rounded-xl border border-primary/20 flex items-center gap-1">
+                        <CheckCircle className="w-3.5 h-3.5" /> Đã gửi đánh giá
+                      </span>
+                    )}
+
+                    {isReschedulable && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          setReschedulingOrder(order);
+                          setRescheduleDate(new Date().toISOString().split('T')[0]);
+                        }}
+                        className="rounded-xl text-xs font-semibold h-9 px-3.5 border-border hover:bg-muted cursor-pointer"
+                      >
+                        Đổi lịch
+                      </Button>
+                    )}
+
+                    {isCancellable && (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => setCancellingOrder(order)}
+                        className="rounded-xl text-xs font-semibold h-9 px-3.5 text-destructive hover:text-destructive hover:bg-destructive/10 cursor-pointer"
+                      >
+                        Hủy
+                      </Button>
                     )}
                   </div>
-
-                  {/* Actions right panel */}
-                  <div className="flex flex-row md:flex-col items-center md:items-end justify-between md:justify-center border-t md:border-t-0 md:border-l border-border pt-4 md:pt-0 md:pl-5 shrink-0 gap-3">
-                    <div className="flex flex-col md:items-end">
-                      <span className="text-[10px] text-muted-foreground uppercase font-bold block">Tổng thanh toán</span>
-                      <span className="text-base font-semibold text-primary tracking-tight">
-                        {formatCurrency(order.amount)}
-                      </span>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      {isPendingPayment && order.payosCheckoutUrl && (
-                        <Button
-                          size="sm"
-                          onClick={() => window.location.href = order.payosCheckoutUrl!}
-                          className="bg-warning hover:bg-amber-600 text-white rounded-xl text-xs font-bold h-8 px-3 cursor-pointer"
-                        >
-                          Thanh toán
-                        </Button>
-                      )}
-
-                      {order.status === 'completed' && !submittedFeedbacks[order.id] && (
-                        <Button
-                          size="sm"
-                          onClick={() => setFeedbackOrder(order)}
-                          className="bg-success hover:bg-success/90 text-white rounded-xl text-xs font-bold h-8 px-3 cursor-pointer"
-                        >
-                          Đánh giá thợ
-                        </Button>
-                      )}
-
-                      {order.status === 'completed' && submittedFeedbacks[order.id] && (
-                        <span className="text-xs font-semibold text-success bg-success/10 px-2.5 py-1 rounded-lg border border-success/30 flex items-center gap-1 w-fit">
-                          Đã đánh giá
-                        </span>
-                      )}
-
-                      {isReschedulable && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => {
-                            setReschedulingOrder(order);
-                            // Preselect today
-                            setRescheduleDate(new Date().toISOString().split('T')[0]);
-                          }}
-                          className="rounded-xl text-xs font-semibold h-8 px-3 cursor-pointer"
-                        >
-                          Đổi lịch
-                        </Button>
-                      )}
-
-                      {isCancellable && (
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => setCancellingOrder(order)}
-                          className="rounded-xl text-xs font-semibold h-8 px-3 text-destructive hover:text-destructive hover:bg-destructive/10 cursor-pointer"
-                        >
-                          Hủy
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-
                 </CardContent>
               </Card>
             );
