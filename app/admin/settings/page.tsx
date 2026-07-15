@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import { getErrorMessage } from '@/lib/getErrorMessage';
 import { AdminTopbar } from '@/components/admin/AdminTopbar';
 import { useAuthStore } from '@/store/useAuthStore';
 import {
@@ -87,8 +88,9 @@ export default function AdminSettingsPage() {
       qc.invalidateQueries({ queryKey: ['admin-pricing-policy'] });
     },
     onError: (err: unknown) => {
-      const errMsg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message ?? 'Lỗi cập nhật.';
-      toast.error(`Lỗi: ${errMsg}`);
+      toast.error('Không thể lưu thay đổi.', {
+        description: getErrorMessage(err),
+      });
     }
   });
 
@@ -136,8 +138,9 @@ export default function AdminSettingsPage() {
       qc.invalidateQueries({ queryKey: ['admin-golden-hours'] });
     },
     onError: (err: unknown) => {
-      const errMsg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message ?? 'Lỗi khi xoá.';
-      toast.error(`Lỗi: ${errMsg}`);
+      toast.error('Không thể xóa.', {
+        description: getErrorMessage(err),
+      });
     }
   });
 

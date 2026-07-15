@@ -15,7 +15,9 @@ const beVietnam = Be_Vietnam_Pro({
 
 const plusJakarta = Plus_Jakarta_Sans({
   variable: '--font-plus-jakarta',
-  subsets: ['latin'],
+  // Thiếu 'vietnamese' làm mọi ký tự có dấu trong heading fallback sang
+  // Be Vietnam Pro → một tiêu đề bị trộn 2 font.
+  subsets: ['latin', 'vietnamese'],
   weight: ['500', '600', '700', '800'],
 });
 

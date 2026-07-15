@@ -3,6 +3,7 @@
 import { AdminTopbar } from '@/components/admin/AdminTopbar';
 import { adminGetOrders } from '@/lib/admin-api';
 import { useQuery } from '@tanstack/react-query';
+import { useSocketEvent } from '@/hooks/useSocketEvent';
 import { useState } from 'react';
 import { Search, RefreshCw, ChevronDown, X } from 'lucide-react';
 
@@ -50,6 +51,12 @@ export default function ManagerOrdersPage() {
       ...(statusFilter !== 'all' ? { status: statusFilter } : {}),
     }),
   });
+
+  // Realtime: đơn mới tạo / đổi trạng thái / tiến trình rửa → bảng tự cập nhật.
+  useSocketEvent('order:created', () => refetch());
+  useSocketEvent('order:status', () => refetch());
+  useSocketEvent('wash:started', () => refetch());
+  useSocketEvent('wash:completed', () => refetch());
 
   const orders: OrderData[] = data?.data?.data ?? data?.data ?? [];
   const total: number = data?.data?.total ?? orders.length;

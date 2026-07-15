@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus, RefreshCw, CalendarX2, SearchX, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
+import { getErrorMessage } from '@/lib/getErrorMessage';
 
 import { AdminTopbar } from '@/components/admin/AdminTopbar';
 import { Button } from '@/components/ui/button';
@@ -136,10 +137,9 @@ export default function AdminShiftsPage() {
       qc.invalidateQueries({ queryKey: ['admin-shifts'] });
     },
     onError: (err: unknown) => {
-      const errMsg =
-        (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??
-        'Không thể cập nhật trạng thái ca trực.';
-      toast.error(`Lỗi: ${errMsg}`);
+      toast.error('Không thể cập nhật ca trực.', {
+        description: getErrorMessage(err),
+      });
     },
   });
 

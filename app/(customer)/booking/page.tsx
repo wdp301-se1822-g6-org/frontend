@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import { useQueryClient } from '@tanstack/react-query';
+import { useSocketEvent } from '@/hooks/useSocketEvent';
 import {
   Car,
   Bike,
@@ -244,6 +246,13 @@ function BookingFlow() {
 
   const { data: availableSlots = [], isLoading: isLoadingSlots } =
     useAvailableSlots(slotQueryParams);
+
+  // Realtime: có đơn khác vừa đặt/hủy/dời làm slot thay đổi → tải lại lưới giờ
+  // đang xem để khách không chọn nhầm khung đã kín.
+  const qc = useQueryClient();
+  useSocketEvent('slots:changed', () => {
+    void qc.invalidateQueries({ queryKey: ['available-slots'] });
+  });
 
   // Active Service Types
   const { data: serviceTypes = [], isLoading: isLoadingServices } =

@@ -46,7 +46,15 @@ export function getErrorMessage(error: unknown): string {
 
 function isUserFriendlyMessage(message: string): boolean {
   if (message.length > 140) return false;
-  return !/(exception|stack|sql|jwt|token|undefined|null|\{|\}|<|>)/i.test(
+  if (
+    /(exception|stack|sql|jwt|token|undefined|null|\{|\}|<|>)/i.test(message)
+  ) {
+    return false;
+  }
+  // BE trả lẫn message tiếng Anh kỹ thuật ("Work order can only be created...").
+  // Message dành cho người dùng của app này luôn là tiếng Việt có dấu — không
+  // có dấu thì coi như message kỹ thuật và dùng câu fallback theo status.
+  return /[àáảãạăằắẳẵặâầấẩẫậđèéẻẽẹêềếểễệìíỉĩịòóỏõọôồốổỗộơờớởỡợùúủũụưừứửữựỳýỷỹỵ]/i.test(
     message,
   );
 }

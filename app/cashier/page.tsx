@@ -49,7 +49,7 @@ export default function CashierPOSPage() {
   const handleUploadCheckIn = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
     setIsUploading(true);
-    const toastId = toast.loading('Đang tải ảnh lên Cloudinary...');
+    const toastId = toast.loading('Đang tải ảnh lên...');
     try {
       const { uploadImages } = await import('@/lib/upload-api');
       const res = await uploadImages(files);
@@ -57,8 +57,8 @@ export default function CashierPOSPage() {
       setCheckInPhotos((prev) => [...prev, ...urls]);
       toast.success(`Đã tải lên ${urls.length} ảnh hiện trạng.`, { id: toastId });
     } catch (err: unknown) {
-      const errMsg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message ?? 'Không thể tải ảnh lên.';
-      toast.error(`Lỗi tải ảnh: ${errMsg}`, { id: toastId });
+      console.error('Upload ảnh check-in thất bại:', err);
+      toast.error('Không thể tải ảnh lên. Vui lòng thử lại.', { id: toastId });
     } finally {
       setIsUploading(false);
     }

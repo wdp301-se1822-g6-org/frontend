@@ -1,16 +1,18 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { 
-  Car, 
-  Bike, 
-  Plus, 
-  Check, 
-  Trash2, 
-  Pencil, 
-  AlertTriangle, 
+import Link from 'next/link';
+import {
+  Car,
+  Bike,
+  Plus,
+  Check,
+  Trash2,
+  Pencil,
+  AlertTriangle,
   X,
-  Star
+  Star,
+  History
 } from 'lucide-react';
 import { Spinner } from '@/components/ui/spinner';
 import { toast } from 'sonner';
@@ -18,6 +20,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { formatLicensePlate, capitalizeWords } from '@/lib/format';
+import { getErrorMessage } from '@/lib/getErrorMessage';
 import { 
   getMyVehicles, 
   createVehicle, 
@@ -87,7 +91,7 @@ export default function VehicleManagement() {
     } catch (error: unknown) {
       const err = error as { response?: { data?: { message?: string } } };
       console.error('Lỗi khi tải dữ liệu xe:', err);
-      toast.error(err.response?.data?.message || 'Không thể tải danh sách phương tiện');
+      toast.error(getErrorMessage(error));
     } finally {
       setIsLoading(false);
     }
@@ -168,7 +172,7 @@ export default function VehicleManagement() {
     } catch (error: unknown) {
       const err = error as { response?: { data?: { message?: string } } };
       console.error('Lỗi lưu xe:', err);
-      toast.error(err.response?.data?.message || 'Có lỗi xảy ra, vui lòng thử lại');
+      toast.error(getErrorMessage(error));
     } finally {
       setIsSubmitLoading(false);
     }
@@ -185,7 +189,7 @@ export default function VehicleManagement() {
     } catch (error: unknown) {
       const err = error as { response?: { data?: { message?: string } } };
       console.error('Lỗi xóa xe:', err);
-      toast.error(err.response?.data?.message || 'Không thể xóa phương tiện');
+      toast.error('Không thể xóa phương tiện.', { description: getErrorMessage(error) });
     } finally {
       setIsSubmitLoading(false);
     }
@@ -199,23 +203,28 @@ export default function VehicleManagement() {
     } catch (error: unknown) {
       const err = error as { response?: { data?: { message?: string } } };
       console.error('Lỗi cài đặt mặc định:', err);
-      toast.error(err.response?.data?.message || 'Không thể đặt làm mặc định');
+      toast.error('Không thể đặt xe mặc định.', { description: getErrorMessage(error) });
     }
   };
 
-  // Helper to get type name
+  // Tên loại xe hiển thị tiếng Việt (dữ liệu BE đang lưu tên tiếng Anh).
+  const VEHICLE_TYPE_VI: Record<string, string> = {
+    car: 'Ô tô',
+    motorbike: 'Xe máy',
+  };
   const getTypeName = (typeId: string): string => {
     if (!typeId) return 'Chưa phân loại';
     const found = vehicleTypes.find(t => (t._id || t.id) === typeId);
-    return found?.name || 'Chưa phân loại';
+    if (!found?.name) return 'Chưa phân loại';
+    return VEHICLE_TYPE_VI[found.name.toLowerCase()] || found.name;
   };
 
   // Helper to render beautiful license plate
   const renderLicensePlate = (plate: string) => {
     return (
-      <div className="inline-flex flex-col items-center justify-center border-2 border-border rounded-lg px-4 py-1.5 bg-muted/40 shadow-xs min-w-[140px] text-center font-mono">
+      <div className="inline-flex flex-col items-center justify-center border-2 border-border rounded-lg px-4 py-1.5 bg-muted/40 shadow-xs min-w-35 text-center font-mono">
         <div className="w-full border-b border-border text-[9px] tracking-wider text-placeholder font-sans pb-0.5 leading-none">VIỆT NAM</div>
-        <span className="text-sm font-bold text-foreground tracking-wide pt-0.5 leading-none">{plate}</span>
+        <span className="text-sm font-bold text-foreground tracking-wide pt-0.5 leading-none">{formatLicensePlate(plate)}</span>
       </div>
     );
   };
@@ -225,15 +234,19 @@ export default function VehicleManagement() {
       {/* Header section */}
       <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-border pb-4'>
         <div>
-          <h1 className='font-heading text-xl font-bold text-foreground'>Xe Của Tôi</h1>
-          <p className='text-sm text-muted-foreground'>Quản lý danh sách phương tiện cá nhân của bạn để đặt lịch nhanh chóng hơn</p>
+          <h1 className='font-heading text-xl font-bold text-foreground'>Xe của tôi</h1>
+          <p className='text-sm text-muted-foreground'>
+            {isLoading
+              ? 'Quản lý danh sách phương tiện để đặt lịch nhanh hơn'
+              : `${vehicles.length} phương tiện đã lưu — dùng để đặt lịch nhanh hơn`}
+          </p>
         </div>
         <Button 
           onClick={handleOpenAddModal}
           className='bg-primary hover:bg-primary/90 text-white rounded-xl px-5 py-3 font-semibold shadow-lg transition-all hover:scale-[1.02] flex items-center gap-2'
         >
           <Plus className='w-4 h-4' />
-          Thêm Phương Tiện
+          Thêm phương tiện
         </Button>
       </div>
 
@@ -272,93 +285,94 @@ export default function VehicleManagement() {
             const vId = vehicle._id || vehicle.id || '';
             
             return (
-              <Card 
-                key={vId} 
-                className={`relative border-none overflow-hidden rounded-xl shadow-md transition-all hover:shadow-lg hover:scale-[1.01] bg-white/90 backdrop-blur-sm ${
-                  vehicle.isDefault ? 'ring-2 ring-primary/60 bg-primary/5' : ''
+              <Card
+                key={vId}
+                className={`relative overflow-hidden rounded-xl shadow-xs transition-all hover:shadow-md bg-card py-0 gap-0 ${
+                  vehicle.isDefault ? 'border-primary/40' : 'border-border'
                 }`}
               >
-                <CardContent className="p-6 flex flex-col justify-between h-full min-h-[200px]">
+                <CardContent className="p-5 flex flex-col justify-between h-full min-h-44">
                   <div>
                     {/* Header info card */}
                     <div className="flex justify-between items-start mb-4">
                       <div className="flex items-center gap-3">
                         <div className={`p-2.5 rounded-xl ${
-                          vehicle.isDefault ? 'bg-primary/20 text-primary' : 'bg-muted text-muted-foreground'
+                          vehicle.isDefault ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'
                         }`}>
                           {isMotorbike ? <Bike className="w-5 h-5" /> : <Car className="w-5 h-5" />}
                         </div>
                         <div>
                           <h4 className="font-heading font-bold text-foreground text-md flex items-center gap-2">
-                            {vehicle.nickname || vehicle.brand || 'Xe của tôi'}
+                            {capitalizeWords(vehicle.nickname || vehicle.brand) || 'Xe của tôi'}
                             {vehicle.isDefault && (
-                              <span className="inline-flex items-center gap-0.5 text-[10px] bg-primary text-white font-bold px-2 py-0.5 rounded-full shadow-xs">
-                                <Check className="w-3 h-3" /> Mặc định
+                              <span className="inline-flex items-center gap-1 text-[10px] bg-primary/10 text-primary font-bold px-2 py-0.5 rounded-full border border-primary/20">
+                                <Check className="w-3 h-3" /> Xe mặc định
                               </span>
                             )}
                           </h4>
                           <span className="text-xs text-muted-foreground font-medium">
                             {getTypeName(vehicle.vehicleTypeId)}
+                            {(vehicle.brand || vehicle.model) && (
+                              <> · {capitalizeWords([vehicle.brand, vehicle.model].filter(Boolean).join(' '))}</>
+                            )}
                           </span>
                         </div>
                       </div>
                     </div>
 
                     {/* Middle details */}
-                    <div className="grid grid-cols-2 gap-4 items-center mb-6">
+                    <div className="flex items-center gap-4 mb-5">
                       {renderLicensePlate(vehicle.licensePlate)}
-                      
-                      <div className="space-y-1 text-xs text-muted-foreground font-medium">
-                        {(vehicle.brand || vehicle.model) && (
-                          <div>
-                            <span className="text-placeholder">Hiệu xe:</span>{' '}
-                            <span className="text-foreground font-bold">{[vehicle.brand, vehicle.model].filter(Boolean).join(' ')}</span>
-                          </div>
-                        )}
-                        {vehicle.color && (
-                          <div>
-                            <span className="text-placeholder">Màu sắc:</span>{' '}
-                            <span className="text-foreground font-bold">{vehicle.color}</span>
-                          </div>
-                        )}
-                      </div>
+                      {vehicle.color && (
+                        <div className="text-xs text-muted-foreground font-medium">
+                          <span className="text-placeholder">Màu sắc</span>{' '}
+                          <span className="text-foreground font-semibold block">{capitalizeWords(vehicle.color)}</span>
+                        </div>
+                      )}
                     </div>
                   </div>
 
                   {/* Actions footer */}
-                  <div className="flex items-center justify-between border-t border-border pt-4 mt-auto">
-                    {!vehicle.isDefault ? (
-                      <button 
-                        onClick={() => handleSetDefault(vehicle._id || vehicle.id || '')}
-                        className="text-xs text-primary hover:text-primary/80 font-bold flex items-center gap-1 transition-colors group"
+                  <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border pt-3 mt-auto">
+                    <div className="flex items-center gap-1">
+                      <Link
+                        href={`/profile/orders?q=${encodeURIComponent(vehicle.licensePlate)}`}
+                        className="h-8 rounded-lg px-2.5 text-xs font-semibold text-muted-foreground hover:text-primary hover:bg-primary/10 inline-flex items-center transition-colors"
                       >
-                        <Star className="w-3.5 h-3.5 group-hover:scale-110 transition-transform" />
-                        Đặt mặc định
-                      </button>
-                    ) : (
-                      <span className="text-xs text-primary font-bold flex items-center gap-1">
-                        <Check className="w-3.5 h-3.5" /> Xe chính
-                      </span>
-                    )}
+                        <History className="w-3.5 h-3.5 mr-1" />
+                        Lịch sử rửa
+                      </Link>
+                      {!vehicle.isDefault && (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => handleSetDefault(vehicle._id || vehicle.id || '')}
+                          className="h-8 rounded-lg px-2.5 text-xs font-semibold text-primary hover:text-primary hover:bg-primary/10"
+                        >
+                          <Star className="w-3.5 h-3.5 mr-1" />
+                          Đặt làm mặc định
+                        </Button>
+                      )}
+                    </div>
 
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1.5">
                       <Button
-                        size="icon"
-                        variant="ghost"
+                        size="sm"
+                        variant="outline"
                         onClick={() => handleOpenEditModal(vehicle)}
-                        className="w-8 h-8 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-all"
-                        title="Chỉnh sửa"
+                        className="h-8 rounded-lg px-3 text-xs font-semibold"
                       >
-                        <Pencil className="w-4 h-4" />
+                        <Pencil className="w-3.5 h-3.5 mr-1" />
+                        Sửa
                       </Button>
                       <Button
-                        size="icon"
-                        variant="ghost"
+                        size="sm"
+                        variant="outline"
                         onClick={() => handleOpenDeleteModal(vehicle)}
-                        className="w-8 h-8 rounded-lg hover:bg-destructive/10 text-destructive hover:text-destructive transition-all"
-                        title="Xóa xe"
+                        className="h-8 rounded-lg px-3 text-xs font-semibold border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive"
                       >
-                        <Trash2 className="w-4 h-4" />
+                        <Trash2 className="w-3.5 h-3.5 mr-1" />
+                        Xóa
                       </Button>
                     </div>
                   </div>
@@ -372,7 +386,7 @@ export default function VehicleManagement() {
       {/* Add / Edit Form Modal */}
       {isFormOpen && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
-          <Card className="w-full max-w-lg border-none shadow-2xl rounded-xl overflow-hidden bg-white/95 backdrop-blur-md animate-in zoom-in-95 duration-200">
+          <Card className="w-full max-w-lg border-none shadow-2xl rounded-xl overflow-hidden bg-card py-0 gap-0 animate-in zoom-in-95 duration-200">
             <CardContent className="p-6">
               <div className="flex items-center justify-between border-b border-border pb-4 mb-6">
                 <h3 className="font-heading text-lg font-bold text-foreground">
@@ -502,7 +516,7 @@ export default function VehicleManagement() {
       {/* Delete Confirmation Modal */}
       {isDeleteOpen && selectedVehicle && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
-          <Card className="w-full max-w-md border-none shadow-2xl rounded-xl overflow-hidden bg-white/95 backdrop-blur-md animate-in zoom-in-95 duration-200">
+          <Card className="w-full max-w-md border-none shadow-2xl rounded-xl overflow-hidden bg-card py-0 gap-0 animate-in zoom-in-95 duration-200">
             <CardContent className="p-6">
               <div className="flex items-start gap-4 mb-4">
                 <div className="p-3 rounded-full bg-destructive/10 text-destructive">
@@ -530,7 +544,7 @@ export default function VehicleManagement() {
                 </Button>
                 <Button
                   onClick={handleDelete}
-                  className="bg-destructive/100 hover:bg-red-600 text-white rounded-xl px-5 py-2 font-semibold shadow-lg shadow-red-500/15 min-w-[100px]"
+                  className="bg-destructive hover:bg-destructive/90 text-white rounded-xl px-5 py-2 font-semibold shadow-lg min-w-25"
                   disabled={isSubmitLoading}
                 >
                   {isSubmitLoading ? <Spinner className="size-5 mx-auto" /> : 'Đồng ý xóa'}

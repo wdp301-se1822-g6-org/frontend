@@ -3,51 +3,57 @@
 import { useAuthStore } from '@/store/useAuthStore';
 import { cn } from '@/lib/utils';
 import { getInitials } from '@/lib/format';
-import { User, Bell, Ticket, Pencil, Star, Car, History } from 'lucide-react';
+import {
+  User,
+  Bell,
+  Ticket,
+  Star,
+  Car,
+  History,
+  CalendarClock,
+} from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
-const menuItems = [
+/**
+ * Sidebar nhóm theo tác vụ: tiêu đề nhóm KHÔNG bấm được, item luôn là link.
+ * Active tính theo prefix dài nhất khớp pathname để trang con
+ * (/profile/orders/[id], /profile/loyalty/transactions) vẫn sáng đúng mục.
+ */
+const menuGroups: {
+  heading: string;
+  items: { label: string; href: string; icon: typeof User }[];
+}[] = [
   {
-    title: 'Tài Khoản Của Tôi',
-    icon: User,
-    color: 'text-blue-500',
-    subItems: [
-      { label: 'Hồ Sơ', href: '/profile' },
-      { label: 'Xe Của Tôi', href: '/profile/vehicles' },
-      { label: 'Đổi Mật Khẩu', href: '/' },
+    heading: 'Tài khoản',
+    items: [
+      { label: 'Hồ sơ cá nhân', href: '/profile', icon: User },
+      { label: 'Xe của tôi', href: '/profile/vehicles', icon: Car },
     ],
   },
   {
-    title: 'Lịch sử rửa xe',
-    icon: Car,
-    color: 'text-orange-500',
-    href: '/profile/orders',
+    heading: 'Lịch rửa xe',
+    items: [
+      { label: 'Lịch sử rửa xe', href: '/profile/orders', icon: CalendarClock },
+    ],
   },
   {
-    title: 'Thông Báo',
-    icon: Bell,
-    color: 'text-red-500',
-    href: '/profile/notifications',
-  },
-
-  {
-    title: 'Khách hàng thân thiết',
-    icon: Star,
-    color: 'text-yellow-500',
-    href: '/profile/loyalty',
-  },
-  {
-    title: 'Lịch sử điểm thưởng',
-    icon: History,
-    color: 'text-green-500',
-    href: '/profile/loyalty/transactions',
+    heading: 'Ưu đãi',
+    items: [
+      { label: 'Hạng thành viên', href: '/profile/loyalty', icon: Star },
+      {
+        label: 'Lịch sử điểm thưởng',
+        href: '/profile/loyalty/transactions',
+        icon: History,
+      },
+      { label: 'Voucher của tôi', href: '/profile/my-voucher', icon: Ticket },
+    ],
   },
   {
-    title: 'Voucher của tôi',
-    icon: Ticket,
-    color: 'text-blue-500',
-    href: '/profile/my-voucher',
+    heading: 'Khác',
+    items: [
+      { label: 'Thông báo', href: '/profile/notifications', icon: Bell },
+    ],
   },
 ];
 
@@ -57,107 +63,78 @@ export default function ProfileSidebar() {
 
   const initials = getInitials(authUser?.name);
 
+  // Item active = href là prefix dài nhất của pathname trong toàn bộ menu.
+  const allHrefs = menuGroups.flatMap((g) => g.items.map((i) => i.href));
+  const activeHref = allHrefs
+    .filter((href) => pathname === href || pathname.startsWith(`${href}/`))
+    .sort((a, b) => b.length - a.length)[0];
+
   return (
-    <div className='flex flex-col gap-6'>
+    <div className='flex flex-col gap-5'>
       {/* User Summary */}
       <div className='flex items-center gap-3 px-2'>
-        <div className='relative group'>
-          <div className='w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold overflow-hidden border-2 border-background shadow-sm'>
-            {authUser?.avatarUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={authUser.avatarUrl}
-                alt={authUser.name}
-                className='w-full h-full object-cover'
-              />
-            ) : (
-              <span>{initials}</span>
-            )}
-          </div>
+        <div className='w-11 h-11 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold overflow-hidden border border-border shrink-0'>
+          {authUser?.avatarUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={authUser.avatarUrl}
+              alt={authUser.name}
+              className='w-full h-full object-cover'
+            />
+          ) : (
+            <span>{initials}</span>
+          )}
         </div>
-        <div className='flex flex-col'>
-          <span className='font-bold text-foreground truncate max-w-[150px]'>
+        <div className='flex flex-col min-w-0'>
+          <span className='font-heading font-bold text-foreground truncate capitalize'>
             {authUser?.name || 'Người dùng'}
           </span>
           <Link
             href='/profile'
-            className='flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors'
+            className='text-xs font-semibold text-primary hover:underline underline-offset-2'
           >
-            <Pencil className='w-3 h-3' />
-            Sửa Hồ Sơ
+            Xem hồ sơ
           </Link>
         </div>
       </div>
 
-      {/* Menu */}
-      <nav className='space-y-1'>
-        {menuItems.map((item, idx) => {
-          const Icon = item.icon;
-          const isActive =
-            item.href === pathname ||
-            item.subItems?.some((si) => si.href === pathname);
-
-          return (
-            <div
-              key={idx}
-              className='space-y-1'
-            >
-              <div
-                className={cn(
-                  'flex items-center gap-3 px-3 py-2 rounded-lg transition-all',
-                  item.subItems && isActive && 'bg-primary/5 text-primary',
-                  !item.subItems &&
-                    (pathname === item.href
-                      ? 'bg-primary/5 text-primary'
-                      : 'hover:bg-accent/50'),
-                )}
-              >
-                <div
-                  className={cn(
-                    'p-1.5 rounded-md bg-card shadow-sm',
-                    item.color,
-                  )}
-                >
-                  <Icon className='w-4 h-4' />
-                </div>
-                {item.href ? (
-                  <Link
-                    href={item.href}
-                    className='text-sm font-semibold flex-1'
-                  >
-                    {item.title}
-                  </Link>
-                ) : (
-                  <span className='text-sm font-semibold flex-1'>
-                    {item.title}
-                  </span>
-                )}
-              </div>
-
-              {item.subItems && (
-                <div className='ml-11 flex flex-col gap-1'>
-                  {item.subItems.map((sub, sIdx) => {
-                    const isSubActive = pathname === sub.href;
-                    return (
-                      <Link
-                        key={sIdx}
-                        href={sub.href}
+      {/* Menu theo nhóm */}
+      <nav className='space-y-5' aria-label='Menu tài khoản'>
+        {menuGroups.map((group) => (
+          <div key={group.heading}>
+            <p className='px-3 mb-1 text-[11px] font-bold uppercase tracking-wider text-placeholder select-none'>
+              {group.heading}
+            </p>
+            <ul className='space-y-0.5'>
+              {group.items.map((item) => {
+                const Icon = item.icon;
+                const isActive = item.href === activeHref;
+                return (
+                  <li key={item.href}>
+                    <Link
+                      href={item.href}
+                      aria-current={isActive ? 'page' : undefined}
+                      className={cn(
+                        'flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors',
+                        isActive
+                          ? 'bg-primary/10 text-primary font-bold'
+                          : 'text-muted-foreground font-medium hover:bg-accent/50 hover:text-foreground',
+                      )}
+                    >
+                      <Icon
                         className={cn(
-                          'text-sm py-1 transition-colors',
-                          isSubActive
-                            ? 'text-primary font-bold'
-                            : 'text-muted-foreground hover:text-primary',
+                          'w-4 h-4 shrink-0',
+                          isActive ? 'text-primary' : 'text-muted-foreground',
                         )}
-                      >
-                        {sub.label}
-                      </Link>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          );
-        })}
+                      />
+                      {item.label}
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        ))}
       </nav>
     </div>
   );

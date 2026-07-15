@@ -8,6 +8,7 @@ import {
   adminGetShiftStaff
 } from '@/lib/admin-api';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useSocketEvent } from '@/hooks/useSocketEvent';
 import { useState, useMemo } from 'react';
 import { Pagination } from '@/components/shared/Pagination';
 import {
@@ -16,6 +17,7 @@ import {
   Camera, Eye
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { getErrorMessage } from '@/lib/getErrorMessage';
 
 interface UserData {
   _id: string;
@@ -90,6 +92,17 @@ export default function ManagerWorkOrdersPage() {
     queryFn: () => adminGetWorkOrders(),
   });
 
+  // Realtime: check-in tạo work order mới / giao thợ / bắt đầu / hoàn thành
+  // → bảng điều phối và hàng đợi FIFO tự cập nhật.
+  const invalidateWorkOrders = () => {
+    void qc.invalidateQueries({ queryKey: ['manager-work-orders'] });
+    void qc.invalidateQueries({ queryKey: ['manager-work-orders-queue'] });
+  };
+  useSocketEvent('order:status', invalidateWorkOrders);
+  useSocketEvent('wash:assigned', invalidateWorkOrders);
+  useSocketEvent('wash:started', invalidateWorkOrders);
+  useSocketEvent('wash:completed', invalidateWorkOrders);
+
   // Lấy danh sách hàng đợi FIFO
   const { data: fifoQueueRes, isLoading: isLoadingFIFO, refetch: refetchFIFO } = useQuery({
     queryKey: ['manager-work-orders-queue'],
@@ -128,8 +141,14 @@ export default function ManagerWorkOrdersPage() {
     }
   ];
 
-  const allWorkOrders: WorkOrderData[] = workOrdersRes?.data?.data ?? workOrdersRes?.data ?? [];
-  const fifoQueue: WorkOrderData[] = fifoQueueRes?.data ?? [];
+  const allWorkOrders: WorkOrderData[] = useMemo(
+    () => workOrdersRes?.data?.data ?? workOrdersRes?.data ?? [],
+    [workOrdersRes],
+  );
+  const fifoQueue: WorkOrderData[] = useMemo(
+    () => fifoQueueRes?.data ?? [],
+    [fifoQueueRes],
+  );
   const fetchedWashers: UserData[] = washersRes?.data?.data ?? washersRes?.data ?? [];
   const washers = fetchedWashers.length > 0 ? fetchedWashers : FALLBACK_WASHERS;
 
@@ -202,8 +221,9 @@ export default function ManagerWorkOrdersPage() {
       qc.invalidateQueries({ queryKey: ['manager-dashboard-workorders'] });
     },
     onError: (err) => {
-      const errMsg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message ?? 'Không thể gán thợ.';
-      toast.error(`Lỗi: ${errMsg}`);
+      toast.error('Không thể giao việc cho thợ.', {
+        description: getErrorMessage(err),
+      });
     }
   });
 

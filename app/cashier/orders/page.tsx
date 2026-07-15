@@ -3,6 +3,7 @@
 import { AdminTopbar } from '@/components/admin/AdminTopbar';
 import { adminGetOrders, adminCreateWorkOrder, adminGetWorkOrders } from '@/lib/admin-api';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useSocketEvent } from '@/hooks/useSocketEvent';
 import { useState, useMemo } from 'react';
 import {
   Search,
@@ -20,6 +21,7 @@ import {
   ArrowUpDown,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { getErrorMessage } from '@/lib/getErrorMessage';
 
 export interface ShiftInfo {
   _id?: string;
@@ -149,16 +151,16 @@ export default function CashierOrdersPage() {
   const handleUploadCheckIn = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
     setIsUploading(true);
-    const toastId = toast.loading('Đang tải ảnh hiện trạng lên server...');
+    const toastId = toast.loading('Đang tải ảnh hiện trạng lên...');
     try {
       const { uploadImages } = await import('@/lib/upload-api');
       const res = await uploadImages(files);
       const urls = res.data.urls;
       setCheckInPhotos((prev) => [...prev, ...urls]);
-      toast.success(`Đã tải lên thành công ${urls.length} ảnh hiện trạng.`, { id: toastId });
+      toast.success(`Đã tải lên ${urls.length} ảnh hiện trạng.`, { id: toastId });
     } catch (err: unknown) {
-      const errMsg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message ?? 'Không thể tải ảnh lên.';
-      toast.error(`Lỗi tải ảnh: ${errMsg}`, { id: toastId });
+      console.error('Upload ảnh check-in thất bại:', err);
+      toast.error('Không thể tải ảnh lên. Vui lòng thử lại.', { id: toastId });
     } finally {
       setIsUploading(false);
     }
@@ -177,6 +179,20 @@ export default function CashierOrdersPage() {
     queryFn: () => adminGetWorkOrders(),
   });
 
+  // Realtime POS: khách đặt đơn mới / trạng thái đơn đổi / thợ bắt đầu-kết thúc
+  // rửa → bảng đơn và work order tự cập nhật, thu ngân không phải bấm tải lại.
+  const invalidateCashierData = () => {
+    void qc.invalidateQueries({ queryKey: ['cashier-orders'] });
+    void qc.invalidateQueries({ queryKey: ['cashier-work-orders-all'] });
+  };
+  useSocketEvent('order:created', () => {
+    invalidateCashierData();
+    toast.info('Có lịch đặt rửa xe mới.');
+  });
+  useSocketEvent('order:status', invalidateCashierData);
+  useSocketEvent('wash:started', invalidateCashierData);
+  useSocketEvent('wash:completed', invalidateCashierData);
+
   const checkInMutation = useMutation({
     mutationFn: async ({ orderId, photos }: { orderId: string; photos: string[] }) => {
       await adminCreateWorkOrder(orderId, photos);
@@ -188,8 +204,9 @@ export default function CashierOrdersPage() {
       qc.invalidateQueries({ queryKey: ['cashier-orders'] });
     },
     onError: (err: unknown) => {
-      const errMsg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message ?? 'Đã xảy ra lỗi khi check-in.';
-      toast.error(`Check-in thất bại: ${errMsg}`);
+      toast.error('Check-in không thành công.', {
+        description: getErrorMessage(err),
+      });
     }
   });
 

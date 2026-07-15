@@ -120,8 +120,8 @@ export default function ChatbotWidget() {
         }]);
       }
     } catch (err) {
-      const errMsg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message ?? 'Đã xảy ra lỗi khi kết nối máy chủ.';
-      toast.error(`Trợ lý lỗi: ${errMsg}`);
+      console.error('Chatbot request failed:', err);
+      toast.error('Trợ lý đang gặp sự cố. Vui lòng thử lại sau.');
       setMessages(prev => [...prev, {
         id: nextMsgId('err'),
         role: 'assistant',

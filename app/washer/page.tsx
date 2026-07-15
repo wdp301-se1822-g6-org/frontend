@@ -23,7 +23,9 @@ import {
   Clock
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { getErrorMessage } from '@/lib/getErrorMessage';
 import { useEffect } from 'react';
+import { useSocketEvent } from '@/hooks/useSocketEvent';
 import { StatusBadge } from '@/components/shared/StatusBadge';
 import type { StatusTone } from '@/constants';
 
@@ -85,6 +87,12 @@ export default function WasherDashboard() {
   const qc = useQueryClient();
   const [activeTab, setActiveTab] = useState<'todo' | 'completed' | 'schedule'>('todo');
 
+  // Realtime: được giao xe mới → danh sách việc tự cập nhật, khỏi refresh.
+  // Toast do NotificationSocketBridge lo (BE đã gửi notification "Bạn được giao rửa xe").
+  useSocketEvent('wash:assigned', () => {
+    void qc.invalidateQueries({ queryKey: ['washer-work-orders'] });
+  });
+
   const [inspectionPhotos, setInspectionPhotos] = useState<Record<string, { preWash: string[]; postWash: string[] }>>(() => {
     const stored = localStorage.getItem('wave_inspection_photos');
     if (stored) {
@@ -110,7 +118,7 @@ export default function WasherDashboard() {
       ? (type === 'pre' ? woPhotos.preWash : woPhotos.postWash)
       : [];
     
-    const toastId = toast.loading('Đang tải ảnh lên Cloudinary...');
+    const toastId = toast.loading('Đang tải ảnh lên...');
     try {
       const { uploadImages } = await import('@/lib/upload-api');
       const res = await uploadImages(files);
@@ -125,8 +133,8 @@ export default function WasherDashboard() {
       localStorage.setItem('wave_inspection_photos', JSON.stringify(newMap));
       toast.success(`Đã tải lên thành công ${urls.length} ảnh ${type === 'pre' ? 'trước khi rửa' : 'sau khi rửa'}!`, { id: toastId });
     } catch (err: unknown) {
-      const errMsg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message ?? 'Không thể tải ảnh lên.';
-      toast.error(`Lỗi tải ảnh: ${errMsg}`, { id: toastId });
+      console.error('Upload ảnh thất bại:', err);
+      toast.error('Không thể tải ảnh lên. Vui lòng thử lại.', { id: toastId });
     }
   };
 
@@ -165,7 +173,10 @@ export default function WasherDashboard() {
     enabled: activeTab === 'schedule',
   });
 
-  const allWorkOrders: WorkOrderData[] = workOrdersRes?.data?.data ?? workOrdersRes?.data ?? [];
+  const allWorkOrders: WorkOrderData[] = useMemo(
+    () => workOrdersRes?.data?.data ?? workOrdersRes?.data ?? [],
+    [workOrdersRes],
+  );
   const scheduleItems = scheduleRes?.data ?? [];
 
   const isLoading = activeTab === 'schedule' ? isLoadingSchedule : isLoadingWO;
@@ -199,8 +210,9 @@ export default function WasherDashboard() {
       qc.invalidateQueries({ queryKey: ['washer-work-orders'] });
     },
     onError: (err: unknown) => {
-      const errMsg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message ?? 'Không thể bắt đầu rửa xe.';
-      toast.error(`Lỗi: ${errMsg}`);
+      toast.error('Không thể bắt đầu rửa xe.', {
+        description: getErrorMessage(err),
+      });
     }
   });
 
@@ -218,8 +230,9 @@ export default function WasherDashboard() {
       qc.invalidateQueries({ queryKey: ['washer-work-orders'] });
     },
     onError: (err: unknown) => {
-      const errMsg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message ?? 'Không thể gửi báo cáo hoàn thành.';
-      toast.error(`Lỗi: ${errMsg}`);
+      toast.error('Không thể hoàn thành đơn rửa xe.', {
+        description: getErrorMessage(err),
+      });
     }
   });
 

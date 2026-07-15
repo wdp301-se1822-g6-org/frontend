@@ -70,3 +70,33 @@ export function getInitials(name?: string | null): string {
     .toUpperCase();
   return initials || '?';
 }
+
+/**
+ * Chuẩn hóa hiển thị biển số VN về một format duy nhất, ví dụ
+ * "51A-12312" / "59A99999" / "51a 123.12" -> "51A-123.12" / "59A-999.99".
+ * Dữ liệu nhập tự do nên chỉ chuẩn hóa lúc hiển thị, không đổi giá trị gốc.
+ */
+export function formatLicensePlate(plate?: string | null): string {
+  if (!plate) return '';
+  const raw = plate.toUpperCase().replace(/[^A-Z0-9]/g, '');
+  // Biển phổ thông: 2 số vùng + serie chữ (kèm số phụ nếu có) + 4-5 số cuối.
+  // `\d??` lazy để ưu tiên phần đuôi đủ 5 số (51A77312 -> 51A-773.12).
+  const match = raw.match(/^(\d{2}[A-Z]{1,2}\d??)(\d{4,5})$/);
+  if (!match) return plate.toUpperCase();
+  const [, prefix, digits] = match;
+  const tail =
+    digits.length === 5
+      ? `${digits.slice(0, 3)}.${digits.slice(3)}`
+      : digits;
+  return `${prefix}-${tail}`;
+}
+
+/** Viết hoa chữ cái đầu mỗi từ - dùng cho tên người/hãng xe nhập tự do. */
+export function capitalizeWords(value?: string | null): string {
+  if (!value) return '';
+  return value
+    .trim()
+    .split(/\s+/)
+    .map((word) => (word ? word[0].toUpperCase() + word.slice(1) : word))
+    .join(' ');
+}
