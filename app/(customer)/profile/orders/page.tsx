@@ -78,8 +78,8 @@ const TAB_GROUPS: { id: string; label: string; statuses: OrderStatus[] }[] = [
 ];
 
 const SORT_OPTIONS = [
+  { id: 'soonest', label: 'Ngày giờ sớm nhất' },
   { id: 'priority', label: 'Ưu tiên xử lý' },
-  { id: 'soonest', label: 'Lịch gần nhất' },
   { id: 'newest', label: 'Mới tạo gần đây' },
   { id: 'oldest', label: 'Cũ nhất' },
   { id: 'price-desc', label: 'Giá cao → thấp' },
@@ -109,7 +109,7 @@ export default function MyOrdersPage() {
   const [vehicles, setVehicles] = useState<CustomerVehicle[]>([]);
 
   const [activeTab, setActiveTab] = useState('all');
-  const [sortBy, setSortBy] = useState<SortId>('priority');
+  const [sortBy, setSortBy] = useState<SortId>('soonest');
   // ?q= cho phép trang khác (VD: card xe) deep-link thẳng vào kết quả lọc.
   const [searchQuery, setSearchQuery] = useState(
     () => searchParams.get('q') ?? '',

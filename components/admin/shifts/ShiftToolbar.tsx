@@ -50,6 +50,7 @@ const DATE_OPTIONS: { value: DateRangeKey; label: string }[] = [
 ];
 
 const SORT_OPTIONS: { value: SortKey; label: string }[] = [
+  { value: 'latest', label: 'Ngày mới nhất' },
   { value: 'soonest', label: 'Sắp diễn ra trước' },
   { value: 'capacity', label: 'Sắp đầy chỗ trước' },
   { value: 'newest', label: 'Mới tạo trước' },

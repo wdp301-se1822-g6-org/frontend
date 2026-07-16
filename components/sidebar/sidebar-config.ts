@@ -11,6 +11,7 @@ import {
     Layers,
     Crown,
     Settings,
+    Bot,
 } from 'lucide-react';
 
 // Mọi role dùng chung hệ màu thương hiệu (primary) — phân biệt role bằng
@@ -31,6 +32,7 @@ export const SIDEBAR_CONFIG = {
             { href: '/admin/shifts', icon: Clock, label: 'Ca làm việc' },
             { href: '/admin/tiers', icon: Crown, label: 'Hạng thành viên' },
             { href: '/admin/vouchers', icon: Ticket, label: 'Voucher' },
+            { href: '/admin/chat-knowledge', icon: Bot, label: 'Huấn luyện AI' },
             { href: '/admin/settings', icon: Settings, label: 'Cài đặt' },
         ],
     },
@@ -47,6 +49,7 @@ export const SIDEBAR_CONFIG = {
             { href: '/manager/vehicles', icon: Car, label: 'Quản lý xe' },
             { href: '/manager/shifts', icon: Clock, label: 'Ca làm việc' },
             { href: '/manager/vouchers', icon: Ticket, label: 'Voucher' },
+            { href: '/manager/chat-knowledge', icon: Bot, label: 'Huấn luyện AI' },
         ],
     },
 

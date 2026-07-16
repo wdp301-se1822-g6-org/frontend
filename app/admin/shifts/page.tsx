@@ -60,7 +60,7 @@ export default function AdminShiftsPage() {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [roleFilter, setRoleFilter] = useState<string>('all');
   const [dateRange, setDateRange] = useState<DateRangeKey>('all');
-  const [sort, setSort] = useState<SortKey>('soonest');
+  const [sort, setSort] = useState<SortKey>('latest');
   const [view, setView] = useState<ShiftView>('table');
   const [page, setPage] = useState(1);
 

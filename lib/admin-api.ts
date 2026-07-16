@@ -218,3 +218,29 @@ export const adminUpdatePricingPolicy = (data: Record<string, unknown>) =>
 // ─── Work Orders Queue ──────────────────────────────────
 export const adminGetWorkOrdersQueue = () =>
   axiosInstance.get(ENDPOINTS.adminWorkOrders.queue);
+
+// ─── Chat Knowledge (huấn luyện trợ lý AI - admin/manager) ──────────
+export interface ChatKnowledgePayload {
+  question: string;
+  answer: string;
+  keywords?: string[];
+  category?: string;
+  isActive?: boolean;
+}
+
+export const adminGetChatKnowledge = () =>
+  axiosInstance.get(ENDPOINTS.adminChatKnowledge.list);
+
+export const adminGetChatKnowledgeEntry = (id: string) =>
+  axiosInstance.get(ENDPOINTS.adminChatKnowledge.byId(id));
+
+export const adminCreateChatKnowledge = (data: ChatKnowledgePayload) =>
+  axiosInstance.post(ENDPOINTS.adminChatKnowledge.create, data);
+
+export const adminUpdateChatKnowledge = (
+  id: string,
+  data: Partial<ChatKnowledgePayload>,
+) => axiosInstance.patch(ENDPOINTS.adminChatKnowledge.byId(id), data);
+
+export const adminDeleteChatKnowledge = (id: string) =>
+  axiosInstance.delete(ENDPOINTS.adminChatKnowledge.byId(id));
