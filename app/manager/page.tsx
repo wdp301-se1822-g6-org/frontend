@@ -130,7 +130,6 @@ export default function ManagerOverviewPage() {
     <>
       <AdminTopbar
         title='Tổng quan vận hành'
-        subtitle='Việc cần xử lý ngay và báo cáo vận hành theo thời gian.'
       />
       <main className='flex-1 p-6 lg:p-8 overflow-y-auto bg-background'>
         <div className='max-w-7xl mx-auto flex flex-col gap-8'>
@@ -341,8 +340,7 @@ function ManagerReportBody({ report }: { report: DashboardReport }) {
     <div className='flex flex-col gap-10'>
       {/* 1 - OVERVIEW */}
       <DashboardSection
-        title='Tổng quan vận hành'
-        subtitle='Các chỉ số chính trong kỳ đã chọn.'
+        title='Tổng quan vận hành'  
         icon={Layers}
       >
         <div className='grid grid-cols-2 gap-3 lg:grid-cols-4'>
@@ -372,7 +370,7 @@ function ManagerReportBody({ report }: { report: DashboardReport }) {
             tone='destructive'
           />
           <KpiCard
-            label='Giá trị đơn TB'
+            label='Giá trị đơn trung bình'
             value={formatCurrency(overview.averageOrderValue)}
             hint='Trên đơn hoàn thành'
             icon={CreditCard}
@@ -587,7 +585,7 @@ function ManagerReportBody({ report }: { report: DashboardReport }) {
 
       {/* 5 - VOUCHER & REFUND SUMMARY */}
       <DashboardSection
-        title='Voucher & Hoàn tiền (tổng quan)'
+        title='Voucher & Hoàn tiền'
         subtitle='Mức độ sử dụng voucher và hoàn tiền - chỉ ở mức tổng hợp.'
         icon={Gift}
       >
@@ -641,7 +639,7 @@ function ManagerReportBody({ report }: { report: DashboardReport }) {
 
       {/* 7 - SCHEDULE */}
       <DashboardSection
-        title='Lịch & Năng lực'
+        title='Lịch làm việc & Slot'
         subtitle='Tỷ lệ lấp đầy slot và khung giờ cao điểm.'
         icon={Clock}
       >

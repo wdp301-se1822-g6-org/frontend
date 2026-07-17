@@ -215,6 +215,7 @@ export function RankingTable<T>({
                     : c.align === 'center'
                       ? 'text-center'
                       : 'text-left',
+                  c.className,
                 )}
               >
                 {c.header}

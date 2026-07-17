@@ -98,7 +98,6 @@ export default function AdminDashboardPage() {
     <>
       <AdminTopbar
         title='Báo cáo quản trị & Phân tích vận hành'
-        subtitle='Toàn bộ số liệu được tổng hợp trực tiếp từ dữ liệu thật của hệ thống.'
       />
       <main className='flex-1 overflow-y-auto p-6 lg:p-8'>
         <div className='mx-auto flex max-w-7xl flex-col gap-8'>
@@ -150,8 +149,7 @@ function DashboardBody({ report }: { report: DashboardReport }) {
     <div className='flex flex-col gap-10'>
       {/* 1 ─ OVERVIEW KPI */}
       <DashboardSection
-        title='Tổng quan (Overview KPI)'
-        subtitle='Các chỉ số vận hành chính trong kỳ đã chọn.'
+        title='Tổng quan '
         icon={Sparkles}
       >
         <div className='grid grid-cols-2 gap-3 lg:grid-cols-4'>
@@ -189,7 +187,7 @@ function DashboardBody({ report }: { report: DashboardReport }) {
             tone='destructive'
           />
           <KpiCard
-            label='Giá trị đơn TB'
+            label='Giá trị đơn trung bình'
             value={formatCurrency(overview.averageOrderValue)}
             hint='Trên đơn hoàn thành'
             icon={CreditCard}
@@ -244,8 +242,7 @@ function DashboardBody({ report }: { report: DashboardReport }) {
 
       {/* 2 ─ REVENUE ANALYTICS */}
       <DashboardSection
-        title='Phân tích doanh thu (Revenue Analytics)'
-        subtitle='Doanh thu chỉ tính từ đơn Hoàn thành & Đã thanh toán.'
+        title='Phân tích doanh thu '
         icon={CircleDollarSign}
       >
         <div className='grid gap-4 lg:grid-cols-3'>
@@ -307,7 +304,7 @@ function DashboardBody({ report }: { report: DashboardReport }) {
           </Panel>
         </div>
 
-        <Panel title='Doanh thu theo ngày' hint='Theo ngày rửa (scheduled_at)'>
+        <Panel title='Doanh thu theo ngày'>
           {revenue.byDay.length === 0 ? (
             <EmptyBlock message='Chưa có doanh thu trong kỳ này' />
           ) : (
@@ -318,8 +315,7 @@ function DashboardBody({ report }: { report: DashboardReport }) {
 
       {/* 3 ─ BOOKING ANALYTICS */}
       <DashboardSection
-        title='Phân tích đặt lịch (Booking Analytics)'
-        subtitle='Phân rã trạng thái, tỷ lệ hoàn thành/huỷ và khung giờ.'
+        title='Phân tích đặt lịch'
         icon={CalendarCheck}
       >
         <div className='grid grid-cols-2 gap-3 lg:grid-cols-4'>
@@ -388,8 +384,7 @@ function DashboardBody({ report }: { report: DashboardReport }) {
 
       {/* 4 ─ WASHER PERFORMANCE */}
       <DashboardSection
-        title='Hiệu suất thợ rửa (Washer Performance)'
-        subtitle='“Ai là người rửa nhiều nhất?” - xếp hạng theo số lượt rửa hoàn thành.'
+        title='Hiệu suất thợ rửa'
         icon={Wrench}
       >
         <Panel title='Top thợ rửa theo số việc hoàn thành'>

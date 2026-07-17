@@ -44,7 +44,7 @@ export function AppSidebar({ role }: Props) {
 
   return (
     <aside
-      className={`sticky top-0 h-screen self-start flex flex-col bg-sidebar text-sidebar-foreground transition-all duration-300 shrink-0 border-r border-sidebar-border ${
+      className={`sticky top-0 z-30 h-screen self-start flex flex-col bg-sidebar text-sidebar-foreground transition-all duration-300 shrink-0 border-r border-sidebar-border ${
         collapsed ? 'w-[72px]' : 'w-64'
       }`}
     >
