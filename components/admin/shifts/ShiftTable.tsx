@@ -34,7 +34,6 @@ type ShiftTableProps = {
   staffList: UserData[];
   onEdit: (shift: Shift) => void;
   onCancelRequest: (shift: Shift) => void;
-  onSetStatus: (shift: Shift, status: string) => void;
 };
 
 export function ShiftTable({
@@ -42,7 +41,6 @@ export function ShiftTable({
   staffList,
   onEdit,
   onCancelRequest,
-  onSetStatus,
 }: ShiftTableProps) {
   return (
     <div className='overflow-hidden rounded-xl border border-border bg-card shadow-sm'>
@@ -148,7 +146,6 @@ export function ShiftTable({
                     shift={shift}
                     onEdit={onEdit}
                     onCancelRequest={onCancelRequest}
-                    onSetStatus={onSetStatus}
                   />
                 </TableCell>
               </TableRow>

@@ -247,8 +247,9 @@ function BookingFlow() {
   const { data: availableSlots = [], isLoading: isLoadingSlots } =
     useAvailableSlots(slotQueryParams);
 
-  // Realtime: có đơn khác vừa đặt/hủy/dời làm slot thay đổi → tải lại lưới giờ
-  // đang xem để khách không chọn nhầm khung đã kín.
+  // Realtime: slot thay đổi khi có đơn khác vừa đặt/hủy/dời HOẶC khi manager
+  // tạo/hủy ca làm việc (BE bắn chung event `slots:changed`) → tải lại lưới
+  // giờ đang xem để khách không chọn nhầm khung đã kín/đã đóng.
   const qc = useQueryClient();
   useSocketEvent('slots:changed', () => {
     void qc.invalidateQueries({ queryKey: ['available-slots'] });

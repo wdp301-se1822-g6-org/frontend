@@ -13,11 +13,14 @@ export type PopulatedStaff = {
 export type Shift = {
   _id?: string;
   id?: string;
+  // staffId / stationName có thể vắng mặt trong response (contract mới).
   staffId?: string | PopulatedStaff;
   shiftType?: 'cashier' | 'washer';
   stationName?: string;
   startAt?: string;
   endAt?: string;
+  /** Sức chứa khai báo khi tạo ca (contract mới) — ưu tiên hơn maxBookings. */
+  capacity?: number;
   maxBookings?: number;
   currentBookings?: number;
   status?: string;
@@ -246,7 +249,12 @@ export type Capacity = {
 
 export function getCapacity(shift: Shift): Capacity {
   const current = shift.currentBookings ?? 0;
-  const max = typeof shift.maxBookings === 'number' ? shift.maxBookings : null;
+  const max =
+    typeof shift.capacity === 'number'
+      ? shift.capacity
+      : typeof shift.maxBookings === 'number'
+        ? shift.maxBookings
+        : null;
   const hasData = max !== null && max > 0;
   const free = hasData ? Math.max(0, (max as number) - current) : null;
   const ratio = hasData ? Math.min(1, current / (max as number)) : 0;

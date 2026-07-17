@@ -99,8 +99,8 @@ export default function AdminShiftsPage() {
       const count = Array.isArray(res?.data) ? res.data.length : 1;
       toast.success(
         count > 1
-          ? `Đã tạo ${count} ca trực: sáng (08:00–12:00) và chiều (14:00–17:00).`
-          : 'Thêm ca trực nhân viên mới thành công!',
+          ? `Đã tạo ${count} ca làm việc: sáng (08:00–12:00) và chiều (14:00–17:00).`
+          : 'Thêm ca làm việc mới thành công!',
       );
       qc.invalidateQueries({ queryKey: ['admin-shifts'] });
       setEditShift(false);
@@ -129,15 +129,16 @@ export default function AdminShiftsPage() {
     },
   });
 
-  const toggleShift = useMutation({
-    mutationFn: ({ id, status }: { id: string; status: string }) =>
-      adminToggleShift(id, status),
+  // Thao tác trạng thái duy nhất còn lại là hủy ca ({ status: 'cancelled' }) —
+  // active/completed do BE tự chuyển theo thời gian.
+  const cancelShift = useMutation({
+    mutationFn: (id: string) => adminToggleShift(id, 'cancelled'),
     onSuccess: () => {
-      toast.success('Cập nhật trạng thái ca trực thành công!');
+      toast.success('Đã hủy ca làm việc.');
       qc.invalidateQueries({ queryKey: ['admin-shifts'] });
     },
     onError: (err: unknown) => {
-      toast.error('Không thể cập nhật ca trực.', {
+      toast.error('Không thể hủy ca làm việc.', {
         description: getErrorMessage(err),
       });
     },
@@ -151,16 +152,11 @@ export default function AdminShiftsPage() {
     }
   };
 
-  const handleSetStatus = (shift: Shift, status: string) => {
-    toggleShift.mutate({ id: getShiftId(shift), status });
-  };
-
   const handleCancelConfirm = () => {
     if (!cancelTarget) return;
-    toggleShift.mutate(
-      { id: getShiftId(cancelTarget), status: 'cancelled' },
-      { onSuccess: () => setCancelTarget(null) },
-    );
+    cancelShift.mutate(getShiftId(cancelTarget), {
+      onSuccess: () => setCancelTarget(null),
+    });
   };
 
   // ─── Role filter options (dynamic từ data) ────────────────────────
@@ -253,7 +249,6 @@ export default function AdminShiftsPage() {
           staffList={staffList}
           onEdit={(s) => setEditShift(s)}
           onCancelRequest={(s) => setCancelTarget(s)}
-          onSetStatus={handleSetStatus}
         />
       ))}
     </div>
@@ -393,7 +388,6 @@ export default function AdminShiftsPage() {
                   staffList={staffList}
                   onEdit={(s) => setEditShift(s)}
                   onCancelRequest={(s) => setCancelTarget(s)}
-                  onSetStatus={handleSetStatus}
                 />
               </div>
               <div className='md:hidden'>{cardGrid}</div>
@@ -414,7 +408,6 @@ export default function AdminShiftsPage() {
           item={editShift}
           onClose={() => setEditShift(false)}
           onSave={handleSave}
-          staffList={staffList}
           isPending={createShift.isPending || updateShift.isPending}
         />
       )}
@@ -428,7 +421,7 @@ export default function AdminShiftsPage() {
           if (!open) setCancelTarget(null);
         }}
         onConfirm={handleCancelConfirm}
-        isPending={toggleShift.isPending}
+        isPending={cancelShift.isPending}
       />
     </>
   );

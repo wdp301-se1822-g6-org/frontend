@@ -25,7 +25,6 @@ type ShiftCardProps = {
   staffList: UserData[];
   onEdit: (shift: Shift) => void;
   onCancelRequest: (shift: Shift) => void;
-  onSetStatus: (shift: Shift, status: string) => void;
 };
 
 export function ShiftCard({
@@ -33,7 +32,6 @@ export function ShiftCard({
   staffList,
   onEdit,
   onCancelRequest,
-  onSetStatus,
 }: ShiftCardProps) {
   const status = getShiftStatus(shift);
   const meta = STATUS_META[status];
@@ -67,7 +65,6 @@ export function ShiftCard({
           shift={shift}
           onEdit={onEdit}
           onCancelRequest={onCancelRequest}
-          onSetStatus={onSetStatus}
         />
       </div>
 

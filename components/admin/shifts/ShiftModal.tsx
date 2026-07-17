@@ -6,13 +6,12 @@ import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
-import type { Shift, UserData } from '@/lib/shift-helpers';
+import type { Shift } from '@/lib/shift-helpers';
 
 type ShiftModalProps = {
   item?: Shift | null;
   onClose: () => void;
   onSave: (d: Record<string, unknown>) => void;
-  staffList: UserData[];
   isPending?: boolean;
 };
 
@@ -36,7 +35,9 @@ const isBlockEnded = (dateStr: string, block: 'morning' | 'afternoon') => {
   return end.getTime() <= Date.now();
 };
 
-export function ShiftModal({ item, onClose, onSave, staffList, isPending }: ShiftModalProps) {
+// Form tạo/sửa ca theo contract mới: { date, block, capacity?, note? }.
+// Ca không còn gắn nhân viên/trạm khi tạo — BE tự phân bổ.
+export function ShiftModal({ item, onClose, onSave, isPending }: ShiftModalProps) {
   const getBlockFromTimes = (
     startStr?: string,
     endStr?: string,
@@ -70,43 +71,28 @@ export function ShiftModal({ item, onClose, onSave, staffList, isPending }: Shif
       ? 'afternoon'
       : 'morning';
 
+  const initialCapacity = item?.capacity ?? item?.maxBookings;
+
   const [form, setForm] = useState({
-    staffId:
-      typeof item?.staffId === 'object'
-        ? item?.staffId?._id ?? item?.staffId?.id ?? ''
-        : item?.staffId ?? '',
-    shiftType: item?.shiftType ?? 'washer',
-    stationName: item?.stationName ?? 'Bay 1',
     date: formatDateForInput(item?.startAt) || today,
     block: defaultBlock,
+    capacity: typeof initialCapacity === 'number' ? String(initialCapacity) : '',
     note: item?.note ?? '',
   });
 
   const minDate = !item ? formatDateForInput(new Date().toISOString()) : undefined;
 
-  // Tự động cập nhật shiftType tương ứng khi chọn staffId
-  const handleStaffChange = (staffId: string) => {
-    setForm((prev) => {
-      const selectedStaff = staffList.find((s) => (s._id ?? s.id) === staffId);
-      if (
-        staffId &&
-        selectedStaff &&
-        (selectedStaff.role === 'washer' || selectedStaff.role === 'cashier')
-      ) {
-        return { ...prev, staffId, shiftType: selectedStaff.role as 'washer' | 'cashier' };
-      }
-      return { ...prev, staffId };
-    });
-  };
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.staffId) {
-      toast.error('Vui lòng chọn nhân viên ca trực.');
+    if (!form.date) {
+      toast.error('Vui lòng chọn ngày làm việc.');
       return;
     }
-    if (!form.date) {
-      toast.error('Vui lòng chọn ngày trực.');
+
+    const capacityRaw = form.capacity.trim();
+    const capacity = capacityRaw === '' ? undefined : Number(capacityRaw);
+    if (capacity !== undefined && (!Number.isInteger(capacity) || capacity < 1)) {
+      toast.error('Sức chứa phải là số nguyên dương.');
       return;
     }
 
@@ -124,11 +110,9 @@ export function ShiftModal({ item, onClose, onSave, staffList, isPending }: Shif
     }
 
     onSave({
-      staffId: form.staffId,
-      shiftType: form.shiftType,
-      stationName: form.stationName,
       date: form.date,
       block: form.block,
+      ...(capacity !== undefined ? { capacity } : {}),
       note: form.note,
     });
   };
@@ -145,7 +129,7 @@ export function ShiftModal({ item, onClose, onSave, staffList, isPending }: Shif
       >
         <div className='flex items-center justify-between border-b border-border pb-3'>
           <h3 className='font-heading text-lg font-bold text-foreground'>
-            {item ? 'Sửa ca trực nhân viên' : 'Thêm ca trực mới'}
+            {item ? 'Sửa ca làm việc' : 'Thêm ca làm việc mới'}
           </h3>
           <button
             type='button'
@@ -158,55 +142,6 @@ export function ShiftModal({ item, onClose, onSave, staffList, isPending }: Shif
         </div>
 
         <div className='flex flex-col gap-4'>
-          {/* Chọn nhân viên */}
-          <div>
-            <label className={fieldLabelCls}>Nhân viên ca trực</label>
-            <select
-              value={form.staffId}
-              onChange={(e) => handleStaffChange(e.target.value)}
-              className={selectCls}
-            >
-              <option value=''>-- Chọn nhân viên --</option>
-              {staffList.map((s) => {
-                const sId = s._id ?? s.id ?? '';
-                return (
-                  <option key={sId} value={sId}>
-                    {s.fullName ?? s.name} ({s.role === 'washer' ? 'Rửa xe' : 'Thu ngân'})
-                  </option>
-                );
-              })}
-            </select>
-          </div>
-
-          {/* Loại ca suy ra từ role của nhân viên — khoá để không thể mâu thuẫn */}
-          <div>
-            <label className={fieldLabelCls}>Loại ca làm việc</label>
-            <select
-              value={form.shiftType}
-              disabled
-              aria-readonly
-              className={`${fieldCls} cursor-not-allowed bg-muted/50 text-muted-foreground`}
-            >
-              <option value='washer'>Nhân viên rửa xe (Washer)</option>
-              <option value='cashier'>Thu ngân (Cashier)</option>
-            </select>
-            <p className='mt-1 text-[11px] text-muted-foreground'>
-              Tự chọn theo vai trò của nhân viên đã chọn ở trên.
-            </p>
-          </div>
-
-          {/* Tên trạm làm việc */}
-          <div>
-            <label className={fieldLabelCls}>Tên trạm / Bãi làm việc</label>
-            <input
-              type='text'
-              value={form.stationName}
-              onChange={(e) => setForm({ ...form, stationName: e.target.value })}
-              placeholder='Ví dụ: Bay 1, Quầy thu ngân'
-              className={fieldCls}
-            />
-          </div>
-
           {/* Ngày trực */}
           <div>
             <label className={fieldLabelCls}>Ngày làm việc</label>
@@ -250,6 +185,24 @@ export function ShiftModal({ item, onClose, onSave, staffList, isPending }: Shif
             </p>
           </div>
 
+          {/* Sức chứa */}
+          <div>
+            <label className={fieldLabelCls}>Sức chứa (số xe tối đa)</label>
+            <input
+              type='number'
+              min={1}
+              step={1}
+              inputMode='numeric'
+              value={form.capacity}
+              onChange={(e) => setForm({ ...form, capacity: e.target.value })}
+              placeholder='Bỏ trống để dùng mặc định của hệ thống'
+              className={fieldCls}
+            />
+            <p className='mt-1 text-[11px] text-muted-foreground'>
+              Số xe tối đa ca này có thể nhận. Bỏ trống nếu không giới hạn riêng.
+            </p>
+          </div>
+
           {/* Ghi chú */}
           <div>
             <label className={fieldLabelCls}>Ghi chú / Mô tả</label>
@@ -269,7 +222,7 @@ export function ShiftModal({ item, onClose, onSave, staffList, isPending }: Shif
           </Button>
           <Button type='submit' className='flex-1' disabled={isPending}>
             {isPending && <Spinner />}
-            Lưu ca trực
+            Lưu ca làm việc
           </Button>
         </div>
       </form>
