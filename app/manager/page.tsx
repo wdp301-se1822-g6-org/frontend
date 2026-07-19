@@ -484,59 +484,66 @@ function ManagerReportBody({ report }: { report: DashboardReport }) {
 
           <DetailGroupCard
             title='Tình hình đặt lịch'
-            subtitle='Tỷ lệ hoàn thành/huỷ, trạng thái, khung giờ'
+            subtitle='Bấm để xem tỷ lệ hoàn thành/huỷ và khung giờ'
             icon={CalendarCheck}
+            preview={
+              <DonutChart
+                data={Object.entries(bookings.statusSummary).map(
+                  ([key, count]) => ({
+                    label: STATUS_LABELS[key] ?? key,
+                    value: count,
+                  }),
+                )}
+                centerCaption='đơn'
+                emptyMessage='Chưa có đặt lịch nào trong khoảng thời gian này'
+              />
+            }
           >
-        <div className='grid grid-cols-1 sm:grid-cols-3 gap-3'>
-          <KpiCard
-            label='Tỷ lệ hoàn thành'
-            value={formatPercent(bookings.completionRate)}
-            icon={CalendarCheck}
-            tone='success'
-          />
-          <KpiCard
-            label='Tỷ lệ huỷ'
-            value={formatPercent(bookings.cancellationRate)}
-            icon={TrendingDown}
-            tone='destructive'
-          />
-          <KpiCard
-            label='Tỷ lệ không đến'
-            value={formatPercent(bookings.noShowRate)}
-            icon={AlertTriangle}
-            tone='warning'
-          />
-        </div>
-        <div className='grid gap-4 lg:grid-cols-3'>
-          <Panel title='Tỷ trọng trạng thái đặt lịch'>
-            <DonutChart
-              data={Object.entries(bookings.statusSummary).map(
-                ([key, count]) => ({
-                  label: STATUS_LABELS[key] ?? key,
-                  value: count,
-                }),
-              )}
-              centerCaption='đơn'
-              emptyMessage='Chưa có đặt lịch nào trong khoảng thời gian này'
-            />
-          </Panel>
-          <Panel
-            title='Khung giờ đông khách'
-            hint='Số đơn theo giờ trong ngày - cột đậm là giờ cao điểm'
-            className='lg:col-span-2'
-          >
-            <HourStrip
-              data={bookings.byHour}
-              emptyMessage='Chưa có đặt lịch trong khoảng thời gian này'
-            />
-          </Panel>
-        </div>
+            <div className='grid grid-cols-1 sm:grid-cols-3 gap-3'>
+              <KpiCard
+                label='Tỷ lệ hoàn thành'
+                value={formatPercent(bookings.completionRate)}
+                icon={CalendarCheck}
+                tone='success'
+              />
+              <KpiCard
+                label='Tỷ lệ huỷ'
+                value={formatPercent(bookings.cancellationRate)}
+                icon={TrendingDown}
+                tone='destructive'
+              />
+              <KpiCard
+                label='Tỷ lệ không đến'
+                value={formatPercent(bookings.noShowRate)}
+                icon={AlertTriangle}
+                tone='warning'
+              />
+            </div>
+            <Panel
+              title='Khung giờ đông khách'
+              hint='Số đơn theo giờ trong ngày - cột đậm là giờ cao điểm'
+            >
+              <HourStrip
+                data={bookings.byHour}
+                emptyMessage='Chưa có đặt lịch trong khoảng thời gian này'
+              />
+            </Panel>
           </DetailGroupCard>
 
           <DetailGroupCard
             title='Hiệu suất thợ rửa'
-            subtitle='Top thợ theo lượt rửa hoàn thành trong kỳ'
+            subtitle='Bấm để xem bảng chi tiết từng thợ'
             icon={Wrench}
+            preview={
+              <BarList
+                items={washers.slice(0, 5).map((w) => ({
+                  label: w.name,
+                  value: w.completedJobs,
+                }))}
+                format={(v) => `${formatNumber(v)} lượt`}
+                emptyMessage='Chưa có thợ nào hoàn thành lượt rửa trong kỳ này'
+              />
+            }
           >
             <div className='flex justify-end'>
               <Link
@@ -615,8 +622,19 @@ function ManagerReportBody({ report }: { report: DashboardReport }) {
 
           <DetailGroupCard
             title='Voucher & Hoàn tiền'
-            subtitle='Mức độ dùng voucher và hoàn tiền'
+            subtitle='Bấm để xem số phát hành, đã dùng, hoàn tiền'
             icon={Gift}
+            preview={
+              <DonutChart
+                data={[
+                  { label: 'Chưa dùng', value: voucherLoyalty.unused },
+                  { label: 'Đã dùng', value: voucherLoyalty.used },
+                  { label: 'Hết hạn', value: voucherLoyalty.expired },
+                ]}
+                centerCaption='voucher'
+                emptyMessage='Chưa có voucher nào trong khoảng thời gian này'
+              />
+            }
           >
         <div className='grid grid-cols-1 gap-3 sm:grid-cols-3'>
           <KpiCard
@@ -639,25 +657,30 @@ function ManagerReportBody({ report }: { report: DashboardReport }) {
             tone='destructive'
           />
         </div>
-        <Panel title='Tỷ trọng trạng thái voucher'>
-          <DonutChart
-            data={[
-              { label: 'Chưa dùng', value: voucherLoyalty.unused },
-              { label: 'Đã dùng', value: voucherLoyalty.used },
-              { label: 'Hết hạn', value: voucherLoyalty.expired },
-            ]}
-            centerCaption='voucher'
-            emptyMessage='Chưa có voucher nào trong khoảng thời gian này'
-          />
-        </Panel>
           </DetailGroupCard>
 
           {report.cancellationNoShow && (
             <DetailGroupCard
               title='Hủy lịch & Không đến'
-              subtitle='Lý do huỷ và khách hàng cần lưu ý'
+              subtitle='Bấm để xem lý do huỷ và khách cần lưu ý'
               icon={AlertTriangle}
               hideModalHeader
+              preview={
+                <DonutChart
+                  data={[
+                    {
+                      label: 'Đã huỷ',
+                      value: report.cancellationNoShow.totalCancelled,
+                    },
+                    {
+                      label: 'Không đến',
+                      value: report.cancellationNoShow.totalNoShow,
+                    },
+                  ]}
+                  centerCaption='đơn'
+                  emptyMessage='Không có đơn huỷ/không đến trong kỳ này'
+                />
+              }
             >
               <CancellationNoShowSection
                 data={report.cancellationNoShow}
@@ -668,8 +691,19 @@ function ManagerReportBody({ report }: { report: DashboardReport }) {
 
           <DetailGroupCard
             title='Lịch làm việc & Chỗ đặt'
-            subtitle='Mức độ lấp đầy chỗ đặt, giờ cao điểm'
+            subtitle='Bấm để xem số ca, sức chứa, giờ cao điểm'
             icon={Clock}
+            preview={
+              <BarList
+                items={[
+                  { label: 'Chỗ đã đặt', value: schedule.bookedSlots },
+                  { label: 'Còn trống', value: schedule.availableSlots },
+                ]}
+                format={(v) => `${formatNumber(v)} chỗ`}
+                emptyMessage='Chưa có ca làm việc trong kỳ này'
+                accent='bg-info'
+              />
+            }
           >
         <div className='grid grid-cols-1 sm:grid-cols-3 gap-3'>
           <KpiCard
