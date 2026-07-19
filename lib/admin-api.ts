@@ -101,9 +101,8 @@ export const adminToggleTierConfig = (id: string, isActive: boolean) =>
 export const adminGetShifts = (params?: Record<string, unknown>) =>
   axiosInstance.get('/admin/shifts', { params });
 
-// Active washers + cashiers assignable to a shift (manager + admin allowed).
-export const adminGetShiftStaff = () =>
-  axiosInstance.get('/admin/shifts/staff');
+// GET /admin/shifts/staff đã bị BE xoá khi chuyển sang ca ẩn danh —
+// danh sách thợ lấy qua adminGetWasherStatus.
 
 export const adminCreateShift = (data: Record<string, unknown>) =>
   axiosInstance.post('/admin/shifts', data);

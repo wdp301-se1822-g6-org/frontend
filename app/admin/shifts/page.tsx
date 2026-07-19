@@ -14,7 +14,7 @@ import {
   adminCreateShift,
   adminUpdateShift,
   adminToggleShift,
-  adminGetShiftStaff,
+  adminGetWasherStatus,
 } from '@/lib/admin-api';
 import {
   getShiftId,
@@ -29,7 +29,6 @@ import {
   type DateRangeKey,
   type SortKey,
 } from '@/lib/shift-helpers';
-import { ShiftKpiCards } from '@/components/admin/shifts/ShiftKpiCards';
 import {
   ShiftToolbar,
   type StatusFilter,
@@ -76,12 +75,20 @@ export default function AdminShiftsPage() {
     queryFn: () => adminGetShifts({ limit: 100 }),
   });
 
-  // Danh sách nhân viên (washers & cashiers) để gán ca
+  // Danh sách thợ thật từ /admin/shifts/washer-status — chỉ dùng để hiển thị
+  // tên cho các ca legacy còn staff_id (BE đã bỏ GET /admin/shifts/staff khi
+  // chuyển sang ca ẩn danh theo sức chứa).
   const { data: usersRes } = useQuery({
-    queryKey: ['admin-shifts-staff'],
+    queryKey: ['washer-status'],
     queryFn: async (): Promise<UserData[]> => {
-      const res = await adminGetShiftStaff();
-      return (res.data?.data ?? res.data ?? []) as UserData[];
+      const res = await adminGetWasherStatus();
+      return (res.data ?? []).map((w) => ({
+        _id: w.washerId,
+        id: w.washerId,
+        name: w.name,
+        email: w.email,
+        role: 'washer',
+      })) as UserData[];
     },
   });
 
@@ -306,8 +313,8 @@ export default function AdminShiftsPage() {
             </div>
           </div>
 
-          {/* KPI summary */}
-          <ShiftKpiCards shifts={shifts} loading={isLoading} />
+          {/* Trang danh sách không gắn cụm KPI tổng quan — số liệu tổng đã có
+              ở dashboard; bộ lọc trạng thái trên toolbar là đủ để thu hẹp. */}
 
           {/* Toolbar */}
           <ShiftToolbar
