@@ -17,11 +17,9 @@ import {
   CalendarCheck,
   CircleDollarSign,
   Clock,
-  CreditCard,
   Layers,
   Sparkles,
   TrendingDown,
-  Users,
   Wrench,
 } from 'lucide-react';
 import { AdminTopbar } from '@/components/admin/AdminTopbar';
@@ -33,14 +31,19 @@ import { DonutChart } from '@/components/admin/dashboard/DonutChart';
 import {
   BarList,
   DashboardSection,
+  DayRevenueChart,
+  DetailGroupCard,
   EmptyBlock,
   HourStrip,
+  InlineStats,
   KpiCard,
   Panel,
   RankBadge,
   RankingTable,
 } from '@/components/admin/dashboard/parts';
+import Link from 'next/link';
 import { QueryBoundary } from '@/components/shared/QueryBoundary';
+import { WasherStatusMini } from '@/components/washers/WasherStatusMini';
 import { adminGetDashboard } from '@/lib/admin-api';
 import { DEFAULT_PERIOD, getRangeForPeriod } from '@/lib/date-range';
 import { formatCurrency, formatNumber, formatPercent } from '@/lib/format';
@@ -51,7 +54,7 @@ import type { DashboardReport } from '@/types/dashboard';
 const STATUS_LABELS: Record<string, string> = {
   pending_payment: 'Chờ thanh toán',
   confirmed: 'Đã xác nhận',
-  checked_in: 'Đã check-in',
+  checked_in: 'Đã nhận xe',
   in_progress: 'Đang rửa',
   completed: 'Hoàn thành',
   cancelled: 'Đã huỷ',
@@ -147,104 +150,91 @@ function DashboardBody({ report }: { report: DashboardReport }) {
 
   return (
     <div className='flex flex-col gap-10'>
-      {/* 1 ─ OVERVIEW KPI */}
+      {/* 1 ─ TỔNG QUAN TRỌNG TÂM: 4 chỉ số chính + hàng chỉ số phụ, kèm khối
+          thợ theo nhóm hành vi đặt đối diện. Các donut cơ cấu bị bỏ khỏi đây
+          vì trùng với mục Doanh thu / Đặt lịch. */}
       <DashboardSection
-        title='Tổng quan '
+        title='Tổng quan'
         icon={Sparkles}
       >
-        <div className='grid grid-cols-2 gap-3 lg:grid-cols-4'>
-          <KpiCard
-            label='Doanh thu thực nhận'
-            value={formatCurrency(overview.netRevenue)}
-            hint='Sau giảm giá & hoàn tiền'
-            icon={CircleDollarSign}
-            tone='success'
-          />
-          <KpiCard
-            label='Tổng đặt lịch'
-            value={formatNumber(overview.totalBookings)}
-            hint={`${formatNumber(overview.completedBookings)} hoàn thành`}
-            icon={CalendarCheck}
-          />
-          <KpiCard
-            label='Đang rửa'
-            value={formatNumber(inProgressBookings)}
-            hint='Xe đang được xử lý'
-            icon={Sparkles}
-            tone='primary'
-          />
-          <KpiCard
-            label='Đang chờ xử lý'
-            value={formatNumber(waitingBookings)}
-            hint='Chưa vào rửa'
-            icon={Clock}
-          />
-          <KpiCard
-            label='Huỷ / Không đến'
-            value={`${formatNumber(overview.cancelledBookings)} / ${formatNumber(overview.noShowBookings)}`}
-            hint='Không tính doanh thu'
-            icon={TrendingDown}
-            tone='destructive'
-          />
-          <KpiCard
-            label='Giá trị đơn trung bình'
-            value={formatCurrency(overview.averageOrderValue)}
-            hint='Trên đơn hoàn thành'
-            icon={CreditCard}
-          />
-          <KpiCard
-            label='Thợ đang hoạt động'
-            value={formatNumber(overview.activeWashers)}
-            icon={Wrench}
-          />
-          <KpiCard
-            label='Khách hàng'
-            value={formatNumber(overview.totalCustomers)}
-            icon={Users}
-          />
-        </div>
-
-        {/* Tỷ trọng tổng hợp cho các card KPI ở trên */}
-        <div className='grid gap-4 lg:grid-cols-2'>
-          <Panel
-            title='Cơ cấu doanh thu'
-            hint='Doanh thu gộp được chia thành thực nhận, giảm giá và hoàn tiền'
-          >
-            <DonutChart
-              data={[
-                { label: 'Thực nhận', value: overview.netRevenue },
-                { label: 'Giảm giá', value: overview.discountAmount },
-                { label: 'Hoàn tiền', value: overview.refundAmount },
+        <div className='grid gap-4 lg:grid-cols-3'>
+          <div className='flex flex-col gap-3 lg:col-span-2'>
+            <div className='grid grid-cols-2 gap-3'>
+              <KpiCard
+                label='Doanh thu thực nhận'
+                value={formatCurrency(overview.netRevenue)}
+                hint='Sau giảm giá & hoàn tiền'
+                icon={CircleDollarSign}
+                tone='success'
+              />
+              <KpiCard
+                label='Tổng đặt lịch'
+                value={formatNumber(overview.totalBookings)}
+                hint={`${formatNumber(overview.completedBookings)} hoàn thành`}
+                icon={CalendarCheck}
+              />
+              <KpiCard
+                label='Đang xử lý'
+                value={formatNumber(waitingBookings + inProgressBookings)}
+                hint={`${formatNumber(inProgressBookings)} đang rửa · ${formatNumber(waitingBookings)} chờ`}
+                icon={Clock}
+                tone='primary'
+              />
+              <KpiCard
+                label='Huỷ / Không đến'
+                value={`${formatNumber(overview.cancelledBookings)} / ${formatNumber(overview.noShowBookings)}`}
+                hint='Không tính doanh thu'
+                icon={TrendingDown}
+                tone='destructive'
+              />
+            </div>
+            <InlineStats
+              items={[
+                {
+                  label: 'Giá trị đơn trung bình',
+                  value: formatCurrency(overview.averageOrderValue),
+                },
+                {
+                  label: 'Thợ đang hoạt động',
+                  value: formatNumber(overview.activeWashers),
+                },
+                {
+                  label: 'Khách hàng',
+                  value: formatNumber(overview.totalCustomers),
+                },
               ]}
-              formatValue={formatCurrency}
-              centerCaption='doanh thu gộp'
-              emptyMessage='Chưa có doanh thu trong khoảng thời gian này'
             />
-          </Panel>
-          <Panel
-            title='Cơ cấu đặt lịch'
-            hint='Tổng đặt lịch chia theo trạng thái xử lý'
-          >
-            <DonutChart
-              data={[
-                { label: 'Hoàn thành', value: overview.completedBookings },
-                { label: 'Đang rửa', value: inProgressBookings },
-                { label: 'Đang chờ xử lý', value: waitingBookings },
-                { label: 'Đã huỷ', value: overview.cancelledBookings },
-                { label: 'Không đến', value: overview.noShowBookings },
-              ]}
-              centerCaption='đơn'
-              emptyMessage='Chưa có booking nào trong khoảng thời gian này'
-            />
-          </Panel>
+          </div>
+          {/* Thợ nhóm theo hành vi — nhìn nhanh ai đang rửa/rảnh/trong ca. */}
+          <WasherStatusMini href='/admin/washers' />
         </div>
       </DashboardSection>
 
-      {/* 2 ─ REVENUE ANALYTICS */}
+      {/* 2 ─ PHÂN TÍCH CHI TIẾT: dashboard chỉ giữ tổng quan cơ bản, mỗi
+          nhóm số liệu mở ra trong modal riêng. */}
       <DashboardSection
-        title='Phân tích doanh thu '
-        icon={CircleDollarSign}
+        title='Phân tích chi tiết'
+        subtitle='Bấm vào từng nhóm để mở số liệu đầy đủ của kỳ đã chọn.'
+        icon={Layers}
       >
+        <div className='grid gap-3 sm:grid-cols-2 lg:grid-cols-3'>
+          {/* Biểu đồ tổng quan hiển thị sẵn; bấm vào mở các biểu đồ còn lại. */}
+          <DetailGroupCard
+            title='Doanh thu theo ngày'
+            subtitle='Bấm để xem cơ cấu, theo dịch vụ và thanh toán'
+            icon={CircleDollarSign}
+            className='sm:col-span-2 lg:col-span-3'
+            preview={
+              revenue.byDay.length === 0 ? (
+                <EmptyBlock message='Chưa có doanh thu trong kỳ này' />
+              ) : (
+                <DayRevenueChart
+                  data={revenue.byDay}
+                  formatValue={formatCurrency}
+                />
+              )
+            }
+          >
         <div className='grid gap-4 lg:grid-cols-3'>
           <Panel
             title='Cơ cấu doanh thu'
@@ -304,21 +294,14 @@ function DashboardBody({ report }: { report: DashboardReport }) {
           </Panel>
         </div>
 
-        <Panel title='Doanh thu theo ngày'>
-          {revenue.byDay.length === 0 ? (
-            <EmptyBlock message='Chưa có doanh thu trong kỳ này' />
-          ) : (
-            <DayRevenueChart data={revenue.byDay} />
-          )}
-        </Panel>
-      </DashboardSection>
+          </DetailGroupCard>
 
-      {/* 3 ─ BOOKING ANALYTICS */}
-      <DashboardSection
-        title='Phân tích đặt lịch'
-        icon={CalendarCheck}
-      >
-        <div className='grid grid-cols-2 gap-3 lg:grid-cols-4'>
+          <DetailGroupCard
+            title='Phân tích đặt lịch'
+            subtitle='Tỷ lệ hoàn thành/huỷ, trạng thái, khung giờ'
+            icon={CalendarCheck}
+          >
+        <div className='grid grid-cols-1 gap-3 sm:grid-cols-3'>
           <KpiCard
             label='Tỷ lệ hoàn thành'
             value={formatPercent(bookings.completionRate)}
@@ -336,11 +319,6 @@ function DashboardBody({ report }: { report: DashboardReport }) {
             value={formatPercent(bookings.noShowRate)}
             icon={AlertTriangle}
             tone='warning'
-          />
-          <KpiCard
-            label='Tổng đặt lịch'
-            value={formatNumber(overview.totalBookings)}
-            icon={Layers}
           />
         </div>
         <div className='grid gap-4 lg:grid-cols-3'>
@@ -380,13 +358,21 @@ function DashboardBody({ report }: { report: DashboardReport }) {
             emptyMessage='Chưa có đặt lịch trong kỳ này'
           />
         </Panel>
-      </DashboardSection>
+          </DetailGroupCard>
 
-      {/* 4 ─ WASHER PERFORMANCE */}
-      <DashboardSection
-        title='Hiệu suất thợ rửa'
-        icon={Wrench}
-      >
+          <DetailGroupCard
+            title='Hiệu suất thợ rửa'
+            subtitle='Top thợ theo lượt rửa hoàn thành trong kỳ'
+            icon={Wrench}
+          >
+            <div className='flex justify-end'>
+              <Link
+                href='/admin/washers'
+                className='text-xs font-semibold text-primary hover:underline'
+              >
+                Xem giám sát trực tiếp →
+              </Link>
+            </div>
         <Panel title='Top thợ rửa theo số việc hoàn thành'>
           <RankingTable
             rows={washers}
@@ -464,8 +450,9 @@ function DashboardBody({ report }: { report: DashboardReport }) {
             ]}
           />
         </Panel>
+          </DetailGroupCard>
+        </div>
       </DashboardSection>
-
     </div>
   );
 }
@@ -497,38 +484,6 @@ function RevenueRow({
       >
         {formatCurrency(display)}
       </dd>
-    </div>
-  );
-}
-
-function DayRevenueChart({
-  data,
-}: {
-  data: { key: string; revenue: number; orders: number }[];
-}) {
-  const max = Math.max(...data.map((d) => d.revenue), 1);
-  return (
-    <div className='flex items-end gap-1.5 overflow-x-auto' style={{ height: 160 }}>
-      {data.map((d) => {
-        const height = Math.max((d.revenue / max) * 100, 3);
-        const label = d.key.slice(5); // MM-DD
-        return (
-          <div
-            key={d.key}
-            className='group flex min-w-4.5 max-w-16 flex-1 flex-col items-center justify-end'
-            style={{ height: '100%' }}
-            title={`${d.key}: ${formatCurrency(d.revenue)} (${d.orders} đơn)`}
-          >
-            <div
-              className='w-full rounded-t-sm bg-primary/70 transition-colors group-hover:bg-primary'
-              style={{ height: `${height}%` }}
-            />
-            <span className='mt-1 rotate-0 whitespace-nowrap text-[9px] text-muted-foreground'>
-              {label}
-            </span>
-          </div>
-        );
-      })}
     </div>
   );
 }

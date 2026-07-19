@@ -41,8 +41,10 @@ export const setDefaultVehicle = (id: string) =>
 // ─── Loyalty & Tiers (Customer) ─────────────────────────
 export const getMyLoyalty = () => axiosInstance.get(ENDPOINTS.loyalty.mine);
 
-export const getMyLoyaltyTransactions = () =>
-  axiosInstance.get(ENDPOINTS.loyalty.transactions);
+export const getMyLoyaltyTransactions = (page = 1, limit = 100) =>
+  axiosInstance.get(ENDPOINTS.loyalty.transactions, {
+    params: { page, limit },
+  });
 
 // ─── Vouchers (Customer) ───────────────────────────────
 export const getMyVouchers = (status?: 'unused' | 'used' | 'expired') =>

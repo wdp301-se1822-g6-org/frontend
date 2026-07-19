@@ -89,6 +89,12 @@ export const ENDPOINTS = {
     status: (id: string) => `/admin/shifts/${id}/status`,
     staff: '/admin/shifts/staff',
     staffStats: '/admin/shifts/staff-stats',
+    washerStatus: '/admin/shifts/washer-status',
+  },
+  /** Hồ sơ của chính người dùng - BE `MeUserController` (mounted /me/profile). */
+  profile: {
+    me: '/me/profile',
+    changePassword: '/me/profile/change-password',
   },
   loyalty: {
     mine: '/me/loyalty',
@@ -160,6 +166,11 @@ export const ENDPOINTS = {
   adminFeedback: {
     list: '/admin/feedback',
     washerSummary: (washerId: string) => `/admin/feedback/washers/${washerId}/summary`,
+  },
+  /** Đánh giá về chính thợ đang đăng nhập - BE `WasherFeedbackController`. */
+  washerFeedback: {
+    list: '/me/washer-feedback',
+    summary: '/me/washer-feedback/summary',
   },
   upload: {
     image: '/upload/image',

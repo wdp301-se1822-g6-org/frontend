@@ -12,27 +12,34 @@ import { CancellationNoShowSection } from '@/components/admin/dashboard/Cancella
 import {
   BarList,
   DashboardSection,
+  DayRevenueChart,
+  DetailGroupCard,
   EmptyBlock,
   HourStrip,
+  InlineStats,
   KpiCard,
   Panel,
   RankBadge,
   RankingTable,
 } from '@/components/admin/dashboard/parts';
 import { QueryBoundary } from '@/components/shared/QueryBoundary';
+import { WasherStatusMini } from '@/components/washers/WasherStatusMini';
+import { useSocketEvent } from '@/hooks/useSocketEvent';
 import { adminGetDashboard, adminGetWorkOrders } from '@/lib/admin-api';
 import { formatCurrency, formatNumber, formatPercent } from '@/lib/format';
 import type { DashboardReport } from '@/types/dashboard';
-import { keepPreviousData, useQuery } from '@tanstack/react-query';
+import {
+  keepPreviousData,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query';
 import {
   AlertTriangle,
   ArrowRight,
   CalendarCheck,
-  CheckCircle2,
   CircleDollarSign,
   ClipboardCheck,
   Clock,
-  CreditCard,
   Gift,
   Layers,
   RotateCcw,
@@ -66,7 +73,7 @@ interface WorkOrderRow {
 const STATUS_LABELS: Record<string, string> = {
   pending_payment: 'Chờ thanh toán',
   confirmed: 'Đã xác nhận',
-  checked_in: 'Đã check-in',
+  checked_in: 'Đã nhận xe',
   in_progress: 'Đang rửa',
   completed: 'Hoàn thành',
   cancelled: 'Đã huỷ',
@@ -82,6 +89,7 @@ const WO_STATUS: Record<string, { label: string; tone: StatusTone }> = {
 };
 
 export default function ManagerOverviewPage() {
+  const qc = useQueryClient();
   const [filter, setFilter] = useState<DateFilterValue>(() => ({
     period: DEFAULT_PERIOD,
     range: getRangeForPeriod(DEFAULT_PERIOD),
@@ -113,6 +121,15 @@ export default function ManagerOverviewPage() {
     queryKey: ['manager-overview-workorders'],
     queryFn: () => adminGetWorkOrders({ limit: 100 }),
   });
+  // Socket wash:*/order:status → cụm "Cần xử lý ngay" và bảng xe đang rửa
+  // tự cập nhật không cần reload.
+  const invalidateWorkOrders = () => {
+    void qc.invalidateQueries({ queryKey: ['manager-overview-workorders'] });
+  };
+  useSocketEvent('order:status', invalidateWorkOrders);
+  useSocketEvent('wash:assigned', invalidateWorkOrders);
+  useSocketEvent('wash:started', invalidateWorkOrders);
+  useSocketEvent('wash:completed', invalidateWorkOrders);
   const workOrders: WorkOrderRow[] =
     workOrdersData?.data?.data ?? workOrdersData?.data ?? [];
 
@@ -124,7 +141,6 @@ export default function ManagerOverviewPage() {
     (w) => w.status === 'in_progress',
   ).length;
   const activeWorkOrders = workOrders.filter((w) => w.status !== 'done');
-  const completedInPeriod = data?.overview.completedBookings ?? 0;
 
   return (
     <>
@@ -140,44 +156,41 @@ export default function ManagerOverviewPage() {
             isFetching={isRefetching}
           />
 
-          {/* ── Cần xử lý ngay (realtime) ── */}
+          {/* ── Cần xử lý ngay (realtime) + thợ theo nhóm hành vi đối diện ── */}
           <section className='flex flex-col gap-4'>
             <h2 className='font-heading text-base font-semibold tracking-tight text-foreground'>
               Cần xử lý ngay
             </h2>
-            <div className='grid grid-cols-2 lg:grid-cols-4 gap-4'>
-              <AlertCard
-                icon={UserPlus}
-                count={waitingCount}
-                label='Đơn chờ gán thợ'
-                sub='Cần phân công thợ rửa'
-                href='/manager/work-orders'
-                active={waitingCount > 0}
-              />
-              <AlertCard
-                icon={ClipboardCheck}
-                count={assignedCount}
-                label='Đơn đã gán thợ'
-                sub='Chờ thợ bắt đầu rửa'
-                href='/manager/work-orders'
-                active={assignedCount > 0}
-              />
-              <AlertCard
-                icon={RotateCcw}
-                count={inProgressCount}
-                label='Xe đang rửa'
-                sub='Thợ đang thực hiện'
-                href='/manager/work-orders'
-                active={inProgressCount > 0}
-              />
-              <AlertCard
-                icon={CheckCircle2}
-                count={completedInPeriod}
-                label='Số xe đã rửa'
-                sub='Đã rửa hoàn tất (kỳ đã chọn)'
-                href='/manager/work-orders'
-                active={completedInPeriod > 0}
-              />
+            <div className='grid gap-4 lg:grid-cols-3'>
+              <div className='grid grid-cols-1 sm:grid-cols-3 gap-4 lg:col-span-2'>
+                <AlertCard
+                  icon={UserPlus}
+                  count={waitingCount}
+                  label='Đơn chờ gán thợ'
+                  sub='Cần phân công thợ rửa'
+                  href='/manager/work-orders'
+                  active={waitingCount > 0}
+                />
+                <AlertCard
+                  icon={ClipboardCheck}
+                  count={assignedCount}
+                  label='Đơn đã gán thợ'
+                  sub='Chờ thợ bắt đầu rửa'
+                  href='/manager/work-orders'
+                  active={assignedCount > 0}
+                />
+                <AlertCard
+                  icon={RotateCcw}
+                  count={inProgressCount}
+                  label='Xe đang rửa'
+                  sub='Thợ đang thực hiện'
+                  href='/manager/work-orders'
+                  active={inProgressCount > 0}
+                />
+              </div>
+              {/* Thợ nhóm theo hành vi, đặt đối diện cụm cần xử lý để nhìn
+                  một phát là biết còn ai rảnh mà điều phối. */}
+              <WasherStatusMini href='/manager/washers' />
             </div>
           </section>
 
@@ -338,9 +351,11 @@ function ManagerReportBody({ report }: { report: DashboardReport }) {
 
   return (
     <div className='flex flex-col gap-10'>
-      {/* 1 - OVERVIEW */}
+      {/* 1 - TỔNG QUAN TRỌNG TÂM: 4 chỉ số chính + hàng chỉ số phụ.
+          Donut trạng thái chuyển xuống mục Đặt lịch; donut doanh thu theo
+          dịch vụ bỏ vì trùng với mục Dịch vụ & Phương tiện. */}
       <DashboardSection
-        title='Tổng quan vận hành'  
+        title='Tổng quan kỳ đã chọn'
         icon={Layers}
       >
         <div className='grid grid-cols-2 gap-3 lg:grid-cols-4'>
@@ -369,58 +384,116 @@ function ManagerReportBody({ report }: { report: DashboardReport }) {
             icon={TrendingDown}
             tone='destructive'
           />
-          <KpiCard
-            label='Giá trị đơn trung bình'
-            value={formatCurrency(overview.averageOrderValue)}
-            hint='Trên đơn hoàn thành'
-            icon={CreditCard}
-          />
-          <KpiCard
-            label='Thợ đang hoạt động'
-            value={formatNumber(overview.activeWashers)}
-            icon={Wrench}
-          />
-          <KpiCard
-            label='Voucher đã dùng'
-            value={formatNumber(overview.usedVouchers)}
-            icon={Gift}
-          />
         </div>
-
-        <div className='grid gap-4 lg:grid-cols-2'>
-          <Panel title='Tỷ trọng trạng thái đặt lịch'>
-            <DonutChart
-              data={Object.entries(bookings.statusSummary).map(
-                ([key, count]) => ({
-                  label: STATUS_LABELS[key] ?? key,
-                  value: count,
-                }),
-              )}
-              centerCaption='đơn'
-              emptyMessage='Chưa có booking nào trong khoảng thời gian này'
-            />
-          </Panel>
-          <Panel title='Tỷ trọng doanh thu theo dịch vụ'>
-            <DonutChart
-              data={revenue.byService.map((s) => ({
-                label: s.name,
-                value: s.revenue,
-              }))}
-              formatValue={formatCurrency}
-              centerCaption='doanh thu'
-              emptyMessage='Chưa có doanh thu theo dịch vụ trong khoảng thời gian này'
-            />
-          </Panel>
-        </div>
+        <InlineStats
+          items={[
+            {
+              label: 'Giá trị đơn trung bình',
+              value: formatCurrency(overview.averageOrderValue),
+            },
+            {
+              label: 'Thợ đang hoạt động',
+              value: formatNumber(overview.activeWashers),
+            },
+            {
+              label: 'Voucher đã dùng',
+              value: formatNumber(overview.usedVouchers),
+            },
+          ]}
+        />
       </DashboardSection>
 
-      {/* 2 - BOOKING SUMMARY */}
+      {/* 2 - PHÂN TÍCH CHI TIẾT: dashboard chỉ giữ tổng quan cơ bản, mỗi
+          nhóm số liệu mở ra trong modal riêng để tập trung từng việc một. */}
       <DashboardSection
-        title='Tình hình đặt lịch'
-        subtitle='Tỷ lệ hoàn thành/huỷ/không đến và khung giờ đông khách.'
-        icon={CalendarCheck}
+        title='Phân tích chi tiết'
+        subtitle='Bấm vào từng nhóm để mở số liệu đầy đủ của kỳ đã chọn.'
+        icon={Layers}
       >
+        <div className='grid gap-3 sm:grid-cols-2 lg:grid-cols-3'>
+          {/* Biểu đồ tổng quan hiển thị sẵn; bấm vào mở các biểu đồ còn lại. */}
+          <DetailGroupCard
+            title='Doanh thu theo ngày'
+            subtitle='Bấm để xem theo dịch vụ và loại xe'
+            icon={CircleDollarSign}
+            className='sm:col-span-2 lg:col-span-3'
+            preview={
+              revenue.byDay.length === 0 ? (
+                <EmptyBlock message='Chưa có doanh thu trong kỳ này' />
+              ) : (
+                <DayRevenueChart
+                  data={revenue.byDay}
+                  formatValue={formatCurrency}
+                />
+              )
+            }
+          >
+            <div className='grid gap-4 lg:grid-cols-2'>
+              <Panel title='Dịch vụ được dùng nhiều nhất'>
+                <BarList
+                  items={services.mostUsed.map((s) => ({
+                    label: s.name,
+                    value: s.count,
+                  }))}
+                  format={(v) => `${formatNumber(v)} đơn`}
+                  emptyMessage='Chưa có đặt lịch trong khoảng thời gian này'
+                />
+              </Panel>
+              <Panel title='Doanh thu theo dịch vụ'>
+                <BarList
+                  items={services.byRevenue.map((s) => ({
+                    label: s.name,
+                    value: s.revenue,
+                    caption: `${formatNumber(s.orders)} đơn`,
+                  }))}
+                  format={formatCurrency}
+                  emptyMessage='Chưa có doanh thu trong khoảng thời gian này'
+                  accent='bg-success'
+                />
+              </Panel>
+            </div>
+            <div className='grid gap-4 lg:grid-cols-2'>
+              <Panel
+                title='Cơ cấu loại xe hiện có'
+                hint='Tổng xe trên hệ thống (không theo kỳ)'
+              >
+                <DonutChart
+                  data={vehicles.byType.map((v) => ({
+                    label: v.name,
+                    value: v.count,
+                  }))}
+                  formatValue={(v) => `${formatNumber(v)} xe`}
+                  centerCaption='xe'
+                  emptyMessage='Chưa có phương tiện nào'
+                />
+              </Panel>
+              <Panel title='Doanh thu theo loại xe'>
+                <BarList
+                  items={vehicles.revenueByType.map((v) => ({
+                    label: v.name,
+                    value: v.revenue,
+                    caption: `${formatNumber(v.orders)} đơn`,
+                  }))}
+                  format={formatCurrency}
+                  emptyMessage='Chưa có doanh thu trong khoảng thời gian này'
+                  accent='bg-success'
+                />
+              </Panel>
+            </div>
+          </DetailGroupCard>
+
+          <DetailGroupCard
+            title='Tình hình đặt lịch'
+            subtitle='Tỷ lệ hoàn thành/huỷ, trạng thái, khung giờ'
+            icon={CalendarCheck}
+          >
         <div className='grid grid-cols-1 sm:grid-cols-3 gap-3'>
+          <KpiCard
+            label='Tỷ lệ hoàn thành'
+            value={formatPercent(bookings.completionRate)}
+            icon={CalendarCheck}
+            tone='success'
+          />
           <KpiCard
             label='Tỷ lệ huỷ'
             value={formatPercent(bookings.cancellationRate)}
@@ -433,29 +506,46 @@ function ManagerReportBody({ report }: { report: DashboardReport }) {
             icon={AlertTriangle}
             tone='warning'
           />
-          <KpiCard
-            label='Doanh thu kỳ này'
-            value={formatCurrency(revenue.net)}
-            icon={CircleDollarSign}
-          />
         </div>
-        <Panel
-          title='Khung giờ đông khách'
-          hint='Số đơn theo giờ trong ngày - cột đậm là giờ cao điểm'
-        >
-          <HourStrip
-            data={bookings.byHour}
-            emptyMessage='Chưa có đặt lịch trong khoảng thời gian này'
-          />
-        </Panel>
-      </DashboardSection>
+        <div className='grid gap-4 lg:grid-cols-3'>
+          <Panel title='Tỷ trọng trạng thái đặt lịch'>
+            <DonutChart
+              data={Object.entries(bookings.statusSummary).map(
+                ([key, count]) => ({
+                  label: STATUS_LABELS[key] ?? key,
+                  value: count,
+                }),
+              )}
+              centerCaption='đơn'
+              emptyMessage='Chưa có đặt lịch nào trong khoảng thời gian này'
+            />
+          </Panel>
+          <Panel
+            title='Khung giờ đông khách'
+            hint='Số đơn theo giờ trong ngày - cột đậm là giờ cao điểm'
+            className='lg:col-span-2'
+          >
+            <HourStrip
+              data={bookings.byHour}
+              emptyMessage='Chưa có đặt lịch trong khoảng thời gian này'
+            />
+          </Panel>
+        </div>
+          </DetailGroupCard>
 
-      {/* 3 - WASHER PERFORMANCE */}
-      <DashboardSection
-        title='Hiệu suất thợ rửa'
-        subtitle='Top thợ theo số lượt rửa hoàn thành trong kỳ.'
-        icon={Wrench}
-      >
+          <DetailGroupCard
+            title='Hiệu suất thợ rửa'
+            subtitle='Top thợ theo lượt rửa hoàn thành trong kỳ'
+            icon={Wrench}
+          >
+            <div className='flex justify-end'>
+              <Link
+                href='/manager/washers'
+                className='text-xs font-semibold text-primary hover:underline'
+              >
+                Xem giám sát trực tiếp →
+              </Link>
+            </div>
         <Panel title='Top thợ rửa'>
           <RankingTable
             rows={washers}
@@ -521,75 +611,14 @@ function ManagerReportBody({ report }: { report: DashboardReport }) {
             ]}
           />
         </Panel>
-      </DashboardSection>
+          </DetailGroupCard>
 
-      {/* 4 - SERVICE & VEHICLE */}
-      <DashboardSection
-        title='Dịch vụ & Phương tiện'
-        subtitle='Dịch vụ bán chạy, doanh thu theo dịch vụ và cơ cấu loại xe.'
-        icon={Layers}
-      >
-        <div className='grid gap-4 lg:grid-cols-2'>
-          <Panel title='Dịch vụ được dùng nhiều nhất'>
-            <BarList
-              items={services.mostUsed.map((s) => ({
-                label: s.name,
-                value: s.count,
-              }))}
-              format={(v) => `${formatNumber(v)} đơn`}
-              emptyMessage='Chưa có đặt lịch trong khoảng thời gian này'
-            />
-          </Panel>
-          <Panel title='Doanh thu theo dịch vụ'>
-            <BarList
-              items={services.byRevenue.map((s) => ({
-                label: s.name,
-                value: s.revenue,
-                caption: `${formatNumber(s.orders)} đơn`,
-              }))}
-              format={formatCurrency}
-              emptyMessage='Chưa có doanh thu trong khoảng thời gian này'
-              accent='bg-success'
-            />
-          </Panel>
-        </div>
-        <div className='grid gap-4 lg:grid-cols-2'>
-          <Panel
-            title='Cơ cấu loại xe hiện có'
-            hint='Tổng xe trên hệ thống (không theo kỳ)'
+          <DetailGroupCard
+            title='Voucher & Hoàn tiền'
+            subtitle='Mức độ dùng voucher và hoàn tiền'
+            icon={Gift}
           >
-            <DonutChart
-              data={vehicles.byType.map((v) => ({
-                label: v.name,
-                value: v.count,
-              }))}
-              formatValue={(v) => `${formatNumber(v)} xe`}
-              centerCaption='xe'
-              emptyMessage='Chưa có phương tiện nào'
-            />
-          </Panel>
-          <Panel title='Doanh thu theo loại xe'>
-            <BarList
-              items={vehicles.revenueByType.map((v) => ({
-                label: v.name,
-                value: v.revenue,
-                caption: `${formatNumber(v.orders)} đơn`,
-              }))}
-              format={formatCurrency}
-              emptyMessage='Chưa có doanh thu trong khoảng thời gian này'
-              accent='bg-success'
-            />
-          </Panel>
-        </div>
-      </DashboardSection>
-
-      {/* 5 - VOUCHER & REFUND SUMMARY */}
-      <DashboardSection
-        title='Voucher & Hoàn tiền'
-        subtitle='Mức độ sử dụng voucher và hoàn tiền - chỉ ở mức tổng hợp.'
-        icon={Gift}
-      >
-        <div className='grid grid-cols-2 gap-3 lg:grid-cols-4'>
+        <div className='grid grid-cols-1 gap-3 sm:grid-cols-3'>
           <KpiCard
             label='Voucher đã phát'
             value={formatNumber(voucherLoyalty.totalIssued)}
@@ -609,12 +638,6 @@ function ManagerReportBody({ report }: { report: DashboardReport }) {
             icon={Undo2}
             tone='destructive'
           />
-          <KpiCard
-            label='Đơn hoàn thành'
-            value={formatNumber(refundDispute.completedBookings)}
-            icon={Gift}
-            tone='success'
-          />
         </div>
         <Panel title='Tỷ trọng trạng thái voucher'>
           <DonutChart
@@ -627,22 +650,27 @@ function ManagerReportBody({ report }: { report: DashboardReport }) {
             emptyMessage='Chưa có voucher nào trong khoảng thời gian này'
           />
         </Panel>
-      </DashboardSection>
+          </DetailGroupCard>
 
-      {/* 6 - CANCELLATION & NO-SHOW (compact) */}
-      {report.cancellationNoShow && (
-        <CancellationNoShowSection
-          data={report.cancellationNoShow}
-          variant='manager'
-        />
-      )}
+          {report.cancellationNoShow && (
+            <DetailGroupCard
+              title='Hủy lịch & Không đến'
+              subtitle='Lý do huỷ và khách hàng cần lưu ý'
+              icon={AlertTriangle}
+              hideModalHeader
+            >
+              <CancellationNoShowSection
+                data={report.cancellationNoShow}
+                variant='manager'
+              />
+            </DetailGroupCard>
+          )}
 
-      {/* 7 - SCHEDULE */}
-      <DashboardSection
-        title='Lịch làm việc & Slot'
-        subtitle='Tỷ lệ lấp đầy slot và khung giờ cao điểm.'
-        icon={Clock}
-      >
+          <DetailGroupCard
+            title='Lịch làm việc & Chỗ đặt'
+            subtitle='Mức độ lấp đầy chỗ đặt, giờ cao điểm'
+            icon={Clock}
+          >
         <div className='grid grid-cols-1 sm:grid-cols-3 gap-3'>
           <KpiCard
             label='Tổng ca làm'
@@ -650,13 +678,13 @@ function ManagerReportBody({ report }: { report: DashboardReport }) {
             icon={Clock}
           />
           <KpiCard
-            label='Tổng sức chứa'
+            label='Sức chứa tối đa'
             value={formatNumber(schedule.totalCapacity)}
-            hint='Slot tối đa'
+            hint='Số xe có thể nhận trong kỳ'
             icon={Layers}
           />
           <KpiCard
-            label='Slot đã đặt / trống'
+            label='Chỗ đã đặt / còn trống'
             value={`${formatNumber(schedule.bookedSlots)} / ${formatNumber(schedule.availableSlots)}`}
             icon={CalendarCheck}
           />
@@ -683,6 +711,8 @@ function ManagerReportBody({ report }: { report: DashboardReport }) {
             </ul>
           )}
         </Panel>
+          </DetailGroupCard>
+        </div>
       </DashboardSection>
     </div>
   );

@@ -1,6 +1,7 @@
 import { axiosInstance } from '@/lib/axios';
 import { ENDPOINTS } from '@/services/endpoints';
 import type { DashboardQuery, DashboardReport } from '@/types/dashboard';
+import type { WasherLiveStatus } from '@/types/washer';
 
 // ─── Auth ──────────────────────────────────────────────
 export const adminGetMe = () => axiosInstance.get('/auth/me');
@@ -30,11 +31,16 @@ export const adminDeleteUser = (id: string) =>
 export const adminUpdateUserRole = (id: string, role: string) =>
   axiosInstance.patch(`/admin/users/${id}/role`, { role });
 
-export const adminUpdateUserStatus = (id: string, status: string) =>
-  axiosInstance.patch(`/admin/users/${id}/status`, { status });
+// BE SetUserStatusDto nhận { isActive: boolean } (không phải chuỗi status).
+export const adminUpdateUserStatus = (id: string, isActive: boolean) =>
+  axiosInstance.patch(`/admin/users/${id}/status`, { isActive });
 
 export const adminResetUserPassword = (id: string, newPassword: string) =>
   axiosInstance.post(`/admin/users/${id}/reset-password`, { newPassword });
+
+// ─── Giám sát thợ (Manager/Admin) ───────────────────────
+export const adminGetWasherStatus = () =>
+  axiosInstance.get<WasherLiveStatus[]>(ENDPOINTS.adminShifts.washerStatus);
 
 // ─── Orders/Bookings (Manager) ──────────────────────────
 export const adminGetOrders = (params?: Record<string, unknown>) =>

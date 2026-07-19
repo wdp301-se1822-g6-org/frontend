@@ -255,7 +255,7 @@ export default function ManagerWorkOrdersPage() {
                   {tab === 'all' && 'Tất cả phiếu'}
                   {tab === 'pending' && 'Chờ giao thợ'}
                   {tab === 'in_progress' && 'Đang rửa xe'}
-                  {tab === 'fifo' && 'Hàng đợi FIFO (Hôm nay)'}
+                  {tab === 'fifo' && 'Xe chờ tới lượt (Hôm nay)'}
                   
                   {statusFilter === tab && (
                     <div className='absolute bottom-0 left-0 right-0 h-0.5 bg-primary rounded-full' />
