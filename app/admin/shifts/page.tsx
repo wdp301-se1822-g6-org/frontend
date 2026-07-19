@@ -77,20 +77,23 @@ export default function AdminShiftsPage() {
 
   // Danh sách thợ thật từ /admin/shifts/washer-status — chỉ dùng để hiển thị
   // tên cho các ca legacy còn staff_id (BE đã bỏ GET /admin/shifts/staff khi
-  // chuyển sang ca ẩn danh theo sức chứa).
-  const { data: usersRes } = useQuery({
+  // chuyển sang ca ẩn danh theo sức chứa). Giữ nguyên queryKey + shape raw
+  // như WasherStatusMini/Board để dùng chung cache, map sang UserData ở dưới.
+  const { data: washerStatusRes } = useQuery({
     queryKey: ['washer-status'],
-    queryFn: async (): Promise<UserData[]> => {
-      const res = await adminGetWasherStatus();
-      return (res.data ?? []).map((w) => ({
+    queryFn: () => adminGetWasherStatus(),
+  });
+  const usersRes: UserData[] = useMemo(
+    () =>
+      (washerStatusRes?.data ?? []).map((w) => ({
         _id: w.washerId,
         id: w.washerId,
         name: w.name,
         email: w.email,
         role: 'washer',
-      })) as UserData[];
-    },
-  });
+      })) as UserData[],
+    [washerStatusRes],
+  );
 
   const shifts: Shift[] = useMemo(
     () => shiftsRes?.data?.data ?? shiftsRes?.data ?? [],
