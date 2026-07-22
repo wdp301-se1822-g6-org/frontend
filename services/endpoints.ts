@@ -85,6 +85,7 @@ export const ENDPOINTS = {
   adminShifts: {
     list: '/admin/shifts',
     create: '/admin/shifts',
+    bulk: '/admin/shifts/bulk',
     byId: (id: string) => `/admin/shifts/${id}`,
     status: (id: string) => `/admin/shifts/${id}/status`,
     staffStats: '/admin/shifts/staff-stats',

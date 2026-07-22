@@ -12,6 +12,7 @@ import { EmptyState } from '@/components/ui/empty-state';
 import {
   adminGetShifts,
   adminCreateShift,
+  adminBulkCreateShifts,
   adminUpdateShift,
   adminToggleShift,
   adminGetWasherStatus,
@@ -123,6 +124,38 @@ export default function AdminShiftsPage() {
     },
   });
 
+  // Tạo ca hàng loạt theo khoảng ngày — POST /admin/shifts/bulk. BE bỏ qua ngày
+  // trùng/đã qua và trả về summary { created, skipped, meta }.
+  const bulkCreateShift = useMutation({
+    mutationFn: adminBulkCreateShifts,
+    onSuccess: (res) => {
+      const meta = res?.data?.meta;
+      const created = meta?.createdCount ?? 0;
+      const skipped = meta?.skippedCount ?? 0;
+      if (created === 0) {
+        toast.warning(
+          skipped > 0
+            ? `Không tạo ca nào — ${skipped} ca bị bỏ qua (đã có ca hoặc đã qua giờ).`
+            : 'Không có ngày nào phù hợp để tạo ca.',
+        );
+      } else {
+        toast.success(
+          skipped > 0
+            ? `Đã tạo ${created} ca, bỏ qua ${skipped} ca (đã có ca hoặc đã qua giờ).`
+            : `Đã tạo ${created} ca làm việc.`,
+        );
+      }
+      qc.invalidateQueries({ queryKey: ['admin-shifts'] });
+      setEditShift(false);
+    },
+    onError: (err: unknown) => {
+      const errMsg =
+        (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??
+        'Đã xảy ra lỗi khi tạo ca hàng loạt.';
+      toast.error(`Tạo ca hàng loạt thất bại: ${errMsg}`);
+    },
+  });
+
   const updateShift = useMutation({
     mutationFn: ({ id, data }: { id: string; data: Record<string, unknown> }) =>
       adminUpdateShift(id, data),
@@ -157,6 +190,11 @@ export default function AdminShiftsPage() {
   const handleSave = (d: Record<string, unknown>) => {
     if (editShift && (editShift as Shift)._id) {
       updateShift.mutate({ id: (editShift as Shift)._id!, data: d });
+    } else if ('fromDate' in d) {
+      // Payload chế độ "Nhiều ngày" từ ShiftModal.
+      bulkCreateShift.mutate(
+        d as unknown as Parameters<typeof adminBulkCreateShifts>[0],
+      );
     } else {
       createShift.mutate(d);
     }
@@ -418,7 +456,11 @@ export default function AdminShiftsPage() {
           item={editShift}
           onClose={() => setEditShift(false)}
           onSave={handleSave}
-          isPending={createShift.isPending || updateShift.isPending}
+          isPending={
+            createShift.isPending ||
+            bulkCreateShift.isPending ||
+            updateShift.isPending
+          }
         />
       )}
 

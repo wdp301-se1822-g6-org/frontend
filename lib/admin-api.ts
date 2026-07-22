@@ -107,6 +107,32 @@ export const adminGetShifts = (params?: Record<string, unknown>) =>
 export const adminCreateShift = (data: Record<string, unknown>) =>
   axiosInstance.post('/admin/shifts', data);
 
+/** Tạo ca cho một khoảng ngày trong 1 lần — POST /admin/shifts/bulk. */
+export interface BulkCreateShiftPayload {
+  /** YYYY-MM-DD (giờ VN, inclusive). */
+  fromDate: string;
+  /** YYYY-MM-DD (giờ VN, inclusive). Khoảng tối đa 92 ngày. */
+  toDate: string;
+  block: 'morning' | 'afternoon' | 'fullday';
+  /** Thứ theo ISO: T2=1 … CN=7. Bỏ trống = mọi thứ. */
+  weekdays?: number[];
+  capacity?: number;
+  note?: string;
+}
+
+export interface BulkCreateShiftResult {
+  created: unknown[];
+  skipped: Array<{
+    date: string;
+    block: 'morning' | 'afternoon';
+    reason: 'overlap' | 'past';
+  }>;
+  meta: { requestedDays: number; createdCount: number; skippedCount: number };
+}
+
+export const adminBulkCreateShifts = (data: BulkCreateShiftPayload) =>
+  axiosInstance.post<BulkCreateShiftResult>(ENDPOINTS.adminShifts.bulk, data);
+
 export const adminUpdateShift = (id: string, data: Record<string, unknown>) =>
   axiosInstance.patch(`/admin/shifts/${id}`, data);
 
